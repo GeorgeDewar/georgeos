@@ -1,0 +1,2 @@
+kernel.c(67): Error! E1156: Assembler error: 'Operands must be the same size'
+kernel.c(67): Error! E1156: Assembler error: 'Cannot use 386 operand size with current CPU setting'
