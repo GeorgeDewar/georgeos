@@ -1,2 +1,4 @@
-kernel.c(67): Error! E1156: Assembler error: 'Operands must be the same size'
-kernel.c(67): Error! E1156: Assembler error: 'Cannot use 386 operand size with current CPU setting'
+kernel.c(24): Warning! W102: Type mismatch (warning)
+kernel.c(24): Note! I2003: source conversion type is 'char *'
+kernel.c(24): Note! I2004: target conversion type is 'char '
+kernel.c(24): Note! I2002: 'printchar' defined in: kernel.c(1)
