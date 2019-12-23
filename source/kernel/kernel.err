@@ -1,4 +1,4 @@
-kernel.c(24): Warning! W102: Type mismatch (warning)
-kernel.c(24): Note! I2003: source conversion type is 'char *'
-kernel.c(24): Note! I2004: target conversion type is 'char '
-kernel.c(24): Note! I2002: 'printchar' defined in: kernel.c(1)
+kernel.c(7): Warning! W102: Type mismatch (warning)
+kernel.c(7): Note! I2003: source conversion type is 'char *'
+kernel.c(7): Note! I2004: target conversion type is 'char '
+kernel.c(7): Note! I2002: 'printchar' defined in: kernel.c(1)
