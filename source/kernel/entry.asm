@@ -19,6 +19,12 @@ extern kernelMain_ : proc
 	mov bx, 0			; to be bright, and not blinking
 	int 10h
 
+	mov ah, 0Eh
+    mov al, 'S'
+    mov bh, 0
+    mov bl, 0Fh
+    int 10h
+
 jmp kernelMain_
 db 0x90
 end

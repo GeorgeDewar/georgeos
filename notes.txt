@@ -1,0 +1,5 @@
+Decisions:
+- Real Mode vs Protected Mode
+- BIOS vs Direct
+
+1. Bootloader loads kernel.bin
