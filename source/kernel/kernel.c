@@ -1,24 +1,13 @@
 void printchar(char c);
 void print(char *s);
 
-char *hello = "Welcome to GeorgeOS";
+char *hello = "Welcome to GeorgeOS!";
 
 void kernelMain(void) {
-   __asm {
-      mov ah, 0Eh
-      mov al, 'G'
-      mov bh, 0
-      mov bl, 0Fh
-      int 10h
-   }
-   __asm {
-      mov ah, 0Eh
-      mov al, '1'
-      mov bh, 0
-      mov bl, 0Fh
-      int 10h
-   }
-   printchar('C');
+   printchar('.');
+   printchar(0xa);
+   printchar(0xd);
+   
    print(hello);
    while(1==1) {
 

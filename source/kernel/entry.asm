@@ -20,7 +20,7 @@ extern kernelMain_ : proc
 	int 10h
 
 	mov ah, 0Eh
-    mov al, 'S'
+    mov al, '.'
     mov bh, 0
     mov bl, 0Fh
     int 10h
