@@ -1,6 +1,7 @@
 void clearScreen();
 void printchar(char c);
 void print(char *s);
+void println(char *s);
 
 #define SET_VIDEO_MODE        0x00
 #define WRITE_CHARACTER_TTY   0x0E
@@ -27,11 +28,16 @@ void print(char* s) {
    }
 }
 
+void println(char* s) {
+   print(s);
+   print("\r\n");
+}
+
 void printchar(char c) {
    __asm {
       mov ah, WRITE_CHARACTER_TTY
-      mov al, [c]                   ; character to write
-      mov bh, 0                     ; page number
+      mov al, [c]                      ; character to write
+      mov bh, 0                        ; page number
       mov bl, COLOR_YELLOW             ; foreground colour
       int 10h
    }
