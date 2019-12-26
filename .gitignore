@@ -1,0 +1,8 @@
+01_mbronly/build/*
+01_mbronly/disk_images/*
+02_asm/build/*
+02_asm/disk_images/*
+current/build/*
+current/disk_images/*
+
+!.keep
