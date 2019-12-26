@@ -7,6 +7,9 @@ cd ..
 
 echo Assembling GeorgeOS kernel...
 rem nasm -O0 -f bin -o kernel.bin kernel.asm
+cd kernel
+call build
+cd ..
 
 cd ..
 
@@ -16,8 +19,8 @@ dd count=2 seek=0 bs=512 if=..\source\bootload\bootload.bin of=.\georgeos.flp
 cd ..
 
 echo Mounting disk image...
-VBoxManage controlvm GeorgeOS poweroff
-pause
+REM VBoxManage controlvm GeorgeOS poweroff
+REM pause
 imdisk -a -f disk_images\georgeos.flp -s 1440K -m B:
 
 echo Copying kernel and applications to disk image...
@@ -27,6 +30,7 @@ copy source\data\*.* B:\
 
 echo Dismounting disk image...
 imdisk -D -m B:
-VBoxManage startvm GeorgeOS
+REM VBoxManage startvm GeorgeOS
 
 echo Done!
+qemu-system-i386 -drive file=disk_images\georgeos.flp,format=raw,index=0,media=disk
