@@ -6,3 +6,5 @@ current/build/*
 current/disk_images/*
 
 !.keep
+
+*.err
