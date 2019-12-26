@@ -1,16 +1,21 @@
+void clearScreen();
 void printchar(char c);
 void print(char *s);
 
 char *hello = "Welcome to GeorgeOS!";
 
 void kernelMain(void) {
-   printchar('.');
-   printchar(0xa);
-   printchar(0xd);
-   
+   clearScreen();
    print(hello);
-   while(1==1) {
 
+   while(1==1) {}
+}
+
+void clearScreen() {
+   __asm {
+      mov ah, 0x00
+      mov al, 0x03  ; text mode 80x25 16 colours
+      int 0x10
    }
 }
 
