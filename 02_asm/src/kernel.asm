@@ -35,7 +35,7 @@ os_main:
 	mov si, welcome_string		; Put string position into SI
 	call print_string			; Call our string-printing routine
 
-	welcome_string db 'Welcome to GeorgeOS!', 0
+	welcome_string db 'Welcome to GeorgeOS, ASM Kernel Edition!', 0
 
 print_string:			; Routine: output string in SI to screen
 	mov ah, 0Eh		; int 10h 'print char' function
