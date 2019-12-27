@@ -16,7 +16,7 @@ void println(char *s);
 void clearScreen() {
    __asm {
       mov ah, SET_VIDEO_MODE
-      mov al, GFX_80_25_16
+      mov al, TEXT_80_25_16
       int 10h
    }
 }
