@@ -11,7 +11,7 @@ extern kernelMain_ : proc
 	cld				; The default direction for string operations
 					; will be 'up' - incrementing address in RAM
 
-	mov ax, 2020h			; Set all segments to match where kernel is loaded
+	mov ax, 2050h			; Set all segments to match where kernel is loaded
 	mov ds, ax			; After this, we don't need to bother with
 	mov es, ax			; segments ever again, as MikeOS and its programs
 

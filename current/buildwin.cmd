@@ -11,18 +11,20 @@ set CC_OPTS=-q -0 -d0 -ms -s -wx -zls
 
 wcc %CC_OPTS% -fo=build\kernel\keyboard.obj src\kernel\bios\keyboard.c
 wcc %CC_OPTS% -fo=build\kernel\video.obj src\kernel\bios\video.c
+wcc %CC_OPTS% -fo=build\kernel\clock.obj src\kernel\bios\clock.c
 wcc %CC_OPTS% -fo=build\kernel\console.obj src\kernel\components\console.c
 wcc %CC_OPTS% -fo=build\kernel\string.obj src\kernel\util\string.c
+
 wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c
 
 cd build\kernel
 wlink ^
-  FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj ^
+  FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj ^
   NAME kernel.bin FORMAT DOS OUTPUT RAW^
   OFFSET=0x0000 OPTION NODEFAULTLIBS^
   ORDER CLNAME CODE^
       SEGMENT ENTRY OFFSET=0x0000^
-  CLNAME DATA OFFSET=0x200
+  CLNAME DATA OFFSET=0x500
 cd ..\..
 
 echo Adding bootsector to disk image...

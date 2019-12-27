@@ -1,5 +1,7 @@
 #include "string.h"
 
+#define ASCII_ZERO 0x30
+
 char strcmp(char *string1, char *string2) {
     int len1 = strlen(string1);
     int len2 = strlen(string2);
@@ -25,4 +27,24 @@ int strlen(char *string) {
         len++;
     }
     return len;
+}
+
+void intToString(int number, char* string) {
+    int index = 0;
+    char buffer[16] = "";
+    int len;
+
+    do {
+        int thisPlace = number % 10;
+        buffer[index++] = ASCII_ZERO + thisPlace;
+        number = number / 10;
+    } while(number > 0);
+    
+    // Reverse it
+    len = index;
+    index = 0;
+    for(index; index < len; index++) {
+        string[index] = buffer[len-index-1];
+    }
+    string[index] = 0;
 }
