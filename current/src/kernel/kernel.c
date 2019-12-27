@@ -18,6 +18,13 @@ void kernelMain(void) {
       if(strcmp(command, "sayhi")) {
          println("HI!!!");
       }
+
+      if(strcmp(command, "reboot")) {
+         reboot();
+      }
    }
 }
 
+void reboot() {
+   __asm{ int 19h }
+}
