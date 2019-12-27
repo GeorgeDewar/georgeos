@@ -48,3 +48,23 @@ void intToString(int number, char* string) {
     }
     string[index] = 0;
 }
+
+void intToStringHex(int number, char* string) {
+    int index = 0;
+    char buffer[16] = "";
+    int len;
+
+    do {
+        int thisPlace = number % 16;
+        buffer[index++] = ASCII_ZERO + thisPlace;
+        number = number / 16;
+    } while(number > 0);
+    
+    // Reverse it
+    len = index;
+    index = 0;
+    for(index; index < len; index++) {
+        string[index] = buffer[len-index-1];
+    }
+    string[index] = 0;
+}

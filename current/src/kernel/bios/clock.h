@@ -1,1 +1,1 @@
-int getRTCTime(char* hour, char* minute, char* second);
+void getRTCTime(char* hour, char* minute, char* second);

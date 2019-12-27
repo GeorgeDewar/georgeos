@@ -10,6 +10,8 @@ char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
 char command[128] = "";
 
+char hour = 0, minute = 0, second = 0;
+
 void kernelMain(void) {
    clearScreen();
    println(hello);
@@ -23,23 +25,19 @@ void kernelMain(void) {
       } else if(strcmp(command, "reboot")) {
          reboot();
       } else if(strcmp(command, "time")) {
-         char hour = 0, minute = 0, second = 0;
-         int sec = getRTCTime(&hour, &minute, &second);
-         printChar(30 + sec);
+         char printableNumber[16] = "";
+
+         getRTCTime(&hour, &minute, &second);
+         intToStringHex(hour, printableNumber);
+         print(printableNumber);
+         printChar(':');
+         intToStringHex(minute, printableNumber);
+         print(printableNumber);
+         printChar(':');
+         intToStringHex(second, printableNumber);
+         println(printableNumber);
       } else if(strcmp(command, "test")) {
-         char numberString[16] = "";
-         intToString(12345, numberString);
-         println(numberString);
-         intToString(0, numberString);
-         println(numberString);
-         intToString(1, numberString);
-         println(numberString);
-         intToString(9, numberString);
-         println(numberString);
-         intToString(10, numberString);
-         println(numberString);
-         intToString(100, numberString);
-         println(numberString);
+         println("Test");
       } else {
          println("Unknown command");
       }
