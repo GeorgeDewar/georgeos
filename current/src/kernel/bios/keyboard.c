@@ -1,9 +1,7 @@
-char getchar();
+#include "keyboard.h"
 
-#define FN_00_READ_KEY_PRESS 0x00
-
-char getchar() {
-    char c;
+char getChar() {
+   char c = 0;
    __asm {
       mov ah, FN_00_READ_KEY_PRESS
       int 16h

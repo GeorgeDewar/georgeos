@@ -1,7 +1,4 @@
-void clearScreen();
-void printchar(char c);
-void print(char *s);
-void println(char *s);
+#include "video.h"
 
 #define SET_VIDEO_MODE        0x00
 #define WRITE_CHARACTER_TTY   0x0E
@@ -21,19 +18,7 @@ void clearScreen() {
    }
 }
 
-void print(char* s) {
-   while(*s != 0) {
-      printchar(*s);
-      s++;
-   }
-}
-
-void println(char* s) {
-   print(s);
-   print("\r\n");
-}
-
-void printchar(char c) {
+void printChar(char c) {
    __asm {
       mov ah, WRITE_CHARACTER_TTY
       mov al, [c]                      ; character to write

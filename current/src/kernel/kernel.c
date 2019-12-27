@@ -1,5 +1,6 @@
-#include "bios/video.c";
-#include "bios/keyboard.c";
+#include "bios/video.h";
+#include "bios/keyboard.h";
+#include "components/console.h";
 
 char *hello = "Welcome to GeorgeOS!";
 char *prompt = "> ";
@@ -16,16 +17,3 @@ void kernelMain(void) {
    }
 }
 
-void getString(char* buffer, char echo) {
-    int index = 0;
-    char c;
-    while((c = getchar()) != '\r') {
-        if(echo == 1) {
-            printchar(c);
-        }
-        buffer[index] = c;
-        index++;
-    }
-    if(echo == 1) println("");
-    buffer[index] = 0; // NULL byte to end string
-}
