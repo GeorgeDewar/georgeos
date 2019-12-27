@@ -5,13 +5,15 @@ nasm -O0 -f bin -o build\bootload.bin src\bootload.asm
 
 echo Assembling GeorgeOS kernel...
 
-wasm -0 -fo=build\kernel\entry.obj src\kernel\entry.asm
-wcc -3 -d0 -ms -s -wx -zls -fo=build\kernel\keyboard.obj src\kernel\bios\keyboard.c
-wcc -3 -d0 -ms -s -wx -zls -fo=build\kernel\video.obj src\kernel\bios\video.c
-wcc -3 -d0 -ms -s -wx -zls -fo=build\kernel\console.obj src\kernel\components\console.c
-wcc -3 -d0 -ms -s -wx -zls -fo=build\kernel\string.obj src\kernel\util\string.c
+wasm -q -0 -fo=build\kernel\entry.obj src\kernel\entry.asm
 
-wcc -3 -d0 -ms -s -wx -zls -fo=build\kernel\kernel.obj src\kernel\kernel.c
+set CC_OPTS=-q -0 -d0 -ms -s -wx -zls
+
+wcc %CC_OPTS% -fo=build\kernel\keyboard.obj src\kernel\bios\keyboard.c
+wcc %CC_OPTS% -fo=build\kernel\video.obj src\kernel\bios\video.c
+wcc %CC_OPTS% -fo=build\kernel\console.obj src\kernel\components\console.c
+wcc %CC_OPTS% -fo=build\kernel\string.obj src\kernel\util\string.c
+wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c
 
 cd build\kernel
 wlink ^

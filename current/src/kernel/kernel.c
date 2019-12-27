@@ -3,6 +3,8 @@
 #include "components/console.h";
 #include "util/string.h";
 
+void reboot();
+
 char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
 char command[128] = "";
@@ -17,10 +19,10 @@ void kernelMain(void) {
 
       if(strcmp(command, "sayhi")) {
          println("HI!!!");
-      }
-
-      if(strcmp(command, "reboot")) {
+      } else if(strcmp(command, "reboot")) {
          reboot();
+      } else {
+         println("Unknown command");
       }
    }
 }
