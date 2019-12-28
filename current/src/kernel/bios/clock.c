@@ -1,34 +1,33 @@
+#include "string.h"
 #include "clock.h"
 
-#define READ_SYS_TIME        0x00
 #define READ_RTC_TIME        0x02
 
-void getRTCTime(char* hour, char* minute, char* second) {
-    char h2 = 0;
-    char m2 = 0;
-    char s2 = 0;
+void getTimeString(char* buffer) {
+    int index = 0;
+    char temp[16] = "";
+
+    char hour = 0, minute = 0, second = 0;
 
     __asm {
         mov ah, READ_RTC_TIME
         int 1Ah
-        mov [h2], ch
-        mov [m2], cl
-        mov [s2], dh
+        mov [hour], ch
+        mov [minute], cl
+        mov [second], dh
     }
-
-    *hour = h2;
-    *minute = m2;
-    *second = s2;
-}
-
-// int getRTCTime(char* hour, char* minute, char* second) {
-//     int second2 = 0;
-//     long a = 0;
-//     __asm {
-//         mov ah, READ_SYS_TIME
-//         int 1Ah
-//         mov [second2], dx
-//     }
     
-//     return second2;
-// }
+    intToStringHex(hour, temp);
+    copyString(temp, buffer, index, strlen(temp));
+    index += strlen(temp);
+    buffer[index++] = ':';
+
+    intToStringHex((int) minute, temp);
+    copyString(temp, buffer, index, strlen(temp));
+    index += strlen(temp);
+    buffer[index++] = ':';
+
+    intToStringHex((int) second, temp);
+    copyString(temp, buffer, index, strlen(temp));
+    index += strlen(temp);
+}

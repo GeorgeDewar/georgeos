@@ -68,3 +68,11 @@ void intToStringHex(int number, char* string) {
     }
     string[index] = 0;
 }
+
+void copyString(char* source, char* dest, int destStart) {
+    int index = 0;
+    while(source[index] != 0) {
+        dest[destStart + index] = source[index];
+        index++;
+    }
+}

@@ -25,17 +25,9 @@ void kernelMain(void) {
       } else if(strcmp(command, "reboot")) {
          reboot();
       } else if(strcmp(command, "time")) {
-         char printableNumber[16] = "";
-
-         getRTCTime(&hour, &minute, &second);
-         intToStringHex(hour, printableNumber);
-         print(printableNumber);
-         printChar(':');
-         intToStringHex(minute, printableNumber);
-         print(printableNumber);
-         printChar(':');
-         intToStringHex(second, printableNumber);
-         println(printableNumber);
+         char timeString[16] = "";
+         getTimeString(timeString);
+         println(timeString);
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

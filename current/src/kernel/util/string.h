@@ -3,3 +3,5 @@ int strlen(char *string);
 
 void intToString(int number, char* string);
 void intToStringHex(int number, char* string);
+
+void copyString(char* source, char* dest, int destStart);
