@@ -3,6 +3,7 @@
 #include "components/console.h";
 #include "util/string.h";
 #include "bios/clock.h";
+#include "bios/disk.h";
 
 void reboot();
 
@@ -10,7 +11,7 @@ char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
 char command[128] = "";
 
-char hour = 0, minute = 0, second = 0;
+char diskBuffer[512] = "initial";
 
 void kernelMain(void) {
    clearScreen();
@@ -28,6 +29,12 @@ void kernelMain(void) {
          char timeString[16] = "";
          getTimeString(timeString);
          println(timeString);
+      } else if(strcmp(command, "dir")) {
+         char responseCode = readRoot(diskBuffer);
+         char responseString[16] = "";
+         intToStringHex(responseCode, responseString);
+         println(responseString);
+         printRange(diskBuffer, 512);
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

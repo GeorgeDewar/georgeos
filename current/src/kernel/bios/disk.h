@@ -1,0 +1,1 @@
+char readRoot(char* buffer);

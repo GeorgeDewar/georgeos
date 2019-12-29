@@ -13,6 +13,13 @@ void println(char* s) {
    print("\r\n");
 }
 
+void printRange(char* s, int bytes) {
+    int i = 0;
+    for(i; i<bytes; i++) {
+        printChar(s[i]);
+    }
+}
+
 void getString(char* buffer, char echo) {
     int index = 0;
     char c;
