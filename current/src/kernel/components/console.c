@@ -13,9 +13,12 @@ void println(char* s) {
    print("\r\n");
 }
 
-void printRange(char* s, int bytes) {
+void printRange(char* s, int bytes, char stopAtNull, char nullCharacter) {
     int i = 0;
     for(i; i<bytes; i++) {
+        if(s[i] == nullCharacter && stopAtNull == 1) {
+            return;
+        }
         printChar(s[i]);
     }
 }

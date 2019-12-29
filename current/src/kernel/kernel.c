@@ -11,9 +11,16 @@ char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
 char command[128] = "";
 
-char diskBuffer[512] = "initial";
+union DirBuf {
+    char diskBuffer[512];
+    struct DirectoryEntry dir[16];
+};
+
+union DirBuf diskBuffer;
 
 void kernelMain(void) {
+   int dirIndex = 0;
+
    clearScreen();
    println(hello);
    
@@ -30,11 +37,20 @@ void kernelMain(void) {
          getTimeString(timeString);
          println(timeString);
       } else if(strcmp(command, "dir")) {
-         char responseCode = readRoot(diskBuffer);
+         char responseCode = readRoot(diskBuffer.diskBuffer);
          char responseString[16] = "";
          intToStringHex(responseCode, responseString);
          println(responseString);
-         printRange(diskBuffer, 512);
+
+         dirIndex = 0;
+         while(diskBuffer.dir[dirIndex].name[0] != 0) {
+            printRange(diskBuffer.dir[dirIndex].name, 8, 1, ' ');
+            printChar('.');
+            printRange(diskBuffer.dir[dirIndex].extension, 3, 1, ' ');
+            println("");
+            dirIndex++;
+         }
+         
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

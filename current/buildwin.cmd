@@ -36,7 +36,7 @@ imdisk -a -f disk_images\georgeos.flp -s 1440K -m B:
 
 echo Copying kernel and applications to disk image...
 copy build\kernel\kernel.bin b:\kernel.bin
-copy source\data\*.* B:\
+copy src\data\*.* B:\
 
 echo Dismounting disk image...
 imdisk -D -m B:
