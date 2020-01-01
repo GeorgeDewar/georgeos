@@ -63,8 +63,10 @@ void kernelMain(void) {
             dirIndex++;
          }
          
-      } else if(strcmp_wl(command, "print", 5)) {
-         println("Print a file");
+      } else if(strcmp_wl(command, "print ", 6)) {
+         char* argument = command + 6;
+         print("Print a file: ");
+         println(argument);
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {
