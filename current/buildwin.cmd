@@ -26,7 +26,7 @@ wlink ^
   OFFSET=0x0000 OPTION NODEFAULTLIBS^
   ORDER CLNAME CODE^
       SEGMENT ENTRY OFFSET=0x0000^
-  CLNAME DATA OFFSET=0x500
+  CLNAME DATA OFFSET=0x1000
 cd ..\..
 
 echo Adding bootsector to disk image...

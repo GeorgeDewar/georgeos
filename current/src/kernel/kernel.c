@@ -48,9 +48,11 @@ void kernelMain(void) {
 
          dirIndex = 0;
          while(diskBuffer.dir[dirIndex].name[0] != 0) {
-            printRange(diskBuffer.dir[dirIndex].name, 8, 1, ' ');
+            trimEnd(diskBuffer.dir[dirIndex].name);
+            trimEnd(diskBuffer.dir[dirIndex].extension);
+            print(diskBuffer.dir[dirIndex].name);
             printChar('.');
-            printRange(diskBuffer.dir[dirIndex].extension, 3, 1, ' ');
+            print(diskBuffer.dir[dirIndex].extension);
             print("  ");
             
             intToString(diskBuffer.dir[dirIndex].fileSize, responseString);

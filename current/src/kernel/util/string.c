@@ -76,3 +76,11 @@ void copyString(char* source, char* dest, int destStart) {
         index++;
     }
 }
+
+void trimEnd(char* source) {
+    int index = 0;
+    while(source[index] != 0 && source[index] != ' ') {
+        index++;
+    }
+    source[index] = 0;
+}
