@@ -3,7 +3,7 @@
 #include "components/console.h";
 #include "util/string.h";
 #include "bios/clock.h";
-#include "bios/disk.h";
+#include "components/filesystem.h";
 
 void reboot();
 
@@ -37,7 +37,7 @@ void kernelMain(void) {
          getTimeString(timeString);
          println(timeString);
       } else if(strcmp(command, "dir")) {
-         char responseCode = readRoot(diskBuffer.diskBuffer);
+         char responseCode = readRootDirectory(diskBuffer.diskBuffer);
          char responseString[16] = "";
 
          if(responseCode != 0) {
