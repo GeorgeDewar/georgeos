@@ -52,11 +52,6 @@ void kernelMain(void) {
             
             getFileName(diskBuffer.dir[dirIndex], filename);
             pad(filename, 14);
-            // trimEnd(diskBuffer.dir[dirIndex].name);
-            // trimEnd(diskBuffer.dir[dirIndex].extension);
-            // print(diskBuffer.dir[dirIndex].name);
-            // printChar('.');
-            // print(diskBuffer.dir[dirIndex].extension);
             print(filename);
             
             intToString(diskBuffer.dir[dirIndex].fileSize, responseString);
@@ -68,6 +63,8 @@ void kernelMain(void) {
             dirIndex++;
          }
          
+      } else if(strcmp_wl(command, "print", 5)) {
+         println("Print a file");
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

@@ -3,17 +3,18 @@
 #define ASCII_ZERO 0x30
 
 char strcmp(char *string1, char *string2) {
-    int len1 = strlen(string1);
-    int len2 = strlen(string2);
+    return strcmp_wl(string1, string2, 65535);
+}
+
+char strcmp_wl(char *string1, char *string2, unsigned int lengthToCompare) {
     int i = 0;
 
-    if (len1 != len2) {
-        return 0;
-    }
-
-    while(i < len1) {
+    while(i < lengthToCompare) {
+        if(string1[i] == 0 && string2[i] == 0) {
+            return 1; // end of both strings
+        }
         if(string1[i] != string2[i]) {
-            return 0;
+            return 0; // strings are not equal
         }
         i++;
     }
