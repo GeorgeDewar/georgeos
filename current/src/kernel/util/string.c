@@ -84,3 +84,13 @@ void trimEnd(char* source) {
     }
     source[index] = 0;
 }
+
+void pad(char* source, int length) {
+    int currentLength = strlen(source);
+    int index = currentLength;
+
+    for(index; index < length; index++) {
+        source[index] = ' ';
+    }
+    source[index] = 0;
+}

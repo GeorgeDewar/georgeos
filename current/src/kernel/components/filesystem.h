@@ -39,3 +39,4 @@ struct DirectoryEntry {
 
 void listFiles(char* buffer);
 char readRootDirectory(char* buffer);
+char getFileName(struct DirectoryEntry e, char* buffer);

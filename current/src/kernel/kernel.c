@@ -48,12 +48,16 @@ void kernelMain(void) {
 
          dirIndex = 0;
          while(diskBuffer.dir[dirIndex].name[0] != 0) {
-            trimEnd(diskBuffer.dir[dirIndex].name);
-            trimEnd(diskBuffer.dir[dirIndex].extension);
-            print(diskBuffer.dir[dirIndex].name);
-            printChar('.');
-            print(diskBuffer.dir[dirIndex].extension);
-            print("  ");
+            char filename[16] = "";
+            
+            getFileName(diskBuffer.dir[dirIndex], filename);
+            pad(filename, 14);
+            // trimEnd(diskBuffer.dir[dirIndex].name);
+            // trimEnd(diskBuffer.dir[dirIndex].extension);
+            // print(diskBuffer.dir[dirIndex].name);
+            // printChar('.');
+            // print(diskBuffer.dir[dirIndex].extension);
+            print(filename);
             
             intToString(diskBuffer.dir[dirIndex].fileSize, responseString);
             print(responseString);
