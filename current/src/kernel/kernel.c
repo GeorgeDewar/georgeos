@@ -39,15 +39,26 @@ void kernelMain(void) {
       } else if(strcmp(command, "dir")) {
          char responseCode = readRoot(diskBuffer.diskBuffer);
          char responseString[16] = "";
-         intToStringHex(responseCode, responseString);
-         println(responseString);
+
+         if(responseCode != 0) {
+            intToStringHex(responseCode, responseString);
+            print("Error 0x");
+            println(responseString);
+         }
 
          dirIndex = 0;
          while(diskBuffer.dir[dirIndex].name[0] != 0) {
             printRange(diskBuffer.dir[dirIndex].name, 8, 1, ' ');
             printChar('.');
             printRange(diskBuffer.dir[dirIndex].extension, 3, 1, ' ');
+            print("  ");
+            
+            intToString(diskBuffer.dir[dirIndex].fileSize, responseString);
+            print(responseString);
+            print(" bytes");
+            
             println("");
+
             dirIndex++;
          }
          
