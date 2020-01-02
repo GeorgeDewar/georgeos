@@ -5,13 +5,19 @@
 ; floppy for KERNEL.BIN (the GeorgeOS kernel), loads it and executes it.
 ; This must grow no larger than 512 bytes (one sector), with the final
 ; two bytes being the boot signature (AA55h). Note that in FAT12,
-; a cluster is the same as a sector: 512 bytes.
+; a cluster is the same as a sector: 512 bytes. KERNEL.BIN must be the
+; first file in the root directory.
 ; ==================================================================
 
     BITS 16
 
     %define LOAD_ADDRESS    7c00h          ; This is where the BIOS puts us
     org LOAD_ADDRESS                       ; Assume all code is at this offset
+
+    %define FAT             9E00h          ; Where in memory to put the FAT
+
+    %define KERNEL_SEGMENT  2000h          ; Where we are going to load the kernel
+    %define KERNEL_OFFSET   0000h          ;
 
     jmp short bootloader_start    ; Jump past disk description section
     nop                ; Pad out before disk description
@@ -47,9 +53,11 @@ FileSystem            db "FAT12   "    ; File system type: don't change!
 ; Main bootloader code
 ;
 ; Memory Map:
-; 0000 - 7BFF = Stack
+; 0000 - 7BFF = Stack       (grows downwards)
 ; 7C00 - 7DFF = Bootloader  (512 bytes)
-; 7E00 - 9E00 = Disk Buffer (8KB)
+; 7E00 - 9DFF = Disk Buffer (8KB)
+; 9E00 - AFFF = FAT         (4,608 bytes)
+; B000 - 
 
 bootloader_start:
     ; Set all segments to zero so that we only need to use offsets
@@ -77,86 +85,64 @@ bootloader_start:
     stc                         ; Set carry bit; a few BIOSes do not set properly on error
     int 13h                     ; Read sectors using BIOS
 
-    jnc search_dir              ; If read went OK, skip ahead
-    jmp fatal_error
+    jnc check_filename          ; If read went OK, skip ahead
+    jmp fatal_error             ; Else it's a fatal read error
 
-
-search_dir:
-    popa
-
-    mov ax, ds            ; Root dir is now in [buffer]
-    mov es, ax            ; Set DI to this info
+check_filename:
     mov di, buffer
-
-    mov cx, word [RootDirEntries]    ; Search all (224) entries
-    mov ax, 0            ; Searching at offset 0
-
-
-next_root_entry:
-    xchg cx, dx            ; We use CX in the inner loop...
-
-    mov si, kern_filename        ; Start searching for kernel filename
-    mov cx, 11
+    mov si, kern_filename       ; Start searching for kernel filename
+    mov cx, 11                  ; Repeat character comparison 11 times
     rep cmpsb
-    je found_file_to_load        ; Pointer DI will be at offset 11
+    je found_file_to_load       ; Success; the filename matches; jump ahead
 
-    add ax, 32            ; Bump searched entries by 1 (32 bytes per entry)
-
-    mov di, buffer            ; Point to next entry
-    add di, ax
-
-    xchg dx, cx            ; Get the original CX back
-    loop next_root_entry
-
-    mov si, file_not_found        ; If kernel is not found, bail out
+    mov si, wrong_file          ; The filename did not match; error
     call print_string
     jmp $
 
+found_file_to_load: 
+    ; Try to load the FAT into RAM
+    mov ax, 1                   ; Sector 1 = first sector of first FAT
+    call l2hts                  ; Calculate head/track/sector
 
-found_file_to_load:            ; Fetch cluster and load FAT into RAM    
-    mov ax, word [es:di+0Fh]    ; Offset 11 + 15 = 26, contains 1st cluster
-    mov word [cluster], ax
-
-    mov ax, 1            ; Sector 1 = first sector of first FAT
-    call l2hts
-
-    mov di, buffer            ; ES:BX points to our buffer
+    mov di, FAT                 ; Set ES:BX to point to our FAT buffer
     mov bx, di
 
-    mov ah, 2            ; int 13h params: read (FAT) sectors
-    mov al, 9            ; All 9 sectors of 1st FAT
+    mov ah, 2                   ; int 13h params: read (FAT) sectors
+    mov al, 9                   ; All 9 sectors of 1st FAT
 
-    stc
-    int 13h                ; Read sectors using the BIOS
+    stc                         ; Set carry bit; a few BIOSes do not set properly on error
+    int 13h                     ; Read sectors using the BIOS
 
-    jnc read_fat_ok            ; If read went OK, skip ahead
-    call fatal_error
-
+    jnc read_fat_ok             ; If read went OK, skip ahead
+    call fatal_error            ; Else it's a fatal read error
 
 read_fat_ok:
-    mov ax, 2000h            ; Segment where we'll load the kernel
+    ; Find the first cluster number of our kernel from the directory structure
+    mov ax, word [buffer + 26]  ; Offset 26 contains 1st cluster of file; first load into AX
+    mov word [cluster], ax      ; Then load into RAM
+
+    mov ax, KERNEL_SEGMENT      ; Set ES:BX to point to where we want to load the kernel
     mov es, ax
-    mov bx, 0
+    mov bx, KERNEL_OFFSET
 
-    mov ah, 2            ; int 13h floppy read params
-    mov al, 1
+    mov ah, 2                   ; int 13h floppy read params
+    mov al, 1                   ; Load one sector at a time
 
-    push ax                ; Save in case we (or int calls) lose it
+    push ax                     ; Save in case we (or int calls) lose it
 
-
-; Now we must load the FAT from the disk. Here's how we find out where it starts:
+; Now we must load the kernel file from the disk. Here's how we find out where it starts:
 ; FAT cluster 0 = media descriptor = 0F0h
 ; FAT cluster 1 = filler cluster = 0FFh
 ; Cluster start = ((cluster number) - 2) * SectorsPerCluster + (start of user)
 ;               = (cluster number) + 31
 
 load_file_sector:
-    mov ax, word [cluster]        ; Convert sector to logical
+    mov ax, word [cluster]      ; Convert cluster number to logical sector
     add ax, 31
 
-    call l2hts            ; Make appropriate params for int 13h
+    call l2hts                  ; Make appropriate params for int 13h
 
-    mov ax, 2000h            ; Set buffer past what we've already read
+    mov ax, KERNEL_SEGMENT            ; Set buffer past what we've already read
     mov es, ax
     mov bx, word [pointer]
 
@@ -183,7 +169,7 @@ calculate_next_cluster:
     mul bx
     mov bx, 2
     div bx                ; DX = [cluster] mod 2
-    mov si, buffer
+    mov si, FAT
     add si, ax            ; AX = word in FAT for the 12 bit entry
     mov ax, word [ds:si]
 
@@ -215,7 +201,7 @@ end:                    ; We've got the file to load!
     pop ax                ; Clean up the stack (AX was pushed earlier)
     mov dl, byte [bootdev]        ; Provide kernel with boot device info
 
-    jmp 2000h:0000h            ; Jump to entry point of loaded kernel!
+    jmp KERNEL_SEGMENT:KERNEL_OFFSET            ; Jump to entry point of loaded kernel!
 
 
 ; ------------------------------------------------------------------
@@ -275,7 +261,7 @@ l2hts:            ; Calculate head, track and sector settings for int 13h
     kern_filename    db "KERNEL  BIN"    ; MikeOS kernel filename
 
     disk_error    db "Floppy error! Press any key...", 0
-    file_not_found    db "KERNEL.BIN not found!", 0
+    wrong_file    db "KERNEL.BIN was not the first file on disk", 0
 
     bootdev        db 0     ; Boot device number
     cluster        dw 0     ; Cluster of the file we want to load
