@@ -121,13 +121,6 @@ read_fat_ok:
     mov ax, word [buffer + 26]  ; Offset 26 contains 1st cluster of file; first load into AX
     mov word [cluster], ax      ; Then load into RAM
 
-    mov ax, KERNEL_SEGMENT      ; Set ES:BX to point to where we want to load the kernel
-    mov es, ax
-    mov bx, KERNEL_OFFSET
-
-    mov ah, 2                   ; int 13h floppy read params
-    mov al, 1                   ; Load one sector at a time
-
     push ax                     ; Save in case we (or int calls) lose it
 
 ; Now we must load the kernel file from the disk. Here's how we find out where it starts:
@@ -146,8 +139,8 @@ load_file_sector:
     mov es, ax
     mov bx, word [pointer]
 
-    pop ax                ; Save in case we (or int calls) lose it
-    push ax
+    mov ah, 2                   ; int 13h floppy read params
+    mov al, 1                   ; Load one sector
 
     stc
     int 13h
