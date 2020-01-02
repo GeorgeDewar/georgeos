@@ -1,25 +1,27 @@
 	BITS 16
 
+    %define LOAD_ADDRESS    7c00h          ; This is where the BIOS puts us
+    org LOAD_ADDRESS                       ; Assume all code is at this offset
+
 start:
-	mov ax, 07C0h		; Set up 4K stack space after this bootloader
-	add ax, 288		; (4096 + 512) / 16 bytes per paragraph
-	mov ss, ax
-	mov sp, 4096
+    ; Set all segments to zero so that we only need to use offsets
+    mov ax, 0               ; Load 0 into ax
+    mov ds, ax              ; Set data segment to 0
+    mov ss, ax              ; Set stack segment to 0
+    mov sp, LOAD_ADDRESS    ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
 
-	mov ax, 07C0h		; Set data segment to where we're loaded
-	mov ds, ax
+	mov si, text_string		; Put string position into SI
+	call print_string		; Call our string-printing routine
 
+	jmp $					; Jump here - infinite loop!
 
-	mov si, text_string	; Put string position into SI
-	call print_string	; Call our string-printing routine
+; -----------------------------------------------------------------------------
+; Routine: print_string
+;
+; Print the string pointed to by SI to the screen using int 10h
+; -----------------------------------------------------------------------------
 
-	jmp $			; Jump here - infinite loop!
-
-
-	text_string db 'Welcome to GeorgeOS MBR Edition!', 0
-
-
-print_string:			; Routine: output string in SI to screen
+print_string:
 	mov ah, 0Eh		; int 10h 'print char' function
 
 .repeat:
@@ -32,6 +34,10 @@ print_string:			; Routine: output string in SI to screen
 .done:
 	ret
 
+; -----------------------------------------------------------------------------
+
+	; Put some raw data in
+	text_string db 'Welcome to GeorgeOS MBR Edition!', 0
 
 	times 510-($-$$) db 0	; Pad remainder of boot sector with 0s
-	dw 0xAA55		; The standard PC boot signature
+	dw 0xAA55				; The standard PC boot signature
