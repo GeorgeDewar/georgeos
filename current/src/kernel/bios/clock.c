@@ -1,4 +1,4 @@
-#include "string.h"
+#include "../util/string.h"
 #include "clock.h"
 
 #define READ_RTC_TIME        0x02
@@ -18,16 +18,16 @@ void getTimeString(char* buffer) {
     }
     
     intToStringHex(hour, temp);
-    copyString(temp, buffer, index, strlen(temp));
+    copyString(temp, buffer, index);
     index += strlen(temp);
     buffer[index++] = ':';
 
     intToStringHex((int) minute, temp);
-    copyString(temp, buffer, index, strlen(temp));
+    copyString(temp, buffer, index);
     index += strlen(temp);
     buffer[index++] = ':';
 
     intToStringHex((int) second, temp);
-    copyString(temp, buffer, index, strlen(temp));
+    copyString(temp, buffer, index);
     index += strlen(temp);
 }
