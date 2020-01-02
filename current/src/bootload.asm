@@ -55,6 +55,7 @@ bootloader_start:
     ; Set all segments to zero so that we only need to use offsets
     mov ax, 0               ; Load 0 into ax
     mov ds, ax              ; Set data segment to 0
+    mov es, ax              ; Set extra segment to 0 (used for disk access)
     mov ss, ax              ; Set stack segment to 0
     mov sp, LOAD_ADDRESS    ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
 
@@ -64,33 +65,20 @@ bootloader_start:
 ; Number of root = RootDirEntries * 32 bytes/entry / 512 bytes/sector = 14
 ; Start of user data = (start of root) + (number of root) = logical 33
 
-floppy_ok:                ; Ready to read first block of data
-    mov ax, 19            ; Root dir starts at logical sector 19
-    call l2hts
+    mov ax, 19                  ; Root dir starts at logical sector 19
+    call l2hts                  ; Calculate head/track/sector
 
-    mov si, buffer            ; Set ES:BX to point to our buffer (see end of code)
-    mov bx, ds
-    mov es, bx
+    mov si, buffer              ; Set ES:BX to point to our buffer (see end of code)
     mov bx, si
 
-    mov ah, 2            ; Params for int 13h: read floppy sectors
-    mov al, 14            ; And read 14 of them
+    mov ah, 2                   ; Params for int 13h: read floppy sectors
+    mov al, 14                  ; And read 14 of them
 
-    pusha                ; Prepare to enter loop
+    stc                         ; Set carry bit; a few BIOSes do not set properly on error
+    int 13h                     ; Read sectors using BIOS
 
-
-read_root_dir:
-    popa                ; In case registers are altered by int 13h
-    pusha
-
-    stc                ; A few BIOSes do not set properly on error
-    int 13h                ; Read sectors using BIOS
-
-    jnc search_dir            ; If read went OK, skip ahead
-    call reset_floppy        ; Otherwise, reset floppy controller and try again
-    jnc read_root_dir        ; Floppy reset OK?
-
-    jmp reboot            ; If not, fatal double error
+    jnc search_dir              ; If read went OK, skip ahead
+    jmp fatal_error
 
 
 search_dir:
@@ -122,10 +110,10 @@ next_root_entry:
 
     mov si, file_not_found        ; If kernel is not found, bail out
     call print_string
-    jmp reboot
+    jmp $
 
 
-found_file_to_load:            ; Fetch cluster and load FAT into RAM
+found_file_to_load:            ; Fetch cluster and load FAT into RAM    
     mov ax, word [es:di+0Fh]    ; Offset 11 + 15 = 26, contains 1st cluster
     mov word [cluster], ax
 
@@ -138,31 +126,14 @@ found_file_to_load:            ; Fetch cluster and load FAT into RAM
     mov ah, 2            ; int 13h params: read (FAT) sectors
     mov al, 9            ; All 9 sectors of 1st FAT
 
-    pusha                ; Prepare to enter loop
-
-
-read_fat:
-    popa                ; In case registers are altered by int 13h
-    pusha
-
     stc
     int 13h                ; Read sectors using the BIOS
 
     jnc read_fat_ok            ; If read went OK, skip ahead
-    call reset_floppy        ; Otherwise, reset floppy controller and try again
-    jnc read_fat            ; Floppy reset OK?
-
-; ******************************************************************
-fatal_disk_error:
-; ******************************************************************
-    mov si, disk_error        ; If not, print error message and reboot
-    call print_string
-    jmp reboot            ; Fatal double error
+    call fatal_error
 
 
 read_fat_ok:
-    popa
-
     mov ax, 2000h            ; Segment where we'll load the kernel
     mov es, ax
     mov bx, 0
@@ -197,8 +168,7 @@ load_file_sector:
 
     jnc calculate_next_cluster    ; If there's no error...
 
-    call reset_floppy        ; Otherwise, reset floppy and retry
-    jmp load_file_sector
+    jmp fatal_error
 
 
     ; In the FAT, cluster values are stored in 12 bits, so we have to
@@ -251,12 +221,9 @@ end:                    ; We've got the file to load!
 ; ------------------------------------------------------------------
 ; BOOTLOADER SUBROUTINES
 
-reboot:
-    mov ax, 0
-    int 16h                ; Wait for keystroke
-    mov ax, 0
-    int 19h                ; Reboot the system
-
+fatal_error:
+    mov si, disk_error
+    call print_string
 
 print_string:                ; Output string in SI to screen
     pusha
@@ -273,19 +240,6 @@ print_string:                ; Output string in SI to screen
 .done:
     popa
     ret
-
-
-reset_floppy:        ; IN: [bootdev] = boot device; OUT: carry set on error
-    push ax
-    push dx
-    mov ax, 0
-    mov dl, byte [bootdev]
-    stc
-    int 13h
-    pop dx
-    pop ax
-    ret
-
 
 l2hts:            ; Calculate head, track and sector settings for int 13h
             ; IN: logical sector in AX, OUT: correct registers for int 13h
