@@ -25,29 +25,27 @@
 
 ; ------------------------------------------------------------------
 ; Disk description table, to make it a valid floppy
-; Note: some of these values are hard-coded in the source!
 ; Values are those used by IBM for 1.44 MB, 3.5" diskette
 
-OEMLabel            db "GEORGEOS"    ; Disk label
-BytesPerSector        dw 512            ; Bytes per sector
-SectorsPerCluster    db 1            ; Sectors per cluster
-ReservedForBoot        dw 1            ; Reserved sectors for boot record
-NumberOfFats        db 2            ; Number of copies of the FAT
-RootDirEntries        dw 224            ; Number of entries in root dir
-                                    ; (224 * 32 = 7168 = 14 sectors to read)
-LogicalSectors        dw 2880            ; Number of logical sectors
-MediumByte            db 0F0h            ; Medium descriptor byte
-SectorsPerFat        dw 9            ; Sectors per FAT
-SectorsPerTrack        dw 18            ; Sectors per track (36/cylinder)
-Sides                dw 2            ; Number of sides/heads
-HiddenSectors        dd 0            ; Number of hidden sectors
-LargeSectors        dd 0            ; Number of LBA sectors
-DriveNo                dw 0            ; Drive No: 0
-Signature            db 41            ; Drive signature: 41 for floppy
-VolumeID            dd 00000000h    ; Volume ID: any number
-VolumeLabel            db "GEORGEOS   "; Volume Label: any 11 chars
-FileSystem            db "FAT12   "    ; File system type: don't change!
-
+OEMLabel            db "GEORGEOS"     ; Disk label
+BytesPerSector      dw 512            ; Bytes per sector
+SectorsPerCluster   db 1              ; Sectors per cluster
+ReservedForBoot     dw 1              ; Reserved sectors for boot record
+NumberOfFats        db 2              ; Number of copies of the FAT
+RootDirEntries      dw 224            ; Number of entries in root dir
+                                      ; (224 * 32 = 7168 = 14 sectors to read)
+LogicalSectors      dw 2880           ; Number of logical sectors
+MediumByte          db 0F0h           ; Medium descriptor byte
+SectorsPerFat       dw 9              ; Sectors per FAT
+SectorsPerTrack     dw 18             ; Sectors per track (36/cylinder)
+Sides               dw 2              ; Number of sides/heads
+HiddenSectors       dd 0              ; Number of hidden sectors
+LargeSectors        dd 0              ; Number of LBA sectors
+DriveNo             dw 0              ; Drive No: 0
+Signature           db 41             ; Drive signature: 41 for floppy
+VolumeID            dd 00000000h      ; Volume ID: any number
+VolumeLabel         db "GEORGEOS   "  ; Volume Label: any 11 chars
+FileSystem          db "FAT12   "     ; File system type: don't change!
 
 ; ------------------------------------------------------------------
 ; Main bootloader code
@@ -61,12 +59,11 @@ FileSystem            db "FAT12   "    ; File system type: don't change!
 
 bootloader_start:
     ; Set all segments to zero so that we only need to use offsets
-    mov ax, 0               ; Load 0 into ax
-    mov ds, ax              ; Set data segment to 0
-    mov es, ax              ; Set extra segment to 0 (used for disk access)
-    mov ss, ax              ; Set stack segment to 0
-    mov sp, LOAD_ADDRESS    ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
-
+    mov ax, 0                   ; Load 0 into ax
+    mov ds, ax                  ; Set data segment to 0
+    mov es, ax                  ; Set extra segment to 0 (used for disk access)
+    mov ss, ax                  ; Set stack segment to 0
+    mov sp, LOAD_ADDRESS        ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
 
 ; First, we need to load the root directory from the disk. Technical details:
 ; Start of root = ReservedForBoot + NumberOfFats * SectorsPerFat = logical 19
@@ -95,7 +92,7 @@ check_filename:
     rep cmpsb
     je found_file_to_load       ; Success; the filename matches; jump ahead
 
-    mov si, wrong_file          ; The filename did not match; error
+    mov si, wrong_file          ; The filename did not match; print error and stop
     call print_string
     jmp $
 
@@ -121,7 +118,6 @@ read_fat_ok:
     mov ax, word [buffer + 26]  ; Offset 26 contains 1st cluster of file; first load into AX
     mov word [cluster], ax      ; Then load into RAM
 
-    push ax                     ; Save in case we (or int calls) lose it
 
 ; Now we must load the kernel file from the disk. Here's how we find out where it starts:
 ; FAT cluster 0 = media descriptor = 0F0h
@@ -135,8 +131,8 @@ load_file_sector:
 
     call l2hts                  ; Make appropriate params for int 13h
 
-    mov ax, KERNEL_SEGMENT            ; Set buffer past what we've already read
-    mov es, ax
+    mov ax, KERNEL_SEGMENT      ; Set buffer to where we want the kernel to load, offset by
+    mov es, ax                  ; the current pointer (location of the next cluster)
     mov bx, word [pointer]
 
     mov ah, 2                   ; int 13h floppy read params
@@ -145,57 +141,62 @@ load_file_sector:
     stc
     int 13h
 
-    jnc calculate_next_cluster    ; If there's no error...
+    jnc calculate_next_cluster  ; If there's no error...
+    jmp fatal_error             ; Else, fatal read error
 
-    jmp fatal_error
-
-
-    ; In the FAT, cluster values are stored in 12 bits, so we have to
-    ; do a bit of maths to work out whether we're dealing with a byte
-    ; and 4 bits of the next byte -- or the last 4 bits of one byte
-    ; and then the subsequent byte!
+; In the FAT, cluster values are stored in 12 bits, so we have to do a bit of maths to work out
+; whether we're dealing with a byte and 4 bits of the next byte -- or the last 4 bits of one byte
+; and then the subsequent byte!
 
 calculate_next_cluster:
     mov ax, [cluster]
-    mov dx, 0
-    mov bx, 3
-    mul bx
-    mov bx, 2
-    div bx                ; DX = [cluster] mod 2
-    mov si, FAT
-    add si, ax            ; AX = word in FAT for the 12 bit entry
+
+    call print_dot              ; One dot for each cluster loaded, so we can see what's happening
+
+    ; Set AX to [cluster] * 3 / 2, i.e. the memory address of the word containing the next cluster address
+    ; Set DX = [cluster] mod 2, to determine whether it is even or odd
+
+    mov dx, 0                   ; Segment address
+    mov bx, 3                   ; BX = 3
+    mul bx                      ; AX = AX * BX = AX * 3
+    mov bx, 2                   ; BX = 2
+    div bx                      ; AX = AX / BX = AX / 2; DX = remainder
+
+    mov si, FAT                 ; AX = word in FAT for the 12 bit entry
+    add si, ax
     mov ax, word [ds:si]
 
-    or dx, dx            ; If DX = 0 [cluster] is even; if DX = 1 then it's odd
-
-    jz even                ; If [cluster] is even, drop last 4 bits of word
-                    ; with next cluster; if odd, drop first 4 bits
+    or dx, dx                   ; If DX = 0 [cluster] is even; if DX = 1 then it's odd
+    jz even                     ; If [cluster] is even, drop last 4 bits of word
+                                ; with next cluster; if odd, drop first 4 bits
 
 odd:
-    shr ax, 4            ; Shift out first 4 bits (they belong to another entry)
-    jmp short next_cluster_cont
-
+    shr ax, 4                   ; Shift out first 4 bits (they belong to another entry)
+    jmp next_cluster_cont
 
 even:
-    and ax, 0FFFh            ; Mask out final 4 bits
-
+    and ax, 0FFFh               ; Mask out final 4 bits
 
 next_cluster_cont:
-    mov word [cluster], ax        ; Store cluster
+    mov word [cluster], ax      ; Store cluster number
 
-    cmp ax, 0FF8h            ; FF8h = end of file marker in FAT12
-    jae end
+    cmp ax, 0FF8h               ; FF8h = end of file marker in FAT12
+    jae end                     ; Jump if we are at the end of the file
 
-    add word [pointer], 512        ; Increase buffer pointer 1 sector length
-    jmp load_file_sector
+    add word [pointer], 512     ; Else, increase buffer pointer 1 sector length
+    jmp load_file_sector        ; Load the next sector
 
+end:
+    mov si, new_line            ; Print a new line after all those dots
+    call print_string
 
-end:                    ; We've got the file to load!
-    pop ax                ; Clean up the stack (AX was pushed earlier)
-    mov dl, byte [bootdev]        ; Provide kernel with boot device info
+    mov si, jumping             ; Print our last status message
+    call print_string
 
-    jmp KERNEL_SEGMENT:KERNEL_OFFSET            ; Jump to entry point of loaded kernel!
+    call pause                  ; Wait for a keystroke
 
+    ; Jump to entry point of loaded kernel!
+    jmp KERNEL_SEGMENT:KERNEL_OFFSET
 
 ; ------------------------------------------------------------------
 ; BOOTLOADER SUBROUTINES
@@ -204,57 +205,85 @@ fatal_error:
     mov si, disk_error
     call print_string
 
-print_string:                ; Output string in SI to screen
+pause:
     pusha
+    mov ax, 0
+	int 16h				        ; Wait for keystroke
+    popa
+    ret
 
-    mov ah, 0Eh            ; int 10h teletype function
+print_dot:
+    pusha
+    mov ah, 0Eh                 ; int 10h teletype function
+    mov al, '.'                 ; char to print
+    int 10h                     ; Otherwise, print it
+    popa
+    ret
+
+; -----------------------------------------------------------------------------
+; Routine: print_string
+;
+; Print the string pointed to by SI to the screen using int 10h
+; -----------------------------------------------------------------------------
+
+print_string:
+    pusha
+    mov ah, 0Eh                 ; int 10h teletype function
 
 .repeat:
-    lodsb                ; Get char from string
-    cmp al, 0
-    je .done            ; If char is zero, end of string
-    int 10h                ; Otherwise, print it
-    jmp short .repeat
+    lodsb                       ; Get char from string
+    cmp al, 0                   ; If char is zero, end of string
+    je .done                    ; So jump to end
+    int 10h                     ; Otherwise, print it
+    jmp .repeat                 ; Repeat for the next character
 
 .done:
     popa
     ret
 
-l2hts:            ; Calculate head, track and sector settings for int 13h
-            ; IN: logical sector in AX, OUT: correct registers for int 13h
+; -----------------------------------------------------------------------------
+; Routine: l2hts
+;
+; Calculate head, track and sector for int 13h usage from a logical sector
+; number (AX). Output values are placed in the appropriate registers for int
+; 13h (CL, CH, DL, DH).
+; -----------------------------------------------------------------------------
+l2hts:
     push bx
     push ax
 
-    mov bx, ax            ; Save logical sector
+    mov bx, ax                  ; Save logical sector
 
-    mov dx, 0            ; First the sector
+    mov dx, 0                   ; First the sector
     div word [SectorsPerTrack]
-    add dl, 01h            ; Physical sectors start at 1
-    mov cl, dl            ; Sectors belong in CL for int 13h
+    add dl, 01h                 ; Physical sectors start at 1
+    mov cl, dl                  ; Sectors belong in CL for int 13h
     mov ax, bx
 
-    mov dx, 0            ; Now calculate the head
+    mov dx, 0                   ; Now calculate the head
     div word [SectorsPerTrack]
     mov dx, 0
     div word [Sides]
-    mov dh, dl            ; Head/side
-    mov ch, al            ; Track
+    mov dh, dl                  ; Head/side
+    mov ch, al                  ; Track
 
     pop ax
     pop bx
 
-    mov dl, byte [bootdev]        ; Set correct device
+    mov dl, byte [bootdev]      ; Set correct device
 
     ret
 
+; -----------------------------------------------------------------------------
+; Strings and variables
+; -----------------------------------------------------------------------------
 
-; ------------------------------------------------------------------
-; STRINGS AND VARIABLES
+    kern_filename  db "KERNEL  BIN"    ; Kernel filename
 
-    kern_filename    db "KERNEL  BIN"    ; MikeOS kernel filename
-
-    disk_error    db "Floppy error! Press any key...", 0
-    wrong_file    db "KERNEL.BIN was not the first file on disk", 0
+    disk_error     db "Floppy error! Press any key...", 0
+    wrong_file     db "KERNEL.BIN was not the first file on disk", 0
+    jumping        db "Jumping to Kernel...", 0
+    new_line       db 0x0D, 0x0A, 0
 
     bootdev        db 0     ; Boot device number
     cluster        dw 0     ; Cluster of the file we want to load
