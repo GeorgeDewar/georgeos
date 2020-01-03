@@ -64,9 +64,18 @@ void kernelMain(void) {
          }
          
       } else if(strcmp_wl(command, "print ", 6)) {
-         char* argument = command + 6;
+         char* filename = command + 6;
+         int clusterNumber = -2;
+         char clusterNumberString[16] = "";
          print("Print a file: ");
-         println(argument);
+         println(filename);
+         clusterNumber = findFile(diskBuffer.dir, 16, filename);
+         if(clusterNumber == -1) {
+            println("File not found");
+            continue;
+         }
+         intToString(clusterNumber, clusterNumberString);
+         println(clusterNumberString);
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

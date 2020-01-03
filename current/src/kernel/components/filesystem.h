@@ -7,6 +7,7 @@
 #define ROOT_DIR_ENTRIES        224
 #define DIR_ENTRY_SIZE          32
 
+#define FAT_0_START             NUM_RESERVED_SECTORS
 #define ROOT_DIR_START          NUM_RESERVED_SECTORS + (NUMBER_OF_FATS * SECTORS_PER_FAT)
 #define ROOT_DIR_LENGTH         (ROOT_DIR_ENTRIES * DIR_ENTRY_SIZE) / BYTES_PER_SECTOR
 
@@ -40,3 +41,7 @@ struct DirectoryEntry {
 void listFiles(char* buffer);
 char readRootDirectory(char* buffer);
 char getFileName(struct DirectoryEntry e, char* buffer);
+
+char loadFile(char* filename, char* buffer);
+unsigned int findFile(struct DirectoryEntry dir[], int directoryLength, char* filename);
+static unsigned int getFATEntry(unsigned int cluster_num);
