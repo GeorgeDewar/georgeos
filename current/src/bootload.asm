@@ -65,6 +65,13 @@ bootloader_start:
     mov ss, ax                  ; Set stack segment to 0
     mov sp, LOAD_ADDRESS        ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
 
+    mov ah, 0x00                ; Set video mode to clear the screen
+    mov al, 0x03                ; TEXT 80/25/16
+    int 10h
+
+    mov si, bootloader_hi
+    call print_string
+
 ; First, we need to load the root directory from the disk. Technical details:
 ; Start of root = ReservedForBoot + NumberOfFats * SectorsPerFat = logical 19
 ; Number of root = RootDirEntries * 32 bytes/entry / 512 bytes/sector = 14
@@ -96,7 +103,10 @@ check_filename:
     call print_string
     jmp $
 
-found_file_to_load: 
+found_file_to_load:
+    mov si, found_kernel
+    call print_string
+
     ; Try to load the FAT into RAM
     mov ax, 1                   ; Sector 1 = first sector of first FAT
     call l2hts                  ; Calculate head/track/sector
@@ -114,6 +124,9 @@ found_file_to_load:
     call fatal_error            ; Else it's a fatal read error
 
 read_fat_ok:
+    mov si, loading_kernel
+    call print_string
+
     ; Find the first cluster number of our kernel from the directory structure
     mov ax, word [buffer + 26]  ; Offset 26 contains 1st cluster of file; first load into AX
     mov word [cluster], ax      ; Then load into RAM
@@ -193,7 +206,7 @@ end:
     mov si, jumping             ; Print our last status message
     call print_string
 
-    call pause                  ; Wait for a keystroke
+    ;call pause                  ; Wait for a keystroke
 
     ; Jump to entry point of loaded kernel!
     jmp KERNEL_SEGMENT:KERNEL_OFFSET
@@ -238,6 +251,11 @@ print_string:
     jmp .repeat                 ; Repeat for the next character
 
 .done:
+    mov al, 0x0D                ; Print CR and NL
+    int 10h
+    mov al, 0x0A
+    int 10h
+
     popa
     ret
 
@@ -280,11 +298,15 @@ l2hts:
 
     kern_filename  db "KERNEL  BIN"    ; Kernel filename
 
-    disk_error     db "Floppy error! Press any key...", 0
-    wrong_file     db "KERNEL.BIN was not the first file on disk", 0
-    jumping        db "Jumping to Kernel...", 0
-    new_line       db 0x0D, 0x0A, 0
+    bootloader_hi  db "Starting GeorgeOS", 0
+    found_kernel   db "Loading FAT", 0
+    loading_kernel db "Loading Kernel",  0
+    jumping        db "Jumping to Kernel", 0
+    new_line       db 0
 
+    disk_error     db "Disk read error", 0
+    wrong_file     db "KERNEL.BIN is not the first file on disk", 0
+    
     bootdev        db 0     ; Boot device number
     cluster        dw 0     ; Cluster of the file we want to load
     pointer        dw 0     ; Pointer into Buffer, for loading kernel
