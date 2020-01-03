@@ -67,22 +67,23 @@ void kernelMain(void) {
          
       } else if(strcmp_wl(command, "print ", 6)) {
          char* filename = command + 6;
-         int responseCode;
+         int length;
          
          readRootDirectory(diskBuffer.diskBuffer);
-         
-         print("Print a file: ");
-         println(filename);
+         length = (int) loadFile(diskBuffer.dir, 16, filename, fileBuffer);
 
-         //findFile(diskBuffer.dir, 16, filename);
-
-         responseCode = loadFile(diskBuffer.dir, 16, filename, fileBuffer);
-
-         if(responseCode != 0) {
+         if(length < 0) { // length is actually an error code
             println("Couldn't load this file");
             continue;
          }
-         printRange(fileBuffer, 2048, 0, 0);
+
+         print("Length: ");
+         printInt(length);
+         println(" bytes");
+         println("");
+
+         printRange(fileBuffer, length, 0, 0);
+         println("");
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

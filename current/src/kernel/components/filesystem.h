@@ -43,6 +43,6 @@ char readRootDirectory(char* buffer);
 char getFileName(struct DirectoryEntry e, char* buffer);
 
 char loadFAT();
-char loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, char* buffer);
+long loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, char* buffer);
 unsigned int findFile(struct DirectoryEntry dir[], int directoryLength, char* filename);
 static unsigned int getFATEntry(unsigned int cluster_num);

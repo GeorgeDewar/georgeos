@@ -37,47 +37,37 @@ char loadFAT() {
     return readSectorsLBA(FAT_0_START, SECTORS_PER_FAT, FAT);
 }
 
-char loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, char* buffer) {
-    int clusterIndex = 0;
+long loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, char* buffer) {
+    int clusterIndex = 1; // we print the first cluster outside the loop
     int readResult;
+    unsigned int fileIndex;
     unsigned int cluster;
-    
-    println("Start");
 
     // Find the first cluster number from the directory entry
-    cluster = findFile(dir, directoryLength, filename);
-    if(cluster == -1) return -1;
-
-    print("Found first cluster: ");
-    printInt(cluster);
-    println("");
+    fileIndex = findFile(dir, directoryLength, filename);
+    if(fileIndex == -1) return -1;
+    cluster = dir[fileIndex].startOfFile;
 
     readResult = readSectorsLBA(cluster + 31, 1, buffer);
-    if(readResult != 0) return readResult; // Error
-    println("Loaded first cluster");
+    if(readResult != 0) return readResult * -1; // Error
 
     while(1==1) {
         cluster = getFATEntry(cluster);
         if(cluster == 0xFFF) break; // we've read the last cluster already
-        println("Found cluster: ");
-        printInt(cluster);
-        println("");
-        getChar();
 
         readResult = readSectorsLBA(cluster + 31, 1, buffer + (BYTES_PER_SECTOR * clusterIndex));
-        if(readResult != 0) return readResult; // Error
-        println("Loaded cluster");
+        if(readResult != 0) return readResult * -1; // Error
 
         clusterIndex++;
     }
 
-    return 0;
+    return dir[fileIndex].fileSize;
 }
 
 // Private functions
 
 /*
- * Find a file and return its first cluster number.
+ * Find a file and return its index within the directory.
  * 
  * Returns -1 if the file cannot be found
  */
@@ -85,10 +75,12 @@ unsigned int findFile(struct DirectoryEntry dir[], int directoryLength, char* fi
     int i;
     for(i=0; i<directoryLength; i++) {
         char thisFilename[16];
+        if(dir[i].name[0] == 0) {
+            continue; // No file here
+        }
         getFileName(dir[i], thisFilename);
-        println(thisFilename);
         if(strcmp(filename, thisFilename)) {
-            return dir[i].startOfFile;
+            return i;
         }
     }
     return -1;
@@ -101,10 +93,6 @@ static unsigned int getFATEntry(unsigned int cluster_num) {
     /* this involves some really ugly bit shifting.  This probably
        only works on a little-endian machine. */
     offset = (3 * (cluster_num / 2));
-
-    print("Offset: ");
-    printInt(offset);
-    println("");
 
     if (cluster_num % 2 == 0) {
         b1 = *(FAT + offset);
