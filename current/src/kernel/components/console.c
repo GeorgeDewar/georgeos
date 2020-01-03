@@ -34,18 +34,20 @@ void getString(char* buffer, char echo) {
     int index = 0;
     char c;
     while((c = getChar()) != '\r') {
-        if(c == '\b') {
+        if(c == '\b' && index > 0) {
             printChar('\b');
             printChar(' ');
             printChar('\b');
             index--; // Backspace should decrement the counter to remove the last character
         }
-        else {
+        else if (c >= 32 && c <= 126) {
             if(echo == 1) {
                 printChar(c);
             }
             buffer[index] = c;
             index++;
+        } else {
+            // Unhandled character (probably a control code)
         }
     }
     if(echo == 1) println("");
