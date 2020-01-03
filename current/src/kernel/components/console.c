@@ -34,11 +34,19 @@ void getString(char* buffer, char echo) {
     int index = 0;
     char c;
     while((c = getChar()) != '\r') {
-        if(echo == 1) {
-            printChar(c);
+        if(c == '\b') {
+            printChar('\b');
+            printChar(' ');
+            printChar('\b');
+            index--; // Backspace should decrement the counter to remove the last character
         }
-        buffer[index] = c;
-        index++;
+        else {
+            if(echo == 1) {
+                printChar(c);
+            }
+            buffer[index] = c;
+            index++;
+        }
     }
     if(echo == 1) println("");
     buffer[index] = 0; // NULL byte to end string
