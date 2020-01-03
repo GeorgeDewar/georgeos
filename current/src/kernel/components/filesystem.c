@@ -2,8 +2,10 @@
 
 #include "../bios/disk.h";
 
+char FAT[SECTORS_PER_FAT * BYTES_PER_SECTOR];
+
 char readRootDirectory(char* buffer) {
-    return readSectorLBA(ROOT_DIR_START, buffer);
+    return readSectorsLBA(ROOT_DIR_START, 1, buffer);
 }
 
 char getFileName(struct DirectoryEntry e, char* buffer) {
@@ -24,4 +26,8 @@ char getFileName(struct DirectoryEntry e, char* buffer) {
     }
 
     return bufferIndex; // length of filename
+}
+
+char loadFAT() {
+    return readSectorsLBA(2, 9, FAT);
 }
