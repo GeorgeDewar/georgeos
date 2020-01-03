@@ -15,13 +15,15 @@ union DirBuf {
     char diskBuffer[512];
     struct DirectoryEntry dir[16];
 };
-
 union DirBuf diskBuffer;
+
+char fileBuffer[8192];
 
 void kernelMain(void) {
    int dirIndex = 0;
 
    clearScreen();
+   loadFAT();
    println(hello);
    
    while(1==1) {    
@@ -65,17 +67,22 @@ void kernelMain(void) {
          
       } else if(strcmp_wl(command, "print ", 6)) {
          char* filename = command + 6;
-         int clusterNumber = -2;
-         char clusterNumberString[16] = "";
+         int responseCode;
+         
+         readRootDirectory(diskBuffer.diskBuffer);
+         
          print("Print a file: ");
          println(filename);
-         clusterNumber = findFile(diskBuffer.dir, 16, filename);
-         if(clusterNumber == -1) {
-            println("File not found");
+
+         //findFile(diskBuffer.dir, 16, filename);
+
+         responseCode = loadFile(diskBuffer.dir, 16, filename, fileBuffer);
+
+         if(responseCode != 0) {
+            println("Couldn't load this file");
             continue;
          }
-         intToString(clusterNumber, clusterNumberString);
-         println(clusterNumberString);
+         printRange(fileBuffer, 2048, 0, 0);
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

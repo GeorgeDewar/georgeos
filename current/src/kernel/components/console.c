@@ -1,5 +1,6 @@
 #include "../bios/video.h";
 #include "../bios/keyboard.h";
+#include "../util/string.h";
 
 void print(char* s) {
    while(*s != 0) {
@@ -21,6 +22,12 @@ void printRange(char* s, int bytes, char stopAtNull, char nullCharacter) {
         }
         printChar(s[i]);
     }
+}
+
+void printInt(int number) {
+    char buffer[16];
+    intToString(number, buffer);
+    print(buffer);
 }
 
 void getString(char* buffer, char echo) {
