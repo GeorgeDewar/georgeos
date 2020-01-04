@@ -88,7 +88,7 @@ void kernelMain(void) {
       } else if(strcmp_wl(command, "run ", 4)) {
          char* filename = command + 4;
          int length;
-         void (*jump)(void) = 0x8000;
+         void (*jump)(void) = program;
          
          readRootDirectory(diskBuffer.diskBuffer);
          length = (int) loadFile(diskBuffer.dir, 16, filename, program);
@@ -99,10 +99,6 @@ void kernelMain(void) {
          }
 
          jump();
-
-         // __asm {
-         //    jmp 0000h:8000h
-         // }
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {
