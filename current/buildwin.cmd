@@ -3,7 +3,7 @@
 echo Assembling bootloader...
 nasm -O0 -f bin -o build\bootload.bin src\bootload.asm
 
-echo Assembling GeorgeOS kernel...
+echo Compiling GeorgeOS kernel...
 
 wasm -q -0 -fo=build\kernel\entry.obj src\kernel\entry.asm || exit /b
 
@@ -18,6 +18,9 @@ wcc %CC_OPTS% -fo=build\kernel\filesystem.obj src\kernel\components\filesystem.c
 wcc %CC_OPTS% -fo=build\kernel\console.obj src\kernel\components\console.c || exit /b
 
 wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
+
+echo Compiling sample application...
+nasm -O0 -f bin -o data\sayhi.bin src\programs\sayhi.asm
 
 cd build\kernel
 wlink ^

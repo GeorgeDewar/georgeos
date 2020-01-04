@@ -18,6 +18,7 @@ union DirBuf {
 union DirBuf diskBuffer;
 
 char fileBuffer[8192];
+char *program = (char *) 32768;
 
 void kernelMain(void) {
    int dirIndex = 0;
@@ -84,6 +85,24 @@ void kernelMain(void) {
 
          printRange(fileBuffer, length, 0, 0);
          println("");
+      } else if(strcmp_wl(command, "run ", 6)) {
+         char* filename = command + 4;
+         int length;
+         void (code *jump)(void) = 0x8000;
+         
+         readRootDirectory(diskBuffer.diskBuffer);
+         length = (int) loadFile(diskBuffer.dir, 16, filename, program);
+
+         if(length < 0) { // length is actually an error code
+            println("Couldn't load this file");
+            continue;
+         }
+
+         jump();
+
+         // __asm {
+         //    jmp 0000h:8000h
+         // }
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {
