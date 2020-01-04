@@ -20,7 +20,7 @@ wcc %CC_OPTS% -fo=build\kernel\console.obj src\kernel\components\console.c || ex
 wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
 
 echo Compiling sample application...
-nasm -O0 -f bin -o data\sayhi.bin src\programs\sayhi.asm
+nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
 
 cd build\kernel
 wlink ^
