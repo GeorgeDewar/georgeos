@@ -3,3 +3,14 @@ Decisions:
 - BIOS vs Direct
 
 1. Bootloader loads kernel.bin
+
+
+
+
+---
+
+https://github.com/alexfru/SmallerC used/recommended by 2 of 3 MikeOS C libraries
+
+https://github.com/alexfru/SmallerC/tree/master/v0100/srclib includes a standard library for C with int 21h DOS calls and int 80h Linux calls
+
+bcc = Bruce's C Compiler, only in Linux?

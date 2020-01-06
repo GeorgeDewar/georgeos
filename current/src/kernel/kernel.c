@@ -88,7 +88,7 @@ void kernelMain(void) {
       } else if(strcmp_wl(command, "run ", 4)) {
          char* filename = command + 4;
          int length;
-         void (*jump)(void) = program;
+         void (*jump)(void) = 0x8000;
          
          readRootDirectory(diskBuffer.diskBuffer);
          length = (int) loadFile(diskBuffer.dir, 16, filename, program);
