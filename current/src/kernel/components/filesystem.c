@@ -1,9 +1,9 @@
-#include "filesystem.h";
+#include "filesystem.h"
 
-#include "../bios/disk.h";
-#include "../bios/keyboard.h";
-#include "../util/string.h";
-#include "../components/console.h";
+#include "../bios/disk.h"
+#include "../bios/keyboard.h"
+#include "../util/string.h"
+#include "../components/console.h"
 
 char FAT[SECTORS_PER_FAT * BYTES_PER_SECTOR];
 
@@ -94,14 +94,14 @@ static unsigned int getFATEntry(unsigned int cluster_num) {
        only works on a little-endian machine. */
     offset = (3 * (cluster_num / 2));
 
-    if (cluster_num % 2 == 0) {
-        b1 = *(FAT + offset);
-        b2 = *(FAT + offset + 1);
-        return ((0x0f & b2) << 8) | b1;
-    }
-    else {
+    // if (cluster_num % 2 == 0) {
+    //     b1 = *(FAT + offset);
+    //     b2 = *(FAT + offset + 1);
+    //     return ((0x0f & b2) << 8) | b1;
+    // }
+    // else {
         b1 = *(FAT + offset + 1);
         b2 = *(FAT + offset + 2);
         return b2 << 4 | ((0xf0 & b1) >> 4);
-    }
+    // }
 }

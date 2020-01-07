@@ -1,9 +1,9 @@
-#include "bios/video.h";
-#include "bios/keyboard.h";
-#include "components/console.h";
-#include "util/string.h";
-#include "bios/clock.h";
-#include "components/filesystem.h";
+#include "bios/video.h"
+#include "bios/keyboard.h"
+#include "components/console.h"
+#include "util/string.h"
+#include "bios/clock.h"
+#include "components/filesystem.h"
 
 void reboot();
 
@@ -20,7 +20,7 @@ union DirBuf diskBuffer;
 char fileBuffer[8192];
 char *program = (char *) 32768;
 
-void kernelMain(void) {
+void main(void) {
    int dirIndex = 0;
 
    clearScreen();
@@ -36,12 +36,12 @@ void kernelMain(void) {
       } else if(strcmp(command, "reboot")) {
          reboot();
       } else if(strcmp(command, "time")) {
-         char timeString[16] = "";
+         char timeString[16];
          getTimeString(timeString);
          println(timeString);
       } else if(strcmp(command, "dir")) {
          char responseCode = readRootDirectory(diskBuffer.diskBuffer);
-         char responseString[16] = "";
+         char responseString[16];
 
          if(responseCode != 0) {
             intToStringHex(responseCode, responseString);
@@ -51,7 +51,7 @@ void kernelMain(void) {
 
          dirIndex = 0;
          while(diskBuffer.dir[dirIndex].name[0] != 0) {
-            char filename[16] = "";
+            char filename[16];
             
             getFileName(diskBuffer.dir[dirIndex], filename);
             pad(filename, 14);
@@ -108,5 +108,7 @@ void kernelMain(void) {
 }
 
 void reboot() {
-   __asm{ int 19h }
+   #asm
+      int 0x19
+   #endasm
 }

@@ -32,14 +32,14 @@ int strlen(char *string) {
 
 void intToString(int number, char* string) {
     int index = 0;
-    char buffer[16] = "";
+    char buffer[16];
     int len;
 
-    do {
-        int thisPlace = number % 10;
-        buffer[index++] = ASCII_ZERO + thisPlace;
-        number = number / 10;
-    } while(number > 0);
+    // do {
+    //     int thisPlace = number % 10;
+    //     buffer[index++] = ASCII_ZERO + thisPlace;
+    //     number = number / 10;
+    // } while(number > 0);
     
     // Reverse it
     len = index;
@@ -52,14 +52,14 @@ void intToString(int number, char* string) {
 
 void intToStringHex(int number, char* string) {
     int index = 0;
-    char buffer[16] = "";
+    char buffer[16];
     int len;
 
-    do {
-        int thisPlace = number % 16;
-        buffer[index++] = ASCII_ZERO + thisPlace;
-        number = number / 16;
-    } while(number > 0);
+    // do {
+    //     int thisPlace = number % 16;
+    //     buffer[index++] = ASCII_ZERO + thisPlace;
+    //     number = number / 16;
+    // } while(number > 0);
     
     // Reverse it
     len = index;
@@ -94,4 +94,12 @@ void pad(char* source, int length) {
         source[index] = ' ';
     }
     source[index] = 0;
+}
+
+void * memcpy(void *dest, void *src, int len) {
+  char *d = dest;
+  char *s = src;
+  while (len--)
+    *d++ = *s++;
+  return dest;
 }

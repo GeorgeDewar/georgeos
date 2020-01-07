@@ -11,19 +11,19 @@
 #define COLOR_WHITE           0x0F
 
 void clearScreen() {
-   __asm {
+   #asm
       mov ah, SET_VIDEO_MODE
       mov al, TEXT_80_25_16
-      int 10h
-   }
+      int 0x10
+   #endasm
 }
 
 void printChar(char c) {
-   __asm {
+   #asm
       mov ah, WRITE_CHARACTER_TTY
-      mov al, [c]                      ; character to write
+      mov al, [_c]                   ; character to write
       mov bh, 0                        ; page number
       mov bl, COLOR_YELLOW             ; foreground colour
-      int 10h
-   }
+      int 0x10
+   #endasm
 }

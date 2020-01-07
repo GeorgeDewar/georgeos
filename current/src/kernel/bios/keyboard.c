@@ -1,11 +1,12 @@
 #include "keyboard.h"
 
+char c;
+
 char getChar() {
-   char c = 0;
-   __asm {
+   #asm
       mov ah, FN_00_READ_KEY_PRESS
-      int 16h
-      mov [c], al                      ; ASCII character code of key pressed
-   }
+      int 0x16
+      mov [_c], al                      ; ASCII character code of key pressed
+   #endasm
    return c;
 }

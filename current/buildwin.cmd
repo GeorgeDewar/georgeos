@@ -21,6 +21,13 @@ wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
 
 echo Compiling sample application...
 nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
+wcc %CC_OPTS% -fo=build\programs\sayhi-c.obj src\programs\sayhi-c.c || exit /b
+wlink ^
+  FILE build\programs\sayhi-c.obj^
+  NAME sayhi-c.bin FORMAT DOS OUTPUT RAW^
+  OFFSET=0000:8000 OPTION NODEFAULTLIBS^
+  ORDER CLNAME CODE SEGADDR=0x0000 OFFSET=0x8000^
+   CLNAME DATA || exit /b
 
 cd build\kernel
 wlink ^
