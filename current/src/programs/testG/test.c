@@ -18,12 +18,10 @@ void println(char* s) {
 
 void printChar(char c)
 {
-#asm
-    push bp
-    mov ah, #$0E
-    mov bp, sp
-    mov al, [bp+4]
-    int 0x10
-    pop bp
-#endasm
+    // asm("push bp"); // SmallerC does this for us
+    asm("mov ah, 0x0E");
+    asm("mov bp, sp");
+    asm("mov al, [bp+4]");
+    asm("int 0x10");
+    // asm("pop bp"); // SmallerC does this for us with the leave instruction
 }
