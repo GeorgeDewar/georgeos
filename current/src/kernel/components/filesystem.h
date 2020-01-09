@@ -16,14 +16,7 @@ struct DirectoryEntry {
     char extension[3];                                                                          // 08
 
     // Bit field
-    unsigned char readOnly       : 1;                                                           // 11
-    unsigned char hidden         : 1;
-    unsigned char system         : 1;
-    unsigned char volumeLabel    : 1;
-    unsigned char subdirectory   : 1;
-    unsigned char archive        : 1;
-    unsigned char device         : 1;
-    unsigned char                : 1;
+    unsigned char attributes;
 
     char unused_0C; // 0x0C; CP/M-86 and DOS Plus store user attributes here                    // 12
     char unused_0D; // 0x0D; Various purposes under some DOS versions                           // 13
@@ -35,7 +28,8 @@ struct DirectoryEntry {
     int lastModifiedDate;                                                                       // 24
 
     unsigned int startOfFile;                                                                   // 26
-    unsigned long fileSize;                                                                     // 28-32
+    unsigned int fileSize1;                                                                     // 28-32
+    unsigned int fileSize2;
 };
 
 void listFiles(char* buffer);
@@ -43,6 +37,6 @@ char readRootDirectory(char* buffer);
 char getFileName(struct DirectoryEntry e, char* buffer);
 
 char loadFAT();
-long loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, char* buffer);
+int loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, char* buffer);
 unsigned int findFile(struct DirectoryEntry dir[], int directoryLength, char* filename);
 static unsigned int getFATEntry(unsigned int cluster_num);

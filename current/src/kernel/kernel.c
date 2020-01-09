@@ -1,9 +1,9 @@
-#include "bios/video.h";
-#include "bios/keyboard.h";
-#include "components/console.h";
-#include "util/string.h";
-#include "bios/clock.h";
-#include "components/filesystem.h";
+#include "bios/video.h"
+#include "bios/keyboard.h"
+#include "components/console.h"
+#include "util/string.h"
+#include "bios/clock.h"
+#include "components/filesystem.h"
 
 void reboot();
 
@@ -18,7 +18,7 @@ union DirBuf {
 union DirBuf diskBuffer;
 
 char fileBuffer[8192];
-char *program = (char *) 32768;
+char *program = (char *) 0x8000;
 
 void kernelMain(void) {
    int dirIndex = 0;
