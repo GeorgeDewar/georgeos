@@ -1,9 +1,9 @@
-#include "filesystem.h";
+#include "filesystem.h"
 
-#include "../bios/disk.h";
-#include "../bios/keyboard.h";
-#include "../util/string.h";
-#include "../components/console.h";
+#include "../bios/disk.h"
+#include "../bios/keyboard.h"
+#include "../util/string.h"
+#include "../components/console.h"
 
 char FAT[SECTORS_PER_FAT * BYTES_PER_SECTOR];
 

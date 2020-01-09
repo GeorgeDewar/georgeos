@@ -1,9 +1,9 @@
-#include "bios/video.h";
-#include "bios/keyboard.h";
-#include "components/console.h";
-#include "util/string.h";
-#include "bios/clock.h";
-#include "components/filesystem.h";
+#include "bios/video.h"
+#include "bios/keyboard.h"
+#include "components/console.h"
+#include "util/string.h"
+#include "bios/clock.h"
+#include "components/filesystem.h"
 
 void reboot();
 
