@@ -221,7 +221,7 @@ fatal_error:
 pause:
     pusha
     mov ax, 0
-	int 16h				        ; Wait for keystroke
+    int 16h                     ; Wait for keystroke
     popa
     ret
 
