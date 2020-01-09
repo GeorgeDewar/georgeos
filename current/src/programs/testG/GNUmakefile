@@ -21,10 +21,10 @@ LIBDIR = $(BD)/lib
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(LD) $(LDFLAGS) -o $(TARGET) $(OBJ)
+    $(LD) $(LDFLAGS) -o $(TARGET) $(OBJ)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -o $@ $<
+    $(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -rf $(TARGET) $(OBJ)
+    rm -rf $(TARGET) $(OBJ)
