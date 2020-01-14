@@ -5,7 +5,7 @@ nasm -O0 -f bin -o build/bootload.bin src/bootload.asm
 
 echo Compiling GeorgeOS kernel...
 
-#nasm -o build/kernel/entry.obj src/kernel/entry.asm
+nasm -o build/kernel/entry.obj src/kernel/entry.asm
 
 #CC_OPTS=-q -0 -d0 -ms -s -wx -zls
 
@@ -24,7 +24,7 @@ echo Compiling sample application...
 
 cd build/kernel
 
-ld86 -y -d -T8000 -HD800 -0 -o kernel.bin kernel.obj keyboard.obj\
+ld86 -y -d -T8000 -HD800 -0 -o kernel.bin entry.obj kernel.obj keyboard.obj\
   video.obj console.obj string.obj clock.obj disk.obj filesystem.obj  
 
 cd ../..

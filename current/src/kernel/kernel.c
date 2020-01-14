@@ -20,7 +20,7 @@ union DirBuf diskBuffer;
 char fileBuffer[8192];
 char *program = (char *) 0x8000;
 
-void main(void) {
+void kernelMain(void) {
    int dirIndex = 0;
 
    clearScreen();
