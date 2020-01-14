@@ -7,9 +7,9 @@
 char readSectorsLBA(int lba, char numSectors, char* buffer) {
     char head, cylinder, sector;
 
-    // head = (lba % (SECTORS_PER_TRACK * 2)) / SECTORS_PER_TRACK;
-	// cylinder = (lba / (SECTORS_PER_TRACK * 2));
-	// sector = (lba % SECTORS_PER_TRACK + 1);
+    head = (lba % (SECTORS_PER_TRACK * 2)) / SECTORS_PER_TRACK;
+    cylinder = (lba / (SECTORS_PER_TRACK * 2));
+    sector = (lba % SECTORS_PER_TRACK + 1);
 
     return readSectors(head, cylinder, sector, numSectors, buffer);
 }

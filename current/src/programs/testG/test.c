@@ -4,7 +4,7 @@ void println(char* s);
 
 void main(void)
 {
-	println("Hello, GeorgeOS!");
+    println("Hello, GeorgeOS!");
 }
 
 void println(char* s) {
@@ -19,11 +19,11 @@ void println(char* s) {
 void printChar(char c)
 {
 #asm
-	push bp
+    push bp
     mov ah, #$0E
-	mov bp, sp
-	mov al, [bp+4]
+    mov bp, sp
+    mov al, [bp+4]
     int 0x10
-	pop bp
+    pop bp
 #endasm
 }
