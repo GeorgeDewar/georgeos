@@ -18,7 +18,7 @@ union DirBuf {
 union DirBuf diskBuffer;
 
 char fileBuffer[8192];
-char *program = (char *) 0x8000;
+char *program = (char *) 32768u;
 
 void kernelMain(void) {
    int dirIndex = 0;

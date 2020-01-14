@@ -3,7 +3,7 @@
 #define ASCII_ZERO 0x30
 
 char strcmp(char *string1, char *string2) {
-    return strcmp_wl(string1, string2, 65535);
+    return strcmp_wl(string1, string2, 65535u);
 }
 
 char strcmp_wl(char *string1, char *string2, unsigned int lengthToCompare) {
