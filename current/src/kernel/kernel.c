@@ -23,6 +23,12 @@ char *program = (char *) 0x8000;
 void kernelMain(void) {
    int dirIndex = 0;
 
+   #asm
+      mov ah, #$0E
+      mov al, #46                   ; character to write
+      int 0x10
+   #endasm
+
    clearScreen();
    loadFAT();
    println(hello);

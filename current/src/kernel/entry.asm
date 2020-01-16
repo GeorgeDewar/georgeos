@@ -1,4 +1,5 @@
 
+[bits 16]
 extern _kernelMain
 
 global _main
@@ -18,3 +19,5 @@ _main:
     int 0x10
 
     jmp _kernelMain         ; Jump to the main function in our C code
+    db 0x99
+    
