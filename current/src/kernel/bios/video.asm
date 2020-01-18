@@ -16,16 +16,18 @@ _clearScreen:
     int 10h
     pop bp
     ret
+    jmp $
 
 global _printChar
 _printChar:
     push bp
     mov bp, sp
     mov ah, WRITE_CHARACTER_TTY
-    mov al, [bp+6]                   ; character to write
+    mov al, [bp+4]                   ; character to write
     mov bh, 0                        ; page number
     mov bl, COLOR_YELLOW             ; foreground colour
     int 10h
     pop bp
     ret
 
+jmp $

@@ -12,7 +12,8 @@ set CC_OPTS=-q -0 -d0 -ms -s -wx -zls
 
 wsl bcc -c -x -ansi -I -o build/kernel/string.obj src/kernel/util/string.c || exit /b
 wsl bcc -c -x -ansi -I -o build/kernel/keyboard.obj src/kernel/bios/keyboard.c  || exit /b
-wsl bcc -c -x -ansi -I -o build/kernel/video.obj src/kernel/bios/video.c  || exit /b
+REM wsl bcc -c -x -ansi -I -o build/kernel/video.obj src/kernel/bios/video.c  || exit /b
+wsl nasm -O0 -f as86 -o build/kernel/video.obj src/kernel/bios/video.asm || exit /b
 wsl bcc -c -x -ansi -I -o build/kernel/clock.obj src/kernel/bios/clock.c  || exit /b
 wsl bcc -c -x -ansi -I -o build/kernel/disk.obj src/kernel/bios/disk.c  || exit /b
 wsl bcc -c -x -ansi -I -o build/kernel/filesystem.obj src/kernel/components/filesystem.c  || exit /b

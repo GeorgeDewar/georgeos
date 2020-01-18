@@ -27,6 +27,7 @@ void kernelMain(void) {
       mov ah, #$0E
       mov al, #46                   ; character to write
       int 0x10
+      nop
    #endasm
 
    clearScreen();
@@ -115,6 +116,7 @@ void kernelMain(void) {
 
 void reboot() {
    #asm
-      int 0x19
+      int #$19
+      nop
    #endasm
 }
