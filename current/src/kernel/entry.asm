@@ -2,13 +2,17 @@
 .code ENTRY
     extern kernelMain_ : proc
 
+
+
     mov ax, 0               ; Set stack segment to zero
     mov ss, ax
     mov sp, 0FFFFh          ; Set stack pointer to the top of the segment
 
     cld                     ; Ensure the direction for string operations will be 'up' - incrementing address in RAM
 
-    mov ax, 2100h           ; Set segments (DS and ES) to the right location
+    ;mov ax, 2100h           ; Set segments (DS and ES) to the right location
+    mov ax, @data
+    add ax, 2000h
     mov ds, ax
     mov es, ax
 

@@ -1,8 +1,8 @@
-void main(void);
+void cstart_(void);
 void printChar(char c);
 void println(char* s);
 
-void main(void)
+void cstart_(void)
 {
     println("Hello, GeorgeOS!");
 }

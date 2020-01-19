@@ -6,6 +6,7 @@
 #include "components/filesystem.h"
 
 void reboot();
+extern runApplication();
 
 char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
@@ -98,7 +99,7 @@ void kernelMain(void) {
             continue;
          }
 
-         jump();
+         runApplication();
       } else if(strcmp(command, "test")) {
          println("Test");
       } else {

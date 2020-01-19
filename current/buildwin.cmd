@@ -6,6 +6,7 @@ nasm -O0 -f bin -o build\bootload.bin src\bootload.asm
 echo Compiling GeorgeOS kernel...
 
 wasm -q -0 -fo=build\kernel\entry.obj src\kernel\entry.asm || exit /b
+nasm -O0 -f obj -o build\kernel\jump.obj src\kernel\jump.asm || exit /b
 
 set CC_OPTS=-q -0 -d0 -ms -s -wx -zls
 
@@ -22,14 +23,20 @@ wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
 echo Compiling sample application...
 nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
 
+wcc -q -0 -d0 -ms -s -wx -zls -zc -fo=build\programs\test-watcom.obj src\programs\test-watcom\test.c || exit /b
+wlink FILE build\programs\test-watcom.obj NAME src\data\testwat.bin SYSTEM COM^
+  OPTION NODEFAULTLIBS || exit /b
+
+rem wcl -q -0 -d0 -mt -s -wx -zl -bcl=dos -fe=src\data\testwat.bin src\programs\test-watcom\test.c
+
 cd build\kernel
 wlink ^
-  FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj FILE disk.obj FILE filesystem.obj ^
+  FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj FILE disk.obj FILE filesystem.obj FILE jump.obj ^
   NAME kernel.bin FORMAT DOS OUTPUT RAW^
   OFFSET=0x0000 OPTION NODEFAULTLIBS^
   ORDER CLNAME CODE^
       SEGMENT ENTRY OFFSET=0x0000^
-  CLNAME DATA OFFSET=0x1000 || exit /b
+  CLNAME DATA || exit /b
 cd ..\..
 
 echo Adding bootsector to disk image...
