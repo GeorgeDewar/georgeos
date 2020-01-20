@@ -6,6 +6,7 @@
 #include "components/filesystem.h"
 
 void reboot();
+void handleCall();
 extern runApplication();
 
 char *hello = "Welcome to GeorgeOS!\r\n";
@@ -123,4 +124,10 @@ void kernelMain(void) {
 
 void reboot() {
    __asm{ int 19h }
+}
+
+void handleCall() {
+   // while(1);
+   println("test");
+
 }

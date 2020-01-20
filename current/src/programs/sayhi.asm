@@ -12,6 +12,8 @@
     mov si, text_string         ; Put string position into SI
     call print_string           ; Call our string-printing routine
 
+    int 21h
+
     retf                        ; Return to the OS
 
 ; -----------------------------------------------------------------------------
