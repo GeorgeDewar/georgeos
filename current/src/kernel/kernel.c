@@ -72,7 +72,7 @@ void kernelMain(void) {
          int length;
          
          readRootDirectory(diskBuffer.diskBuffer);
-         length = (int) loadFile(diskBuffer.dir, 16, filename, fileBuffer);
+         length = (int) loadFile(diskBuffer.dir, 16, filename, -1, fileBuffer);
 
          if(length < 0) { // length is actually an error code
             println("Couldn't load this file");
@@ -86,13 +86,24 @@ void kernelMain(void) {
 
          printRange(fileBuffer, length, 0, 0);
          println("");
+      } else if(strcmp_wl(command, "load ", 5)) {
+         char* filename = command + 5;
+         int length;
+         
+         readRootDirectory(diskBuffer.diskBuffer);
+         length = (int) loadFile(diskBuffer.dir, 16, filename, 0x4000, program);
+
+         if(length < 0) { // length is actually an error code
+            println("Couldn't load this file");
+            continue;
+         }
       } else if(strcmp_wl(command, "run ", 4)) {
          char* filename = command + 4;
          int length;
          void (*jump)(void) = 0x8000;
          
          readRootDirectory(diskBuffer.diskBuffer);
-         length = (int) loadFile(diskBuffer.dir, 16, filename, program);
+         length = (int) loadFile(diskBuffer.dir, 16, filename, 0x4000, 0x0);
 
          if(length < 0) { // length is actually an error code
             println("Couldn't load this file");
@@ -100,7 +111,9 @@ void kernelMain(void) {
          }
 
          runApplication();
-      } else if(strcmp(command, "test")) {
+      } else if(strcmp(command, "halt")) {
+         while(1);
+      }else if(strcmp(command, "test")) {
          println("Test");
       } else {
          println("Unknown command");

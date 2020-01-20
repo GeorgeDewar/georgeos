@@ -6,13 +6,10 @@ char* str = "Hello, GeorgeOS!";
 
 void appMain(void)
 {
-    printChar('G');
     println(str);
 }
 
 void println(char* s) {
-    // printChar(s[0]);
-    s++;
    while(*s != 0) {
       printChar(*s);
       s++;

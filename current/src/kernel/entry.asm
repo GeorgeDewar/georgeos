@@ -4,7 +4,7 @@
 
 
 
-    mov ax, 0               ; Set stack segment to zero
+    mov ax, 1000h               ; Set stack segment to zero
     mov ss, ax
     mov sp, 0FFFFh          ; Set stack pointer to the top of the segment
 

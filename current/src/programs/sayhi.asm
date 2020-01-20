@@ -1,15 +1,18 @@
     BITS 16
 
-    org 32768
+    org 0
 
 ; -----------------------------------------------------------------------------
 ; Start of our application
 ; -----------------------------------------------------------------------------
 
+    mov ax, 0x4000
+    mov ds, ax
+
     mov si, text_string         ; Put string position into SI
     call print_string           ; Call our string-printing routine
 
-    ret                         ; Return to the OS
+    retf                        ; Return to the OS
 
 ; -----------------------------------------------------------------------------
 ; Routine: print_string

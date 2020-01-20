@@ -8,7 +8,7 @@
 char FAT[SECTORS_PER_FAT * BYTES_PER_SECTOR];
 
 char readRootDirectory(char* buffer) {
-    return readSectorsLBA(ROOT_DIR_START, 1, buffer);
+    return readSectorsLBA(ROOT_DIR_START, 1, -1, buffer);
 }
 
 char getFileName(struct DirectoryEntry e, char* buffer) {
@@ -34,10 +34,10 @@ char getFileName(struct DirectoryEntry e, char* buffer) {
 }
 
 char loadFAT() {
-    return readSectorsLBA(FAT_0_START, SECTORS_PER_FAT, FAT);
+    return readSectorsLBA(FAT_0_START, SECTORS_PER_FAT, -1, FAT);
 }
 
-long loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, char* buffer) {
+long loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, int segment, char* buffer) {
     int clusterIndex = 1; // we print the first cluster outside the loop
     int readResult;
     unsigned int fileIndex;
@@ -48,14 +48,14 @@ long loadFile(struct DirectoryEntry dir[], int directoryLength, char* filename, 
     if(fileIndex == -1) return -1;
     cluster = dir[fileIndex].startOfFile;
 
-    readResult = readSectorsLBA(cluster + 31, 1, buffer);
+    readResult = readSectorsLBA(cluster + 31, 1, segment, buffer);
     if(readResult != 0) return readResult * -1; // Error
 
     while(1==1) {
         cluster = getFATEntry(cluster);
         if(cluster == 0xFFF) break; // we've read the last cluster already
 
-        readResult = readSectorsLBA(cluster + 31, 1, buffer + (BYTES_PER_SECTOR * clusterIndex));
+        readResult = readSectorsLBA(cluster + 31, 1, segment, buffer + (BYTES_PER_SECTOR * clusterIndex));
         if(readResult != 0) return readResult * -1; // Error
 
         clusterIndex++;
