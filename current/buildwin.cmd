@@ -34,6 +34,7 @@ wlink ^
   FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj FILE disk.obj FILE filesystem.obj FILE jump.obj ^
   NAME kernel.bin FORMAT DOS OUTPUT RAW^
   OFFSET=0x0000 OPTION NODEFAULTLIBS^
+  OPTION FILLCHAR=0x90^
   ORDER CLNAME CODE^
       SEGMENT ENTRY OFFSET=0x0000^
   CLNAME DATA || exit /b
