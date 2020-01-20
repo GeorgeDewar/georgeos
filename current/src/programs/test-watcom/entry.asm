@@ -6,8 +6,9 @@
     mov al, '.'
     int 10h
 
-    mov ax, @data
-    add ax, 4000h           ; 0x2000 seg for kernel, plus 0x8000 offset for app
+    mov ax, cs
+    add ax, @data
+    ;add ax, 4000h           ; 0x2000 seg for kernel, plus 0x8000 offset for app
     mov ds, ax
     ; mov es, ax
 
