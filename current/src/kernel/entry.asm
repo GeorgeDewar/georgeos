@@ -1,7 +1,7 @@
 .model small
 .code ENTRY
     extern kernelMain_ : proc
-    extern handleCall_ : proc
+    extern println_ : proc
 
     mov ax, 0                   ; Set stack segment to zero
     mov ss, ax
@@ -26,17 +26,17 @@
     jmp kernelMain_             ; Jump to the main function in our C code
 
 handleCallAsm:
-    push ds                     ; Push DS to the stack so we can restore it after execution
-    push es                     ; Push ES also
+    ; push ds                     ; Push DS to the stack so we can restore it after execution
+    ; push es                     ; Push ES also
     
-    mov ax, @data               ; Set segments (DS and ES) to the right location
-    add ax, 2000h
-    mov ds, ax
-    mov es, ax
+    ; mov ax, @data               ; Set segments (DS and ES) to the right location
+    ; add ax, 2000h
+    ; mov ds, ax
+    ; mov es, ax
 
-    call handleCall_            ; Call our main interrupt handler function written in C
-    pop es                      ; Restore ES and DS from the stack
-    pop ds                      ;
+    call println_               ; Call our main interrupt handler function written in C
+    ; pop es                      ; Restore ES and DS from the stack
+    ; pop ds                      ;
 
     iret                        ; Return from the interrupt handler
 

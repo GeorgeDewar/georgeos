@@ -12,12 +12,3 @@ runApplication_:
 
     ret                         ; Return
 
-handleCallAsm:
-    jmp $
-    push ds                     ; Push DS to the stack so we can restore it after execution
-    push es                     ; Push ES also
-    ;call handleCall_            ; Call our main interrupt handler function written in C
-    pop es                      ; Restore ES and DS from the stack
-    pop ds                      ;
-
-    iret                        ; Return from the interrupt handler

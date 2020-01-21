@@ -27,6 +27,11 @@ wcc -q -0 -d0 -ms -s -wx -zls -zc -fo=build\programs\test-watcom.obj src\program
 wlink FILE build\programs\test-watcom.obj NAME src\data\testwat.bin SYSTEM COM^
   OPTION NODEFAULTLIBS || exit /b
 
+cd src\programs\test-watcom
+call buildwin
+cp test.bin ..\..\data\tw.bin
+cd ..\..\..
+
 rem wcl -q -0 -d0 -mt -s -wx -zl -bcl=dos -fe=src\data\testwat.bin src\programs\test-watcom\test.c
 
 cd build\kernel

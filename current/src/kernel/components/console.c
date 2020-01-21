@@ -11,7 +11,8 @@ void print(char* s) {
 
 void println(char* s) {
    print(s);
-   print("\r\n");
+   printChar('\r');
+   printChar('\n');
 }
 
 void printRange(char* s, int bytes, char stopAtNull, char nullCharacter) {
