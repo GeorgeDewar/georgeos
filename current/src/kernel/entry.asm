@@ -1,8 +1,8 @@
 .model small
 .code ENTRY
-    extern kernelMain_ : proc
-    extern println_ : proc
-    extern print_ : proc
+    extern _kernelMain : proc
+    extern _println : proc
+    extern _print : proc
 
     mov ax, 0                   ; Set stack segment to zero
     mov ss, ax
@@ -24,12 +24,12 @@
     mov al, '.'
     int 10h
 
-    jmp kernelMain_             ; Jump to the main function in our C code
+    jmp _kernelMain             ; Jump to the main function in our C code
 
 vectors:
     ; We can calculate the offset of each of these jumps from the label above
-    jmp println_
-    jmp print_
+    jmp _println
+    jmp _print
 
 handleCallAsm:
     ; push ds                     ; Push DS to the stack so we can restore it after execution
@@ -45,6 +45,7 @@ handleCallAsm:
     ; mul bx                      ; AX = AX * BX = AX * 3
     ; mov ax, vectors
     ; pop bx                      ; Pop BX now so that the stack is as it's supposed to be
+    ; jmp $
     call vectors                     ; Call our main interrupt handler function written in C
     ; pop es                      ; Restore ES and DS from the stack
     ; pop ds                      ;

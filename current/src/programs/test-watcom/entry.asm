@@ -1,6 +1,6 @@
 .model small
 .code ENTRY
-    extern appMain_ : proc
+    extern _appMain : proc
 
     mov ah, 0Eh             ; Print a dot for debugging purposes
     mov al, '.'
@@ -12,7 +12,7 @@
     mov ds, ax
     ; mov es, ax
 
-    call appMain_            ; Jump to the main function in our C code
+    call _appMain            ; Jump to the main function in our C code
 
     mov ah, 0Eh             ; Print a dot for debugging purposes
     mov al, '/'

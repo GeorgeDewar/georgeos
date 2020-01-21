@@ -11,7 +11,7 @@ void appMain(void)
 
 void println(char* s) {
    __asm {
-    //    mov ax, 0x0
+    //    mov ax, 0x4004
        int 0x21
    }
 }

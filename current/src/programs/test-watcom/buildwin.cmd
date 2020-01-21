@@ -1,5 +1,5 @@
 wasm -q -0 -fo=entry.obj entry.asm || exit /b
-wcc -q -0 -d0 -ms -s -wx -zls -zc -fo=test.obj test.c || exit /b
+wcc -q -0 -d0 -ms -s -wx -zls -zc -ecd -fo=test.obj test.c || exit /b
 wlink ^
   FILE entry.obj FILE test.obj ^
   NAME test.bin FORMAT DOS OUTPUT RAW^

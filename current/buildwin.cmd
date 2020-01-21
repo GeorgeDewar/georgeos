@@ -8,7 +8,7 @@ echo Compiling GeorgeOS kernel...
 wasm -q -0 -fo=build\kernel\entry.obj src\kernel\entry.asm || exit /b
 nasm -O0 -f obj -o build\kernel\jump.obj src\kernel\jump.asm || exit /b
 
-set CC_OPTS=-q -0 -d0 -ms -s -wx -zls
+set CC_OPTS=-q -0 -d0 -ms -s -wx -zls -ecd
 
 wcc %CC_OPTS% -fo=build\kernel\string.obj src\kernel\util\string.c || exit /b
 wcc %CC_OPTS% -fo=build\kernel\keyboard.obj src\kernel\bios\keyboard.c || exit /b
