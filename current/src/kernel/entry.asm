@@ -32,14 +32,6 @@ vectors:
     jmp print_
 
 handleCallAsm:
-    ; push ds                     ; Push DS to the stack so we can restore it after execution
-    ; push es                     ; Push ES also
-    
-    ; mov ax, @data               ; Set segments (DS and ES) to the right location
-    ; add ax, 2000h
-    ; mov ds, ax
-    ; mov es, ax
-
     push ax
     push bx
     mov ax, bp                  ; BP is where our syscall code is
@@ -53,12 +45,7 @@ handleCallAsm:
 
     call bp                     ; Call our main interrupt handler function written in C
 
-
-    ; pop es                      ; Restore ES and DS from the stack
-    ; pop ds                      ;
-
-
     iret                        ; Return from the interrupt handler
 
-
+    
 end
