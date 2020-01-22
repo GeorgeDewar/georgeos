@@ -1,5 +1,4 @@
 void appMain(void);
-// void printChar(char c);
 void println(char* s);
 
 char* str = "Hello, GeorgeOS!";
@@ -15,14 +14,3 @@ void println(char* s) {
        int 0x21
    }
 }
-
-// void printChar(char c)
-// {
-//     __asm {
-//         mov ah, 0x0E
-//         mov al, [c]
-//         mov bh, 0                        ; page number
-//         mov bl, 0x0F
-//         int 0x10
-//     }
-// }
