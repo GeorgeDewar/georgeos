@@ -40,12 +40,20 @@ handleCallAsm:
     ; mov ds, ax
     ; mov es, ax
 
-    ; push bx
-    ; mov bx, 3
-    ; mul bx                      ; AX = AX * BX = AX * 3
-    ; mov ax, vectors
-    ; pop bx                      ; Pop BX now so that the stack is as it's supposed to be
-    call vectors                     ; Call our main interrupt handler function written in C
+    push ax
+    push bx
+    mov ax, bp                  ; BP is where our syscall code is
+    mov bx, 3
+    mul bx                      ; AX = AX * BX = AX * 3
+    add ax, vectors
+    mov bp, ax                  ; Put the result back in BP, as we need to keep AX,BX,CX,DX clean
+
+    pop bx                      ; Pop BX now so that the stack is as it's supposed to be
+    pop ax
+
+    call bp                     ; Call our main interrupt handler function written in C
+
+
     ; pop es                      ; Restore ES and DS from the stack
     ; pop ds                      ;
 
