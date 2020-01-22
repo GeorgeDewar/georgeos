@@ -23,10 +23,6 @@ wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
 echo Compiling sample application...
 nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
 
-wcc -q -0 -d0 -ms -s -wx -zls -zc -fo=build\programs\test-watcom.obj src\programs\test-watcom\test.c || exit /b
-wlink FILE build\programs\test-watcom.obj NAME src\data\testwat.bin SYSTEM COM^
-  OPTION NODEFAULTLIBS || exit /b
-
 cd src\programs\test-watcom
 call buildwin
 cp test.bin ..\..\data\tw.bin

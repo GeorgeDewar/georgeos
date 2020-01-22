@@ -1,7 +1,7 @@
 wasm -q -0 -fo=entry.obj entry.asm || exit /b
-wcc -q -0 -d0 -ms -s -wx -zls -zc -fo=test.obj test.c || exit /b
+wcc -q -0 -d0 -ms -s -wx -zls -zc -fi=..\..\system_library\os.h -fo=test.obj test.c || exit /b
 wlink ^
-  FILE entry.obj FILE test.obj ^
+  FILE ..\..\system_library\os.obj FILE entry.obj FILE test.obj ^
   NAME test.bin FORMAT DOS OUTPUT RAW^
   OFFSET=0x0000 OPTION NODEFAULTLIBS^
   OPTION FILLCHAR=0x90^
