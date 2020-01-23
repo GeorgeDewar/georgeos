@@ -7,7 +7,7 @@
 
 void reboot();
 void handleCall();
-extern runApplication();
+extern void runApplication();
 
 char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
@@ -20,7 +20,8 @@ union DirBuf {
 union DirBuf diskBuffer;
 
 char fileBuffer[8192];
-char *program = (char *) 0x8000;
+int programSegment = 0x4000;
+int programOffset = 0x0000;
 
 void kernelMain(void) {
    int dirIndex = 0;
@@ -92,7 +93,7 @@ void kernelMain(void) {
          int length;
          
          readRootDirectory(diskBuffer.diskBuffer);
-         length = (int) loadFile(diskBuffer.dir, 16, filename, 0x4000, program);
+         length = (int) loadFile(diskBuffer.dir, 16, filename, programSegment, (char *) programOffset);
 
          if(length < 0) { // length is actually an error code
             println("Couldn't load this file");
@@ -101,10 +102,9 @@ void kernelMain(void) {
       } else if(strcmp_wl(command, "run ", 4)) {
          char* filename = command + 4;
          int length;
-         void (*jump)(void) = 0x8000;
          
          readRootDirectory(diskBuffer.diskBuffer);
-         length = (int) loadFile(diskBuffer.dir, 16, filename, 0x4000, 0x0);
+         length = (int) loadFile(diskBuffer.dir, 16, filename, programSegment, (char *) programOffset);
 
          if(length < 0) { // length is actually an error code
             println("Couldn't load this file");

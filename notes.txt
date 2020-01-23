@@ -14,3 +14,11 @@ https://github.com/alexfru/SmallerC used/recommended by 2 of 3 MikeOS C librarie
 https://github.com/alexfru/SmallerC/tree/master/v0100/srclib includes a standard library for C with int 21h DOS calls and int 80h Linux calls
 
 bcc = Bruce's C Compiler, only in Linux?
+
+
+Todo:
+-- Makefile
+-- Exit command
+-- Program that reads input also
+-- Move interrupt handler out of entry.asm
+-- Tidy up files
