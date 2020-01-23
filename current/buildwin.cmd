@@ -20,21 +20,21 @@ wcc %CC_OPTS% -fo=build\kernel\console.obj src\kernel\components\console.c || ex
 
 wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
 
-echo Compiling sample application...
-nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
-
-call buildprog test
-
 cd build\kernel
 wlink ^
   FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj FILE disk.obj FILE filesystem.obj FILE jump.obj ^
   NAME kernel.bin FORMAT DOS OUTPUT RAW^
   OFFSET=0x0000 OPTION NODEFAULTLIBS^
   OPTION FILLCHAR=0x90^
+  OPTION QUIET^
   ORDER CLNAME CODE^
       SEGMENT ENTRY OFFSET=0x0000^
   CLNAME DATA || exit /b
 cd ..\..
+
+echo Compiling sample applications...
+nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
+call buildprog test
 
 echo Adding bootsector to disk image...
 dd count=2 seek=0 bs=512 if=build\bootload.bin of=disk_images\georgeos.flp
