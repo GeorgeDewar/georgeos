@@ -23,12 +23,7 @@ wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
 echo Compiling sample application...
 nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
 
-cd src\programs\test-watcom
-call buildwin
-cp test.bin ..\..\data\tw.bin
-cd ..\..\..
-
-rem wcl -q -0 -d0 -mt -s -wx -zl -bcl=dos -fe=src\data\testwat.bin src\programs\test-watcom\test.c
+call buildprog test
 
 cd build\kernel
 wlink ^
