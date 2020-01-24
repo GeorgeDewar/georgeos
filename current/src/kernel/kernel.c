@@ -4,6 +4,7 @@
 #include "util/string.h"
 #include "bios/clock.h"
 #include "components/filesystem.h"
+#include "bios/apm.h"
 
 void reboot();
 void handleCall();
@@ -114,7 +115,9 @@ void kernelMain(void) {
          runApplication();
       } else if(strcmp(command, "halt")) {
          while(1);
-      }else if(strcmp(command, "test")) {
+      } else if(strcmp(command, "shutdown")) {
+         shutdown();
+      } else if(strcmp(command, "test")) {
          println("Test");
       } else {
          println("Unknown command");

@@ -15,6 +15,7 @@ wcc %CC_OPTS% -fo=build\kernel\keyboard.obj src\kernel\bios\keyboard.c || exit /
 wcc %CC_OPTS% -fo=build\kernel\video.obj src\kernel\bios\video.c || exit /b
 wcc %CC_OPTS% -fo=build\kernel\clock.obj src\kernel\bios\clock.c || exit /b
 wcc %CC_OPTS% -fo=build\kernel\disk.obj src\kernel\bios\disk.c || exit /b
+wcc %CC_OPTS% -fo=build\kernel\apm.obj src\kernel\bios\apm.c || exit /b
 wcc %CC_OPTS% -fo=build\kernel\filesystem.obj src\kernel\components\filesystem.c || exit /b
 wcc %CC_OPTS% -fo=build\kernel\console.obj src\kernel\components\console.c || exit /b
 
@@ -22,7 +23,8 @@ wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
 
 cd build\kernel
 wlink ^
-  FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj FILE disk.obj FILE filesystem.obj FILE jump.obj ^
+  FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj^
+  FILE disk.obj FILE filesystem.obj FILE jump.obj FILE apm.obj^
   NAME kernel.bin FORMAT DOS OUTPUT RAW^
   OFFSET=0x0000 OPTION NODEFAULTLIBS^
   OPTION FILLCHAR=0x90^
