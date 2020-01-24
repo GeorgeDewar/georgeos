@@ -8,3 +8,5 @@ current/disk_images/*
 !.keep
 
 *.err
+*.obj
+*.bin

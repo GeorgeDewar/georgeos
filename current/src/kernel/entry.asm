@@ -1,8 +1,12 @@
 .model small
 .code ENTRY
     extern kernelMain_ : proc
-    extern println_ : proc
+
     extern print_ : proc
+    extern println_ : proc
+    extern printChar_ : proc
+    extern getString_ : proc
+    extern getChar_ : proc
 
     mov ax, 0                   ; Set stack segment to zero
     mov ss, ax
@@ -28,8 +32,11 @@
 
 vectors:
     ; We can calculate the offset of each of these jumps from the label above
-    jmp println_
     jmp print_
+    jmp println_
+    jmp printChar_
+    jmp getString_
+    jmp getChar_
 
 handleCallAsm:
     push ax

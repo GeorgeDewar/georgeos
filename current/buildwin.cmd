@@ -37,6 +37,7 @@ cd ..\..
 echo Compiling sample applications...
 nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
 call buildprog test
+call buildprog myname
 
 echo Adding bootsector to disk image...
 dd count=2 seek=0 bs=512 if=build\bootload.bin of=disk_images\georgeos.flp

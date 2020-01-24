@@ -11,8 +11,12 @@ void print(char* s) {
 
 void println(char* s) {
    print(s);
-   printChar('\r');
-   printChar('\n');
+   printNl();
+}
+
+void printNl() {
+    printChar('\r');
+    printChar('\n');
 }
 
 void printRange(char* s, int bytes, char stopAtNull, char nullCharacter) {
@@ -51,6 +55,6 @@ void getString(char* buffer, char echo) {
             // Unhandled character (probably a control code)
         }
     }
-    if(echo == 1) println("");
+    if(echo == 1) printNl();
     buffer[index] = 0; // NULL byte to end string
 }
