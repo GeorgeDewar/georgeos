@@ -6,35 +6,45 @@
 
 void print() {
    __asm {
+       push bp
        mov bp, SYSCALL_PRINT
        int 0x21
+       pop bp
    }
 }
 
 void println() {
    __asm {
+       push bp
        mov bp, SYSCALL_PRINTLN
        int 0x21
+       pop bp
    }
 }
 
 void printChar() {
    __asm {
+       push bp
        mov bp, SYSCALL_PRINTCHAR
        int 0x21
+       pop bp
    }
 }
 
 void readString() {
    __asm {
+       push bp
        mov bp, SYSCALL_READLN
        int 0x21
+       pop bp
    }
 }
 
 void readChar() {
    __asm {
+       push bp
        mov bp, SYSCALL_READCHAR
        int 0x21
+       pop bp
    }
 }
