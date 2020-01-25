@@ -8,6 +8,7 @@ void appMain(void)
     println("Hello, what is your name?");
     print("Name: ");
     readString(name, 1);
+
     print("Nice to meet you, ");
     println(name);
     println("Goodbye");

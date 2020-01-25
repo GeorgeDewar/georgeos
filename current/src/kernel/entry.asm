@@ -41,12 +41,17 @@ vectors:
 handleCallAsm:
     push ax
     push bx
+    push cx 
+    push dx
+
     mov ax, bp                  ; BP is where our syscall code is
     mov bx, 3
     mul bx                      ; AX = AX * BX = AX * 3
     add ax, vectors
     mov bp, ax                  ; Put the result back in BP, as we need to keep AX,BX,CX,DX clean
 
+    pop dx ; Needed - But why? Oh, I see. mul bx can be >16 bits result, so uses DX as well. Mystery solved!
+    pop cx
     pop bx                      ; Pop BX now so that the stack is as it's supposed to be
     pop ax
 
