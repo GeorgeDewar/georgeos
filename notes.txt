@@ -17,7 +17,7 @@ bcc = Bruce's C Compiler, only in Linux?
 
 
 Todo:
--- Makefile
+-- Makefile                                     [x]
 -- Exit command                                 [x]
 -- Program that reads input also                [x]
 -- Move interrupt handler out of entry.asm
