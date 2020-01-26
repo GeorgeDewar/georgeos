@@ -1,6 +1,7 @@
 #include "../bios/video.h"
 #include "../bios/keyboard.h"
 #include "../util/string.h"
+#include "console.h"
 
 void print(char* s) {
    while(*s != 0) {

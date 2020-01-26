@@ -4,34 +4,8 @@ echo Assembling bootloader...
 nasm -O0 -f bin -o build\bootload.bin src\bootload.asm
 
 echo Compiling GeorgeOS kernel...
-
-wasm -q -0 -fo=build\kernel\entry.obj src\kernel\entry.asm || exit /b
-nasm -O0 -f obj -o build\kernel\jump.obj src\kernel\jump.asm || exit /b
-
-set CC_OPTS=-q -0 -d0 -ms -s -wx -zls
-
-wcc %CC_OPTS% -fo=build\kernel\string.obj src\kernel\util\string.c || exit /b
-wcc %CC_OPTS% -fo=build\kernel\keyboard.obj src\kernel\bios\keyboard.c || exit /b
-wcc %CC_OPTS% -fo=build\kernel\video.obj src\kernel\bios\video.c || exit /b
-wcc %CC_OPTS% -fo=build\kernel\clock.obj src\kernel\bios\clock.c || exit /b
-wcc %CC_OPTS% -fo=build\kernel\disk.obj src\kernel\bios\disk.c || exit /b
-wcc %CC_OPTS% -fo=build\kernel\apm.obj src\kernel\bios\apm.c || exit /b
-wcc %CC_OPTS% -fo=build\kernel\filesystem.obj src\kernel\components\filesystem.c || exit /b
-wcc %CC_OPTS% -fo=build\kernel\console.obj src\kernel\components\console.c || exit /b
-
-wcc %CC_OPTS% -fo=build\kernel\kernel.obj src\kernel\kernel.c || exit /b
-
-cd build\kernel
-wlink ^
-  FILE entry.obj FILE kernel.obj FILE keyboard.obj FILE video.obj FILE console.obj FILE string.obj FILE clock.obj^
-  FILE disk.obj FILE filesystem.obj FILE jump.obj FILE apm.obj^
-  NAME kernel.bin FORMAT DOS OUTPUT RAW^
-  OFFSET=0x0000 OPTION NODEFAULTLIBS^
-  OPTION FILLCHAR=0x90^
-  OPTION QUIET^
-  ORDER CLNAME CODE^
-      SEGMENT ENTRY OFFSET=0x0000^
-  CLNAME DATA || exit /b
+cd src\kernel
+mingw32-make || (cd ..\.. && exit /b)
 cd ..\..
 
 echo Compiling sample applications...
