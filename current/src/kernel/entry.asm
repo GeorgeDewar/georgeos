@@ -46,7 +46,7 @@ handleCallAsm:
 
     mov ax, bp                  ; BP is where our syscall code is
     mov bx, 3
-    mul bx                      ; AX = AX * BX = AX * 3
+    mul bx                      ; AX = AX * BX = AX * 3         TODO: Use bl instead
     add ax, vectors
     mov bp, ax                  ; Put the result back in BP, as we need to keep AX,BX,CX,DX clean
 
