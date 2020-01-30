@@ -9,7 +9,7 @@ mingw32-make || (cd ..\.. && exit /b)
 cd ..\..
 
 echo Compiling sample applications...
-nasm -O0 -f bin -o src\data\sayhi.bin src\programs\sayhi.asm
+nasm -O0 -f bin -o src\data\sayhi.exe src\programs\sayhi.asm
 call buildprog test
 call buildprog myname
 
