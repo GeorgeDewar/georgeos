@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "C:\\Users\\Owner\\code\\mikeos-4.6.1"
+		},
+		{
+			"path": "C:\\Users\\Owner\\code\\libmikeos-4.2"
+		},
+		{
+			"path": "C:\\Users\\Owner\\Downloads\\MichalOS"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"video.h": "c",
+			"console.h": "c",
+			"disk.h": "c",
+			"filesystem.h": "c"
+		}
+	}
+}

@@ -1,5 +1,3 @@
-    BITS 16
-
     %define LOAD_ADDRESS    7c00h          ; This is where the BIOS puts us
     org LOAD_ADDRESS                       ; Assume all code is at this offset
 
