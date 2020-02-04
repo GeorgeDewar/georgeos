@@ -6,6 +6,7 @@
 #include "components/filesystem.h"
 #include "bios/apm.h"
 
+void updateClock();
 void reboot();
 void handleCall();
 extern void runApplication();
@@ -13,6 +14,9 @@ extern void runApplication();
 char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
 char command[128] = "";
+char timeString[16];
+
+char far *video = 0xB8000000;
 
 union DirBuf {
     char diskBuffer[512];
@@ -25,13 +29,25 @@ int programSegment = 0x4000;
 int programOffset = 0x0000;
 
 void kernelMain(void) {
+   int headerIndex;
    int dirIndex = 0;
 
    clearScreen();
    loadFAT();
+   printNl();
+   printNl();
    println(hello);
-   
-   while(1==1) {    
+
+  
+   while(1==1) {
+      for(headerIndex = 0; headerIndex < 80; headerIndex++) {
+         video[headerIndex * 2] = ' ';
+         video[headerIndex * 2 + 1] = 0x71;
+      }
+
+      printScreenDirect(0, 1, "GeorgeOS");
+      updateClock();
+      
       print(prompt);
       getString(command, 1);
 
@@ -123,6 +139,11 @@ void kernelMain(void) {
          println("Unknown command");
       }
    }
+}
+
+void updateClock() {
+   getTimeString(timeString);
+   printScreenDirect(0, 70, timeString);
 }
 
 void reboot() {

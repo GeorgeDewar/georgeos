@@ -1,6 +1,7 @@
 .model small
 .code ENTRY
     extern kernelMain_ : proc
+    extern updateClock_ : proc
 
     extern print_ : proc
     extern println_ : proc
@@ -16,6 +17,10 @@
 
     mov ax, 0
     mov es, ax
+
+    mov word ptr [es:0x72], 2000h             ; Move code segment address to int 21h segment pointer
+    mov word ptr [es:0x70], offset updateClockAsm     ; Move interrupt handler function offset to int 21h offset pointer
+
     mov word ptr [es:0x86], 2000h             ; Move code segment address to int 21h segment pointer
     mov word ptr [es:0x84], offset handleCallAsm     ; Move interrupt handler function offset to int 21h offset pointer
 
@@ -59,5 +64,12 @@ handleCallAsm:
 
     iret                        ; Return from the interrupt handler
 
+updateClockAsm:
+    mov ax, @data               ; Set segments (DS and ES) to the right location
+    add ax, 2000h
+    mov ds, ax
+    
+    call updateClock_
+    iret
     
 end

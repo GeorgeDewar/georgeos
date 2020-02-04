@@ -30,4 +30,6 @@ void getTimeString(char* buffer) {
     intToStringHex((int) second, temp);
     copyString(temp, buffer, index);
     index += strlen(temp);
+
+    buffer[index++] = 0;
 }
