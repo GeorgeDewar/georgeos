@@ -1,5 +1,5 @@
 CC=wcc
-CFLAGS=-q -0 -d0 -ms -s -wx -zls
+CFLAGS=-q -0 -d0 -ms -s -wx -zls -DSECTORS_PER_TRACK=$(SECTORS_PER_TRACK)
 BUILD=..\..\build\kernel
 
 OBJS := entry.obj kernel.obj jump.obj \

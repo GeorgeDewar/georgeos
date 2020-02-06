@@ -1,6 +1,8 @@
 #include "disk.h"
 
-#define SECTORS_PER_TRACK       18
+#ifndef SECTORS_PER_TRACK
+    #define SECTORS_PER_TRACK 0 // Redefined at build time; defined here for compiler happiness
+#endif
 
 #define FN_02H_READ_SECTORS_FROM_DRIVE  0x02
 

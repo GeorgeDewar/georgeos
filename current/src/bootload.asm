@@ -19,9 +19,8 @@
     %define KERNEL_SEGMENT  2000h          ; Where we are going to load the kernel
     %define KERNEL_OFFSET   0000h          ;
 
-    jmp short bootloader_start    ; Jump past disk description section
-    nop                ; Pad out before disk description
-
+    jmp short bootloader_start  ; Jump past disk description section
+    nop                         ; Pad out before disk description
 
 ; ------------------------------------------------------------------
 ; Disk description table, to make it a valid floppy
@@ -37,7 +36,7 @@ RootDirEntries      dw 224            ; Number of entries in root dir
 LogicalSectors      dw 2880           ; Number of logical sectors
 MediumByte          db 0F0h           ; Medium descriptor byte
 SectorsPerFat       dw 9              ; Sectors per FAT
-SectorsPerTrack     dw 18             ; Sectors per track (36/cylinder)
+SectorsPerTrack     dw SECTORS_PER_TRACK ; Varies by disk size, set externally
 Sides               dw 2              ; Number of sides/heads
 HiddenSectors       dd 0              ; Number of hidden sectors
 LargeSectors        dd 0              ; Number of LBA sectors
@@ -305,7 +304,7 @@ l2hts:
     new_line       db 0
 
     disk_error     db "Disk read error", 0
-    wrong_file     db "KERNEL.BIN is not the first file on disk", 0
+    wrong_file     db "File 0 is not KERNEL.BIN", 0
     
     bootdev        db 0     ; Boot device number
     cluster        dw 0     ; Cluster of the file we want to load
