@@ -1,6 +1,6 @@
 @echo off
 
-set DISK_SIZE=720
+set DISK_SIZE=1440
 
 set SECTORS_PER_TRACK=invalid
 IF "%DISK_SIZE%"=="360" set SECTORS_PER_TRACK=9
