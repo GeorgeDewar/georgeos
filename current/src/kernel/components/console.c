@@ -3,6 +3,8 @@
 #include "../util/string.h"
 #include "console.h"
 
+char far *video = 0xB8000000;
+
 void print(char* s) {
    while(*s != 0) {
       printChar(*s);
@@ -58,4 +60,12 @@ void getString(char* buffer, char echo) {
     }
     if(echo == 1) printNl();
     buffer[index] = 0; // NULL byte to end string
+}
+
+void printScreenDirect(char row, char col, char* s) {
+    int index = (row * 80) + col;
+    while(*s != 0) {
+      video[index++ * 2] = *s;
+      s++;
+    }
 }

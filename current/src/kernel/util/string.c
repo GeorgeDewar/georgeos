@@ -64,6 +64,10 @@ void intToStringHex(int number, char* string) {
     // Reverse it
     len = index;
     index = 0;
+    if(len < 2) {
+        len += 1;
+        buffer[len-1] = ASCII_ZERO; // a bodge to zero-pad numbers for times
+    }
     for(index; index < len; index++) {
         string[index] = buffer[len-index-1];
     }

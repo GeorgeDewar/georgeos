@@ -15,6 +15,26 @@ void clearScreen() {
       mov ah, SET_VIDEO_MODE
       mov al, TEXT_80_25_16
       int 10h
+
+      // MOV AH, 06h    ; Scroll up function
+      // XOR AL, AL     ; Clear entire screen
+      // XOR CX, CX     ; Upper left corner CH=row, CL=column
+      // MOV DX, 184FH  ; lower right corner DH=row, DL=column 
+      // MOV BH, 1Eh    ; YellowOnBlue
+      // INT 10H
+
+      // push ds
+      // push ax
+      // mov ax, 0xB800
+      // mov ds, ax
+      
+      // mov al, 'Z'
+      // mov bx, 0
+      // mov byte [bx], al
+      // mov 0x800, al
+
+      // pop ax
+      // pop ds
    }
 }
 
