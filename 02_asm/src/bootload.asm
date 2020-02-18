@@ -30,7 +30,7 @@
 OEMLabel            db "GEORGEOS"     ; Disk label
 BytesPerSector      dw 512            ; Bytes per sector
 SectorsPerCluster   db 1              ; Sectors per cluster
-ReservedForBoot     dw 1              ; Reserved sectors for boot record
+ReservedForBoot     dw 2              ; Reserved sectors for boot record
 NumberOfFats        db 2              ; Number of copies of the FAT
 RootDirEntries      dw 224            ; Number of entries in root dir
                                       ; (224 * 32 = 7168 = 14 sectors to read)
@@ -77,7 +77,7 @@ bootloader_start:
 ; Number of root = RootDirEntries * 32 bytes/entry / 512 bytes/sector = 14
 ; Start of user data = (start of root) + (number of root) = logical 33
 
-    mov ax, 19                  ; Root dir starts at logical sector 19
+    mov ax, 20                  ; Root dir starts at logical sector 19
     call l2hts                  ; Calculate head/track/sector
 
     mov si, buffer              ; Set ES:BX to point to our buffer (see end of code)
@@ -108,7 +108,7 @@ found_file_to_load:
     call print_string
 
     ; Try to load the FAT into RAM
-    mov ax, 1                   ; Sector 1 = first sector of first FAT
+    mov ax, 2                   ; Sector 1 = first sector of first FAT
     call l2hts                  ; Calculate head/track/sector
 
     mov di, FAT                 ; Set ES:BX to point to our FAT buffer
@@ -140,7 +140,7 @@ read_fat_ok:
 
 load_file_sector:
     mov ax, word [cluster]      ; Convert cluster number to logical sector
-    add ax, 31
+    add ax, 32
 
     call l2hts                  ; Make appropriate params for int 13h
 
