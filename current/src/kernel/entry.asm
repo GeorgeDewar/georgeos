@@ -18,11 +18,11 @@
     mov ax, 0
     mov es, ax
 
-    mov word ptr [es:0x72], 2000h             ; Move code segment address to int 21h segment pointer
-    mov word ptr [es:0x70], offset updateClockAsm     ; Move interrupt handler function offset to int 21h offset pointer
+    mov word ptr [es:0x72], 2000h                     ; Move code segment address to int 1Ch segment pointer
+    mov word ptr [es:0x70], offset updateClockAsm     ; Move interrupt handler function offset to int 1Ch offset pointer
 
-    mov word ptr [es:0x86], 2000h             ; Move code segment address to int 21h segment pointer
-    mov word ptr [es:0x84], offset handleCallAsm     ; Move interrupt handler function offset to int 21h offset pointer
+    mov word ptr [es:0x86], 2000h                     ; Move code segment address to int 21h segment pointer
+    mov word ptr [es:0x84], offset handleCallAsm      ; Move interrupt handler function offset to int 21h offset pointer
 
     mov ax, @data               ; Set segments (DS and ES) to the right location
     add ax, 2000h
@@ -65,11 +65,26 @@ handleCallAsm:
     iret                        ; Return from the interrupt handler
 
 updateClockAsm:
+    push ax
+    push bx
+    push cx
+    push dx
+    push ds
+    push es
+
     mov ax, @data               ; Set segments (DS and ES) to the right location
     add ax, 2000h
     mov ds, ax
     
     call updateClock_
+
+    pop es
+    pop ds
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    
     iret
     
 end
