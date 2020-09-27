@@ -1,6 +1,6 @@
 @echo off
 
-set DISK_SIZE=720
+set DISK_SIZE=1440
 
 set SECTORS_PER_TRACK=invalid
 IF "%DISK_SIZE%"=="360" set SECTORS_PER_TRACK=9
@@ -23,10 +23,10 @@ call buildprog test
 call buildprog myname
 
 echo Adding bootsector to disk image...
-dd count=2 seek=0 bs=512 if=build\bootload.bin of=disk_images\georgeos.flp
+dd count=2 seek=0 bs=512 if=build\bootload.bin of=disk_images\georgeos_%DISK_SIZE%.img
 
 echo Mounting disk image...
-imdisk -a -f disk_images\georgeos.flp -s %DISK_SIZE%K -m B:
+imdisk -a -f disk_images\georgeos_%DISK_SIZE%.img -s %DISK_SIZE%K -m B:
 
 echo Copying kernel and applications to disk image...
 copy build\kernel\kernel.bin b:\kernel.bin
@@ -37,4 +37,4 @@ imdisk -D -m B:
 
 echo Done!
 REM qemu-system-i386 -drive file=disk_images\georgeos.flp,format=raw,index=0,media=disk
-qemu-system-i386 -drive file=disk_images\georgeos.flp,format=raw,index=0,if=floppy -monitor stdio -gdb tcp::9000
+qemu-system-i386 -drive file=disk_images\georgeos_%DISK_SIZE%.img,format=raw,index=0,if=floppy -monitor stdio -gdb tcp::9000
