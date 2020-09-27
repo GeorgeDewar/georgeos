@@ -5,11 +5,13 @@
 #include "bios/clock.h"
 #include "components/filesystem.h"
 #include "bios/apm.h"
+#include "bios/disk.h"
 
 void updateClock();
 void reboot();
 void handleCall();
 extern void runApplication();
+extern char *FAT;
 
 char *hello = "Welcome to GeorgeOS!\r\n";
 char *prompt = "> ";
@@ -33,7 +35,13 @@ void kernelMain(void) {
    int dirIndex = 0;
 
    clearScreen();
-   loadFAT();
+   if(loadFAT() != 0) {
+      println("Error: Failed to read FAT");
+   } else {
+      char fatByte[4];
+      intToStringHex(FAT[0], fatByte);
+      println(fatByte);
+   };
    printNl();
    printNl();
    println(hello);
@@ -62,6 +70,13 @@ void kernelMain(void) {
       } else if(strcmp(command, "dir")) {
          char responseCode = readRootDirectory(diskBuffer.diskBuffer);
          char responseString[16] = "";
+         char errorCount = 0;
+         while(responseCode != 0 && errorCount < 3) {
+            println("Retry");
+            resetDisk();
+            responseCode = readRootDirectory(diskBuffer.diskBuffer);
+            errorCount++;
+         }
 
          if(responseCode != 0) {
             intToStringHex(responseCode, responseString);
