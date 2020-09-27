@@ -218,18 +218,18 @@ fatal_error:
     call print_string
 
 pause:
-    pusha
+    push ax
     mov ax, 0
     int 16h                     ; Wait for keystroke
-    popa
+    pop ax
     ret
 
 print_dot:
-    pusha
+    push ax
     mov ah, 0Eh                 ; int 10h teletype function
     mov al, '.'                 ; char to print
     int 10h                     ; Otherwise, print it
-    popa
+    pop ax
     ret
 
 ; -----------------------------------------------------------------------------
@@ -239,7 +239,7 @@ print_dot:
 ; -----------------------------------------------------------------------------
 
 print_string:
-    pusha
+    push ax
     mov ah, 0Eh                 ; int 10h teletype function
 
 .repeat:
@@ -255,7 +255,7 @@ print_string:
     mov al, 0x0A
     int 10h
 
-    popa
+    pop ax
     ret
 
 ; -----------------------------------------------------------------------------
