@@ -23,7 +23,7 @@ call buildprog test
 call buildprog myname
 
 echo Adding bootsector to disk image...
-dd count=2 seek=0 bs=512 if=build\bootload.bin of=disk_images\georgeos_%DISK_SIZE%.img
+wsl dd count=2 seek=0 bs=512 if=build/bootload.bin of=disk_images/georgeos_%DISK_SIZE%.img
 
 echo Mounting disk image...
 imdisk -a -f disk_images\georgeos_%DISK_SIZE%.img -s %DISK_SIZE%K -m B:
