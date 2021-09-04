@@ -1,0 +1,6 @@
+Design of the FAT file system
+From Wikipedia, the free encyclopedia
+
+A FAT file system is a specific type of computer file system architecture and a family of industry-standard file systems utilizing it.
+
+The FAT file system is a legacy file system which is simple and robust.[3] It offers good performance even in very light-weight implementations, but cannot deliver the same performance, reliability and scalability as some modern file systems. It is, however, supported for compatibility reasons by nearly all currently developed operating systems for personal computers and many home computers, mobile devices and embedded systems, and thus is a well suited format for data exchange between computers and devices of almost any type and age from 1981 through the present.
