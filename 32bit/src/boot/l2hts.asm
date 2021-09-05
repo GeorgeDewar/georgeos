@@ -32,3 +32,24 @@ l2hts:
     mov dl, byte [bootdev]      ; Set correct device
 
     ret
+
+; -----------------------------------------------------------------------------
+; Routine: read_sectors
+;
+; Read (AL) sectors from the floppy disk starting from (BX) into the buffer location (SI)
+; -----------------------------------------------------------------------------
+read_sectors:
+    push ax
+    mov ax, bx
+    ; AX contains the LBA location
+    call l2hts                  ; Calculate head/track/sector
+    pop ax
+
+    mov bx, si                  ; Set BX also to the disk buffer location
+    mov ah, 2                   ; Params for int 13h: read floppy sectors
+
+    stc                         ; Set carry bit; a few BIOSes do not set properly on error
+    int 13h                     ; Read sectors using BIOS
+
+    jc fatal_error              ; If read failed, jump to error handler
+    ret

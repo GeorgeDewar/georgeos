@@ -51,36 +51,16 @@ bootloader_start:
     mov si, bootloader_hi
     call print_string
 
-    ; Load the rest of the bootloader + FAT + root directory into memory
-    ; Sector 0 is this code. We read from sector 1, which is the rest of the bootloader,
-    ; then 2x FAT @ 9 sectors each (total 18), then 14 sectors for the root directory,
-    ; all at once.
-    mov ax, 1                   ; Root dir starts at logical sector 19
-    call l2hts                  ; Calculate head/track/sector
+    ; Load the rest of the bootloader from sector 1
+    mov bx, 1           ; start at sector 1
+    mov al, 1           ; read one sector
+    mov si, stage2      ; put it at stage2
+    call read_sectors   ; call
 
-    mov si, DISK_BUFFER         ; Set ES:BX to point to our buffer (see end of code)
-    mov bx, si
-
-    mov ah, 2                   ; Params for int 13h: read floppy sectors
-    mov al, 33                  ; And read 33 of them
-
-    stc                         ; Set carry bit; a few BIOSes do not set properly on error
-    int 13h                     ; Read sectors using BIOS
-
-    jnc initial_read_ok         ; If read went OK, skip ahead
-    jmp fatal_error             ; Else it's a fatal read error
-
-initial_read_ok:
-    mov si, loading_kernel
+    ; Jump to stage 2, which we just loaded
+    mov si, jumping_to_pt2
     call print_string
-
-    ; Switch to protected mode - after the include we are in [bits 32]
-    %include "src/boot/protected_mode.asm"
-
-    mov ebx, MSG_PROT_MODE
-    call print_string_pm
-
-    jmp $
+    jmp stage2
 
 ; [bits 16]
 ; ------------------------------------------------------------------
@@ -89,6 +69,7 @@ initial_read_ok:
 fatal_error:
     mov si, disk_error
     call print_string
+    jmp $
 
 print_dot:
     push ax
@@ -109,26 +90,63 @@ print_dot:
     kern_filename       db "KERNEL  BIN"    ; Kernel filename
 
     bootloader_hi       db "Starting GeorgeOS", 0
-    found_kernel        db "Loading FAT", 0
-    loading_kernel      db "Loading Kernel",  0
+    ; loading_kernel      db "Loading Kernel",  0
 
-    jumping             db "Jumping to Kernel", 0
+    ; jumping             db "Jumping to Kernel", 0
+    jumping_to_pt2      db "Jumping to bootloader stage 2", 0
     new_line            db 0
 
     disk_error          db "Disk read error", 0
-    ; wrong_file          db "File 0 is not KERNEL.BIN", 0
+    wrong_file          db "File 0 is not KERNEL.BIN", 0
 
     bootdev             db 0     ; Boot device number
     cluster             dw 0     ; Cluster of the file we want to load
     pointer             dw 0     ; Pointer into Buffer, for loading kernel
 
 ; ------------------------------------------------------------------
-; END OF BOOT SECTOR PART 1 AND BUFFER START
+; END OF BOOT SECTOR STAGE 1
 
     times 510-($-$$) db 0    ; Pad remainder of boot sector with zeros
-    dw 0AA55h        ; Boot signature (DO NOT CHANGE!)
+    dw 0AA55h                ; Boot signature (DO NOT CHANGE!)
 
-buffer:
+; START OF STAGE 2 (loaded immediately after stage 1)
+; ------------------------------------------------------------------
 
-    ; times 512 db 55
+stage2:
+    call print_dot
+    
+    ; Load the root directory
+    ; First, we need to load the root directory from the disk. Technical details:
+    ; Start of root = ReservedForBoot + NumberOfFats * SectorsPerFat = logical 19
+    ; Number of root = RootDirEntries * 32 bytes/entry / 512 bytes/sector = 14
+    ; Start of user data = (start of root) + (number of root) = logical 33
+    mov bx, ROOT_DIR_LOCATION   ; start at sector
+    mov al, SECTORS_PER_DIR     ; sectors to read
+    mov si, DISK_BUFFER         ; put it in the general disk buffer
+    call read_sectors           ; call the fucntion
+
+    ; Look for KERNEL.BIN
+    mov di, DISK_BUFFER
+    mov si, kern_filename       ; Start searching for kernel filename
+    mov cx, 11                  ; Repeat character comparison 11 times
+    rep cmpsb
+    je found_file_to_load       ; Success; the filename matches; jump ahead
+
+    mov si, wrong_file          ; The filename did not match; print error and stop
+    call print_string
+    jmp $
+
+found_file_to_load:
+    call print_dot
+
+switch_to_prot:
+    ; Switch to protected mode - after the include we are in [bits 32]
+    %include "src/boot/protected_mode.asm"
+
+    mov ebx, MSG_PROT_MODE
+    call print_string_pm
+
+    jmp $
+
+    times 512-($-stage2) db 0
 ; ==================================================================
