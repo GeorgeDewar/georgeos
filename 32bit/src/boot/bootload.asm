@@ -104,11 +104,8 @@ print_dot:
     ret
 
 %include "src/boot/print_string.asm"
-
 %include "src/boot/print_string_pm.asm"
-
 %include "src/boot/l2hts.asm"
-
 
 ; -----------------------------------------------------------------------------
 ; Strings and variables
@@ -126,13 +123,8 @@ print_dot:
     disk_error          db "Disk read error", 0
     ; wrong_file          db "File 0 is not KERNEL.BIN", 0
 
-        ; nop -- here breaks it, but one line down is fine
-    ; nop
-    bootdev             db 0x90     ; Boot device number
-    
-
+    bootdev             db 0     ; Boot device number
     cluster             dw 0     ; Cluster of the file we want to load
-
     pointer             dw 0     ; Pointer into Buffer, for loading kernel
 
 ; ------------------------------------------------------------------

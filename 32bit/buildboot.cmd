@@ -12,5 +12,6 @@ wsl dd count=2 seek=0 bs=512 if=build/bootload.bin of=disk_images/georgeos_1440.
 @REM imdisk -D -m B:
 
 echo Done!
-qemu-system-i386 -drive file=disk_images\georgeos_1440.img,format=raw,index=0,if=floppy 
+qemu-system-i386 -drive file=disk_images\georgeos_1440.img,format=raw,index=0,if=floppy
 rem -monitor stdio -gdb tcp::9000 -nographic
+rem  -S -s

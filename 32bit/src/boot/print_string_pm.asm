@@ -4,6 +4,7 @@
 ; Print the string pointed to by EAX to the bottom left of the screen by
 ; directly writing to the video memory
 ; -----------------------------------------------------------------------------
+[bits 32]
 
 ; Define some constants
 %define VIDEO_MEMORY        0xb8000

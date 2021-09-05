@@ -3,6 +3,7 @@
 ;
 ; Print the string pointed to by SI to the screen using int 10h
 ; -----------------------------------------------------------------------------
+[bits 16]
 
 print_string:
     push ax
