@@ -40,7 +40,7 @@ bootloader_start:
     mov ds, ax                  ; Set data segment to 0
     mov es, ax                  ; Set extra segment to 0 (used for disk access)
     mov ss, ax                  ; Set stack segment to 0
-    mov sp, LOAD_ADDRESS - 1    ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
+    mov sp, LOAD_ADDRESS        ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
 
     ; Clear the screen
     mov ah, 0x00                ; Set video mode to clear the screen
@@ -58,28 +58,23 @@ bootloader_start:
     mov ax, 1                   ; Root dir starts at logical sector 19
     call l2hts                  ; Calculate head/track/sector
 
-    ; mov si, DISK_BUFFER         ; Set ES:BX to point to our buffer (see end of code)
-    ; mov bx, si
+    mov si, DISK_BUFFER         ; Set ES:BX to point to our buffer (see end of code)
+    mov bx, si
 
-    ; mov ah, 2                   ; Params for int 13h: read floppy sectors
-    ; mov al, 33                  ; And read 33 of them
+    mov ah, 2                   ; Params for int 13h: read floppy sectors
+    mov al, 33                  ; And read 33 of them
 
-    ; stc                         ; Set carry bit; a few BIOSes do not set properly on error
-    ; int 13h                     ; Read sectors using BIOS
+    stc                         ; Set carry bit; a few BIOSes do not set properly on error
+    int 13h                     ; Read sectors using BIOS
 
-    ; jnc initial_read_ok         ; If read went OK, skip ahead
-    ; jmp fatal_error             ; Else it's a fatal read error
+    jnc initial_read_ok         ; If read went OK, skip ahead
+    jmp fatal_error             ; Else it's a fatal read error
 
 initial_read_ok:
     mov si, loading_kernel
     call print_string
 
     ; Switch to protected mode - after the include we are in [bits 32]
-    call print_dot
-    ;jmp switch_prot
-    nop
-    ; nop one nop here breaks it
-    nop
     %include "src/boot/protected_mode.asm"
 
     mov ebx, MSG_PROT_MODE
