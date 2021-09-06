@@ -1,27 +1,22 @@
-CC=wcc
-CFLAGS=-q -0 -d0 -ms -s -wx -zls -DSECTORS_PER_TRACK=$(SECTORS_PER_TRACK)
-BUILD=..\..\build\kernel
+# Automatically generate lists of sources using wildcards .
+C_SOURCES = $(wildcard *.c drivers/*.c)
+HEADERS = $(wildcard kernel/*.h drivers/*.h)
 
-OBJS := entry.obj kernel.obj jump.obj \
-		$(addprefix bios\,apm.obj clock.obj disk.obj keyboard.obj video.obj) \
-	  	$(addprefix components\,console.obj filesystem.obj) \
-		$(addprefix util\,string.obj) \
+# TODO : Make sources dep on all header files .
+# Convert the *.c filenames to *.o to give a list of object files to build
+OBJ = ${C_SOURCES:.c=.o}
+# Default build target
+all: kernel.bin
 
-kernel.bin: $(OBJS)
-	wlink $(foreach objfile,$^,FILE $(BUILD)\$(objfile)) \
-  		NAME $(BUILD)\$@ FORMAT DOS OUTPUT RAW \
-  		OFFSET=0x0000 OPTION NODEFAULTLIBS \
-  		OPTION FILLCHAR=0x90 \
-  		OPTION QUIET \
-  		ORDER CLNAME CODE \
-  		    SEGMENT ENTRY OFFSET=0x0000 \
- 		CLNAME DATA
+kernel.bin: kernel.o ${OBJ}
+	ld -o $@ -T linker.ld -m elf_i386 -nostdlib $^
+	objcopy -O binary --remove-section .note.gnu.property $@ $@
 
-entry.obj: entry.asm
-	wasm -q -0 -fo=$(BUILD)\$@ $<
+# Generic rule for compiling C code to an object file
+# For simplicity , we C files depend on all header files .
+%.o: %.c ${HEADERS}
+	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-jump.obj: jump.asm
-	nasm -O0 -f obj -o $(BUILD)\$@ $<
-
-%.obj: %.c
-	$(CC) $(CFLAGS) -fo=$(BUILD)\$@ $<
+clean:
+	rm -fr *.bin *.dis *.o
+	rm -fr kernel/*.o boot/*.bin drivers/*.o
