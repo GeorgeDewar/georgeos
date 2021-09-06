@@ -22,7 +22,10 @@
     org LOAD_ADDRESS                       ; Assume all code is at this offset
 
     %define DISK_BUFFER     8400h          ; Where in memory to put temporarily read sectors from disk
-    %define FAT             A400h          ; Where in memory to put the FAT
+    %define FAT             0a400h          ; Where in memory to put the FAT
+
+    %define KERNEL_SEGMENT  2000h          ; Where we are going to load the kernel
+    %define KERNEL_OFFSET   0000h          ; 2000:0000h = 20000h
 
     jmp short bootloader_start  ; Jump past disk description section
     nop                         ; Pad out before disk description
@@ -113,40 +116,68 @@ print_dot:
 ; ------------------------------------------------------------------
 
 stage2:
-    call print_dot
+    mov si, loading_root_dir
+    call print_string
     
     ; Load the root directory
     ; First, we need to load the root directory from the disk. Technical details:
     ; Start of root = ReservedForBoot + NumberOfFats * SectorsPerFat = logical 19
     ; Number of root = RootDirEntries * 32 bytes/entry / 512 bytes/sector = 14
     ; Start of user data = (start of root) + (number of root) = logical 33
-    mov bx, ROOT_DIR_LOCATION   ; start at sector
-    mov al, SECTORS_PER_DIR     ; sectors to read
-    mov si, DISK_BUFFER         ; put it in the general disk buffer
-    call read_sectors           ; call the fucntion
+    mov bx, ROOT_DIR_LOCATION    ; start at sector
+    mov al, SECTORS_PER_DIR      ; sectors to read
+    mov si, DISK_BUFFER          ; put it in the general disk buffer
+    call read_sectors            ; call the function
 
-    ; Look for KERNEL.BIN
-    mov di, DISK_BUFFER
-    mov si, kern_filename       ; Start searching for kernel filename
-    mov cx, 11                  ; Repeat character comparison 11 times
-    rep cmpsb
-    je found_file_to_load       ; Success; the filename matches; jump ahead
-
-    mov si, wrong_file          ; The filename did not match; print error and stop
+    mov si, looking_for_kernel
     call print_string
-    jmp $
+    %include "src/boot/find_kernel.asm"
 
-found_file_to_load:
-    call print_dot
+    ; Load the File Allocation Table (FAT)
+    mov si, loading_fat
+    call print_string
+    mov bx, NUM_RESERVED_SECTORS ; start at sector
+    mov al, SECTORS_PER_FAT      ; sectors to read
+    mov si, FAT                  ; put it in the FAT location
+    call read_sectors            ; call the function
+
+    mov si, loading_kernel
+    call print_string
+    %include "src/boot/load_kernel.asm"
+
+    ; mov ax, 2000h
+    ; mov ds, ax
+    ; mov ah, 0Eh                 ; int 10h teletype function
+    ; mov al, [0]                 ; char to print
+    ; int 10h                     ; Otherwise, print it
+    ; jmp $
+
 
 switch_to_prot:
+    mov si, switching_to_prot
+    call print_string
+
     ; Switch to protected mode - after the include we are in [bits 32]
     %include "src/boot/protected_mode.asm"
 
     mov ebx, MSG_PROT_MODE
     call print_string_pm
 
+    ; jmp KERNEL_OFFSET
+    call 0x20000
     jmp $
+    db 0xBA, 0xBA, 0xBA
+
+; -----------------------------------------------------------------------------
+; Strings and variables (stage 2)
+; -----------------------------------------------------------------------------
+
+    loading_root_dir     db "Loading root directory", 0
+    looking_for_kernel   db "Locating KERNEL.BIN", 0
+    file_not_found       db 0x0D, 0x0A, "Could not find KERNEL.BIN in root directory", 0
+    loading_fat          db 0x0D, 0x0A, "Loading FAT", 0
+    loading_kernel       db "Loading kernel", 0
+    switching_to_prot    db "Switching to protected mode", 0
 
     times 512-($-stage2) db 0
 ; ==================================================================

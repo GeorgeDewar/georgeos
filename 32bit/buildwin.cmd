@@ -32,4 +32,5 @@ imdisk -D -m B:
 
 echo Done!
 REM qemu-system-i386 -drive file=disk_images\georgeos.flp,format=raw,index=0,media=disk
-qemu-system-i386 -drive file=disk_images\georgeos_%DISK_SIZE%.img,format=raw,index=0,if=floppy -monitor stdio -gdb tcp::9000
+qemu-system-i386 -drive file=disk_images\georgeos_%DISK_SIZE%.img,format=raw,index=0,if=floppy %*
+rem -S -s
