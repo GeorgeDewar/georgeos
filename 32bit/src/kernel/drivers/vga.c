@@ -25,8 +25,19 @@ void print_char(char character, char attribute_byte) {
     unsigned char *vidmem = (unsigned char *) VIDEO_ADDRESS;
 
     int offset = get_cursor_pos();
-    vidmem[offset] = character;
-    vidmem[offset + 1] = attribute_byte;
+
+    if (character == '\n') {
+        // If we see a newline character, set offset to the end of
+        // current row, so it will be advanced to the first col
+        // of the next row.
+        int row = offset / (2 * COLS);
+        offset = get_screen_offset(row, 79);
+    } else {
+        // Otherwise, write the character and its attribute byte to
+        // video memory at our calculated offset.
+        vidmem[offset] = character;
+        vidmem[offset+1] = attribute_byte;
+    }
     
     // Advance the cursor
     set_cursor_pos(offset + 2);
