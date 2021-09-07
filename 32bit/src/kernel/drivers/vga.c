@@ -1,41 +1,56 @@
-#include "../low_level.h";
+#include "../low_level.h"
+#include "vga.h"
 
 // Location of video memory
 #define VIDEO_ADDRESS 0xb8000
-
-// Size of the screen in text mode
-#define ROWS 25
-#define COLS 80
-
-// Attribute byte for our default colour scheme .
-#define WHITE_ON_BLACK 0x0f
 
 // Screen device I/O ports
 #define REG_SCREEN_CTRL 0x3D4
 #define REG_SCREEN_DATA 0x3D5
 
+// Private functions
+int get_screen_offset(char col, char row);
+int get_cursor_pos();
+void set_cursor_pos(int offset);
+
 void print_string(char *string) {
     int i = 0;
     while(string[i] != 0) {
-        print_char(string[i++], -1, -1, -1);
+        print_char(string[i++], WHITE_ON_BLACK);
     }
-
 }
 
-void print_char(char character, int col, int row, char attribute_byte) {
+void print_char(char character, char attribute_byte) {
     /* Create a byte ( char ) pointer to the start of video memory */
     unsigned char *vidmem = (unsigned char *) VIDEO_ADDRESS;
 
     int offset = get_cursor_pos();
     vidmem[offset] = character;
-    vidmem[offset + 1] = WHITE_ON_BLACK;
+    vidmem[offset + 1] = attribute_byte;
     
     // Advance the cursor
     set_cursor_pos(offset + 2);
 }
 
-int get_screen_offset(char col, char row) {
-    return ((row * COLS) + row) * 2;
+void print_char_fixed(char character, char row, char col, char attribute_byte) {
+    /* Create a byte ( char ) pointer to the start of video memory */
+    unsigned char *vidmem = (unsigned char *) VIDEO_ADDRESS;
+
+    int offset = get_screen_offset(row, col);
+    vidmem[offset] = character;
+    vidmem[offset + 1] = attribute_byte;
+}
+
+void clear_screen() {
+    set_cursor_pos(0);
+    for(int i=0; i<(ROWS*COLS); i++) {
+        print_char(' ', WHITE_ON_BLACK);
+    }
+    set_cursor_pos(0);
+}
+
+int get_screen_offset(char row, char col) {
+    return ((row * COLS) + col) * 2;
 }
 
 int get_cursor_pos() {
