@@ -12,11 +12,6 @@ IF "%SECTORS_PER_TRACK%"=="invalid" echo Unsupported disk size (try 360, 1200, 7
 echo Assembling bootloader...
 nasm -O0 -f bin -DSECTORS_PER_TRACK=%SECTORS_PER_TRACK% -o build\bootload.bin src\boot\bootload.asm || exit /b
 
-echo Compiling GeorgeOS kernel...
-cd src\kernel
-touch ../../build/kernel.bin
-cd ..\..
-
 echo Adding bootsector to disk image...
 wsl dd count=2 seek=0 bs=512 if=build/bootload.bin of=disk_images/georgeos_%DISK_SIZE%.img
 

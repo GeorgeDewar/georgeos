@@ -22,7 +22,7 @@
     org LOAD_ADDRESS                       ; Assume all code is at this offset
 
     %define DISK_BUFFER     8400h          ; Where in memory to put temporarily read sectors from disk
-    %define FAT             0a400h          ; Where in memory to put the FAT
+    %define FAT             0a400h         ; Where in memory to put the FAT
 
     %define KERNEL_SEGMENT  2000h          ; Where we are going to load the kernel
     %define KERNEL_OFFSET   0000h          ; 2000:0000h = 20000h

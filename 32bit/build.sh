@@ -13,10 +13,10 @@ echo Compiling GeorgeOS kernel...
 # gcc -m32 -c src/kernel/kernel.c -o build/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 # ld -o build/kernel.bin -T src/kernel/linker.ld -m elf_i386 -nostdlib build/kernel.o
 # objcopy -O binary --remove-section .note.gnu.property build/kernel.bin build/kernel.bin
-cd src/kernel
-make
-cp kernel.bin ../../build/kernel.bin
-cd ../..
+# cd src/kernel
+# make
+# cp kernel.bin ../../build/kernel.bin
+# cd ../..
 
 echo Initializing disk image...
 rm -f $OUTPUT_IMAGE
