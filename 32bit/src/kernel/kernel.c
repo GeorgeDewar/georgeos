@@ -1,3 +1,4 @@
+#include "../include/kernel/interrupts.h"
 #include "../include/drivers/vga.h"
 
 void main () {
@@ -8,7 +9,8 @@ void main () {
         print_char_fixed(' ', ROWS-1, i, 0x9f);
     }
 
-    while(1) {
+    idt_install();
+    print_string("IDT installed\n");
 
-    }
+    for(;;);
 }

@@ -8,6 +8,7 @@ HEADERS = $(wildcard $(SRCDIR)/include/kernel/*.h $(SRCDIR)/include/drivers/*.h)
 # TODO : Make sources dep on all header files .
 # Convert the *.c filenames to *.o to give a list of object files to build
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(C_SOURCES))
+OBJ += $(OBJDIR)/kernel/kernel_entry.o $(OBJDIR)/kernel/idt.o
 # Default build target
 all: georgeos_1440.img
 run: all
@@ -17,10 +18,9 @@ debug: all
 	gdb.exe -ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
-		-ex "break *0x20000" \
+		-ex "break main" \
 		-ex "continue" \
-		-ex "display/3i \$$pc" \
-		-ex "x/3i \$$pc"
+		-ex "display/10i \$$pc"
 	pkill qemu 
 
 georgeos_1440.img: bootload.bin kernel.bin src/data/*
@@ -47,7 +47,7 @@ bootload.bin: src/boot/*.asm
 $(OBJDIR)/%.o: $(SRCDIR)/%.c ${HEADERS}
 	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-$(OBJDIR)/kernel/kernel_entry.o: $(SRCDIR)/kernel/kernel_entry.asm
+$(OBJDIR)/%.o: $(SRCDIR)/%.asm
 	nasm -f elf -o $@ $<
 
 clean:
