@@ -1,6 +1,7 @@
 #include "../include/kernel/interrupts.h"
 #include "../include/kernel/irq.h"
 #include "../include/drivers/vga.h"
+#include "../include/kernel/timer.h"
 
 void main () {
     clear_screen();
@@ -14,6 +15,11 @@ void main () {
     print_string("IDT installed\n");
     irq_install();
     print_string("IRQ installed\n");
+
+    // Only now is it safe to enable interrupts
+    __asm__ __volatile__ ("sti");
+
+    timer_install();
 
     for(;;);
 }

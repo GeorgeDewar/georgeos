@@ -1,7 +1,7 @@
 #include "../include/kernel/low_level.h"
 #include "../include/kernel/interrupts.h"
 #include "../include/kernel/irq.h"
-#include "../include/drivers/vga.h"
+
 
 extern void irq0();
 extern void irq1();
@@ -108,15 +108,10 @@ void irq_handler(struct regs *r)
     *  the slave controller */
     if (r->int_no >= 40)
     {
-        port_byte_out(PIC2_COMMAND, 0x20);
+        port_byte_out(PIC2_COMMAND, PIC_CMD_EOI);
     }
 
     /* In either case, we need to send an EOI to the master
     *  interrupt controller too */
-    port_byte_out(PIC1_COMMAND, 0x20);
-
-    timerToggle += 1;
-    print_char_fixed((timerToggle / 10) % 2 == 0 ? 'x' : ' ', ROWS-1, COLS-1, 0x9f);
+    port_byte_out(PIC1_COMMAND, PIC_CMD_EOI);
 }
-
-unsigned char timerToggle = 0;
