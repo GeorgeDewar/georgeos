@@ -1,6 +1,6 @@
 #include "../include/drivers/vga.h"
 
-void _start () {
+void main () {
     clear_screen();
     print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
 

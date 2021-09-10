@@ -14,7 +14,8 @@ run: all
 	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy
 debug: all
 	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy -s -S &
-	gdb.exe -ex "target remote localhost:1234" \
+	gdb.exe -ex "file build/kernel.elf" \
+		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
 		-ex "break *0x20000" \
 		-ex "continue" \
@@ -34,9 +35,9 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/*
 	mcopy -i build/$@ build/kernel.bin ::/
 	mcopy -i build/$@ src/data/* ::/
 
-kernel.bin: build/kernel/kernel.o ${OBJ}
-	ld -o build/$@ -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
-	objcopy -O binary --remove-section .note.gnu.property build/$@ build/$@
+kernel.bin: build/kernel/kernel_entry.o ${OBJ}
+	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
+	objcopy -O binary --remove-section .note.gnu.property build/kernel.elf build/$@
 
 bootload.bin: src/boot/*.asm
 	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/bootload.bin src/boot/bootload.asm
@@ -45,6 +46,9 @@ bootload.bin: src/boot/*.asm
 # For simplicity , we C files depend on all header files .
 $(OBJDIR)/%.o: $(SRCDIR)/%.c ${HEADERS}
 	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
+$(OBJDIR)/kernel/kernel_entry.o: $(SRCDIR)/kernel/kernel_entry.asm
+	nasm -f elf -o $@ $<
 
 clean:
 	find ./build -name '*.o' -delete
