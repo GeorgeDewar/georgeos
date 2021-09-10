@@ -8,7 +8,7 @@ HEADERS = $(wildcard $(SRCDIR)/include/kernel/*.h $(SRCDIR)/include/drivers/*.h)
 # TODO : Make sources dep on all header files .
 # Convert the *.c filenames to *.o to give a list of object files to build
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(C_SOURCES))
-OBJ += $(OBJDIR)/kernel/kernel_entry.o $(OBJDIR)/kernel/idt.o
+OBJ += $(OBJDIR)/kernel/kernel_entry.o $(OBJDIR)/kernel/idt.o $(OBJDIR)/kernel/irq_asm.o
 # Default build target
 all: georgeos_1440.img
 run: all

@@ -1,4 +1,5 @@
 #include "../include/kernel/interrupts.h"
+#include "../include/kernel/irq.h"
 #include "../include/drivers/vga.h"
 
 void main () {
@@ -11,6 +12,8 @@ void main () {
 
     idt_install();
     print_string("IDT installed\n");
+    irq_install();
+    print_string("IRQ installed\n");
 
     for(;;);
 }

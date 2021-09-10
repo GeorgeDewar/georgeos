@@ -1,6 +1,7 @@
 #include "../include/stdint.h"
 #include "../include/kernel/memory.h"
 #include "../include/drivers/vga.h"
+#include "../include/kernel/interrupts.h"
 
 extern void isr0();
 extern void isr1();
@@ -150,15 +151,6 @@ char *exception_messages[] = {
     "Coprocessor Fault Exception",
     "Alignment Check Exception",
     "Machine Check Exception"
-};
-
-/* This defines what the stack looks like after an ISR was running */
-struct regs
-{
-    unsigned int gs, fs, es, ds;      /* pushed the segs last */
-    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
-    unsigned int int_no, err_code;    /* our 'push byte #' and ecodes do this */
-    unsigned int eip, cs, eflags, useresp, ss;   /* pushed by the processor automatically */ 
 };
 
 void fault_handler(struct regs *r) {
