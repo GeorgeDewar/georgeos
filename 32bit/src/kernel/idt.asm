@@ -1,5 +1,4 @@
 [bits 32]
-[extern handleInterrupt]
 
 %macro isr_noerror 1
     global isr%1
@@ -18,18 +17,7 @@
         jmp isr_common_stub
 %endmacro
 
-; Loads the IDT defined in '_idtp' into the processor.
-; This is declared in C as 'extern void idt_load();'
-global idt_load
-extern idtp
-idt_load:
-    lidt [idtp]
-    sti
-    ret
-
-; In just a few pages in this tutorial, we will add our Interrupt
-; Service Routines (ISRs) right here!
-
+; Execute our macro to define our ISRs
 isr_noerror 0
 isr_noerror 1
 isr_noerror 2
@@ -93,3 +81,12 @@ isr_common_stub:
     popa
     add esp, 8     ; Cleans up the pushed error code and pushed ISR number
     iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
+
+; Loads the IDT defined in '_idtp' into the processor.
+; This is declared in C as 'extern void idt_load();'
+global idt_load
+extern idtp
+idt_load:
+    lidt [idtp]
+    sti
+    ret
