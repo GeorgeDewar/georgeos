@@ -1,7 +1,8 @@
 #include "../include/kernel/interrupts.h"
 #include "../include/kernel/irq.h"
-#include "../include/drivers/vga.h"
 #include "../include/kernel/timer.h"
+#include "../include/drivers/vga.h"
+#include "../include/drivers/ps2_keyboard.h"
 
 void main () {
     clear_screen();
@@ -20,6 +21,7 @@ void main () {
     __asm__ __volatile__ ("sti");
 
     timer_install();
+    ps2_keyboard_install();
 
     for(;;);
 }
