@@ -1,8 +1,4 @@
-#include "../include/kernel/interrupts.h"
-#include "../include/kernel/irq.h"
-#include "../include/kernel/timer.h"
-#include "../include/drivers/vga.h"
-#include "../include/drivers/ps2_keyboard.h"
+#include "system.h"
 
 void main () {
     clear_screen();

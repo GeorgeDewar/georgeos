@@ -1,7 +1,4 @@
-#include "../include/stdint.h"
-#include "../include/kernel/memory.h"
-#include "../include/drivers/vga.h"
-#include "../include/kernel/interrupts.h"
+#include "system.h"
 
 extern void isr0();
 extern void isr1();
@@ -90,7 +87,7 @@ void idt_install()
     idtp.base = (unsigned int) &idt;
 
     /* Clear out the entire IDT, initializing it to zeros */
-    memset(&idt, 0, sizeof(struct idt_entry) * 256);
+    memset((uint8_t*) &idt, 0, sizeof(struct idt_entry) * 256);
 
     /* Add any new ISRs to the IDT here using idt_set_gate */
 

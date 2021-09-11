@@ -1,5 +1,4 @@
-#include "../include/kernel/low_level.h"
-#include "../include/drivers/vga.h"
+#include "system.h"
 
 // Location of video memory
 #define VIDEO_ADDRESS 0xb8000

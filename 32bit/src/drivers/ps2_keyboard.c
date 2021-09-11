@@ -1,13 +1,10 @@
-#include "../include/drivers/vga.h"
-#include "../include/kernel/irq.h"
-#include "../include/kernel/low_level.h"
-#include "../include/stdint.h"
+#include "system.h"
 
 // Define some constants for the rows of keys
-static char* numbers = "123456789";
-static char* _qwertzuiop = "qwertzuiop";
-static char* _asdfghjkl = "asdfghjkl";
-static char* _yxcvbnm = "yxcvbnm";
+// static char* numbers = "123456789";
+// static char* _qwertzuiop = "qwertzuiop";
+// static char* _asdfghjkl = "asdfghjkl";
+// static char* _yxcvbnm = "yxcvbnm";
 
 enum keyboard_scancodes {
     KEYCODE_None = 0,
@@ -175,7 +172,7 @@ const uint8_t upper_ascii_codes[256] = {
 };
 
 /* Handles the keyboard interrupt */
-void keyboard_handler(struct regs *r)
+void keyboard_handler()
 {
     unsigned char scancode;
 

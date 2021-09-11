@@ -1,5 +1,4 @@
-#include "../include/stdint.h"
-#include "../include/drivers/vga.h"
+#include "system.h"
 
 /* This will keep track of how many ticks that the system
 *  has been running for */
@@ -10,7 +9,7 @@ uint32_t timer_ticks = 0;
 *  timer fires. By default, the timer fires 18.222 times
 *  per second for historical reasons to do with television
 *  circuitry */
-void timer_handler(struct regs *r)
+void timer_handler()
 {
     /* Increment our 'tick count' */
     timer_ticks++;
