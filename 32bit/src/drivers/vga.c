@@ -31,6 +31,12 @@ void print_char(char character, char attribute_byte) {
         // of the next row.
         int row = offset / (2 * COLS);
         offset = get_screen_offset(row, 79);
+    } else if (character == '\b') {
+        if (offset > 0) {
+            offset -= 4;
+            vidmem[offset+2] = ' ';
+            vidmem[offset+3] = attribute_byte;
+        }
     } else {
         // Otherwise, write the character and its attribute byte to
         // video memory at our calculated offset.
