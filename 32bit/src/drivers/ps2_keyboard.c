@@ -171,6 +171,17 @@ const uint8_t upper_ascii_codes[256] = {
     0x00, 0x00, 0x00, 0x00      /* 0x58 */
 };
 
+// Variable to keep track of key states
+struct KeyStatus {
+    uint8_t shift_down      : 1;
+    uint8_t ctrl_down       : 1;
+    uint8_t alt_down        : 1;
+    uint8_t caps_lock_on    : 1;
+    uint8_t numlock_on      : 1;
+    uint8_t scroll_lock_on  : 1;
+};
+struct KeyStatus key_status = {};
+
 /* Handles the keyboard interrupt */
 void keyboard_handler()
 {
@@ -183,6 +194,11 @@ void keyboard_handler()
     *  set, that means that a key has just been released */
     if (scancode & 0x80)
     {
+        scancode -= 128;
+        if (scancode == KEYCODE_LeftShift || scancode == KEYCODE_RightShift) {
+           key_status.shift_down = 0;
+        }
+
         /* You can use this one to see if the user released the
         *  shift, alt, or control keys... */
        if (scancode - 128 == KEYCODE_A) {
@@ -195,6 +211,10 @@ void keyboard_handler()
         *  hold a key down, you will get repeated key press
         *  interrupts. */
 
+       if (scancode == KEYCODE_LeftShift || scancode == KEYCODE_RightShift) {
+           key_status.shift_down = 1;
+       }
+
         /* Just to show you how this works, we simply translate
         *  the keyboard scancode into an ASCII value, and then
         *  display it to the screen. You can get creative and
@@ -203,8 +223,13 @@ void keyboard_handler()
         *  to the above layout to correspond to 'shift' being
         *  held. If shift is held using the larger lookup table,
         *  you would add 128 to the scancode when you look for it */
-        print_char(lower_ascii_codes[scancode], WHITE_ON_BLACK);
+        const uint8_t* code_table = key_status.shift_down ? upper_ascii_codes : lower_ascii_codes;
+        if (code_table[scancode] > 0) {
+            print_char(code_table[scancode], WHITE_ON_BLACK);
+        }
     }
+
+    print_char_fixed('0' + key_status.shift_down, ROWS-1, 0, WHITE_ON_BLACK);
 }
 
 /* Sets up the system clock by installing the timer handler
