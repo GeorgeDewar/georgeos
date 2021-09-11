@@ -166,3 +166,8 @@ struct KeyEvent key_event;
 
 /* Kernel callbacks */
 void on_key_event(struct KeyEvent event);
+
+/* Serial */
+int init_serial(uint32_t speed);
+void write_serial(char a);
+void write_string_serial(char *string);

@@ -1,6 +1,7 @@
 #include "system.h"
 
 void main () {
+    init_serial(115200);
     clear_screen();
     print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
 
@@ -9,15 +10,17 @@ void main () {
     }
 
     idt_install();
-    print_string("IDT installed\n");
+    write_string_serial("IDTs configured\n");
     irq_install();
-    print_string("IRQ installed\n");
+    write_string_serial("IRQs configured\n");
 
     // Only now is it safe to enable interrupts
     __asm__ __volatile__ ("sti");
 
     timer_install();
+    write_string_serial("Timer configured\n");
     ps2_keyboard_install();
+    write_string_serial("Keyboard configured\n");
 
     for(;;);
 }
