@@ -198,6 +198,12 @@ void keyboard_handler()
         if (scancode == KEYCODE_LeftShift || scancode == KEYCODE_RightShift) {
            key_status.shift_down = 0;
         }
+        if (scancode == KEYCODE_LeftControl) {
+            key_status.ctrl_down = 0;
+        }
+        if (scancode == KEYCODE_LeftAlt) {
+            key_status.alt_down = 0;
+        }
 
         /* You can use this one to see if the user released the
         *  shift, alt, or control keys... */
@@ -211,9 +217,15 @@ void keyboard_handler()
         *  hold a key down, you will get repeated key press
         *  interrupts. */
 
-       if (scancode == KEYCODE_LeftShift || scancode == KEYCODE_RightShift) {
-           key_status.shift_down = 1;
-       }
+        if (scancode == KEYCODE_LeftShift || scancode == KEYCODE_RightShift) {
+            key_status.shift_down = 1;
+        }
+        if (scancode == KEYCODE_LeftControl) {
+            key_status.ctrl_down = 1;
+        }
+        if (scancode == KEYCODE_LeftAlt) {
+            key_status.alt_down = 1;
+        }
 
         /* Just to show you how this works, we simply translate
         *  the keyboard scancode into an ASCII value, and then
@@ -230,6 +242,8 @@ void keyboard_handler()
     }
 
     print_char_fixed('0' + key_status.shift_down, ROWS-1, 0, WHITE_ON_BLACK);
+    print_char_fixed('0' + key_status.ctrl_down, ROWS-1, 1, WHITE_ON_BLACK);
+    print_char_fixed('0' + key_status.alt_down, ROWS-1, 2, WHITE_ON_BLACK);
 }
 
 /* Sets up the system clock by installing the timer handler
