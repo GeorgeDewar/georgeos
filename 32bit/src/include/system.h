@@ -171,3 +171,6 @@ void on_key_event(struct KeyEvent event);
 int init_serial(uint32_t speed);
 void write_serial(char a);
 void write_string_serial(char *string);
+
+/* CMOS */
+uint8_t read_from_cmos(uint8_t register_num);

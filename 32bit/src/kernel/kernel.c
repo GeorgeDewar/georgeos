@@ -18,6 +18,13 @@ void main () {
     timer_install();
     ps2_keyboard_install();
 
+    int floppy = read_from_cmos(0x10);
+    int floppy1 = (0xF0 & floppy) >> 4;
+    int floppy2 = (0x0F & floppy);
+    print_string("Floppy type: ");
+    print_char('0' + floppy1, WHITE_ON_BLACK);
+    print_string("\n");
+
     for(;;);
 }
 
