@@ -52,3 +52,117 @@ void clear_screen();
 
 // Attribute byte for our default colour scheme .
 #define WHITE_ON_BLACK 0x0f
+
+/* Keyboard */
+enum keyboard_scancodes {
+    KEYCODE_None = 0,
+    KEYCODE_Escape,
+    KEYCODE_Num1,
+    KEYCODE_Num2,
+    KEYCODE_Num3,
+    KEYCODE_Num4,
+    KEYCODE_Num5,
+    KEYCODE_Num6,
+    KEYCODE_Num7,
+    KEYCODE_Num8,
+    KEYCODE_Num9,
+    KEYCODE_Num0,
+    KEYCODE_Minus,
+    KEYCODE_Equals,
+    KEYCODE_Backspace,
+    KEYCODE_Tab,
+    KEYCODE_Q,
+    KEYCODE_W,
+    KEYCODE_E,
+    KEYCODE_R,
+    KEYCODE_T,
+    KEYCODE_Y,
+    KEYCODE_U,
+    KEYCODE_I,
+    KEYCODE_O,
+    KEYCODE_P,
+    KEYCODE_LeftBracket,
+    KEYCODE_RightBracket,
+    KEYCODE_Enter,
+    KEYCODE_LeftControl,
+    KEYCODE_A,
+    KEYCODE_S,
+    KEYCODE_D,
+    KEYCODE_F,
+    KEYCODE_G,
+    KEYCODE_H,
+    KEYCODE_J,
+    KEYCODE_K,
+    KEYCODE_L,
+    KEYCODE_Semicolon,
+    KEYCODE_Apostrophe,
+    KEYCODE_Grave,
+    KEYCODE_LeftShift,
+    KEYCODE_Backslash,
+    KEYCODE_Z,
+    KEYCODE_X,
+    KEYCODE_C,
+    KEYCODE_V,
+    KEYCODE_B,
+    KEYCODE_N,
+    KEYCODE_M,
+    KEYCODE_Comma,
+    KEYCODE_Period,
+    KEYCODE_Slash,
+    KEYCODE_RightShift,
+    KEYCODE_PadMultiply, // Also PrintScreen
+    KEYCODE_LeftAlt,
+    KEYCODE_Space,
+    KEYCODE_CapsLock,
+    KEYCODE_F1,
+    KEYCODE_F2,
+    KEYCODE_F3,
+    KEYCODE_F4,
+    KEYCODE_F5,
+    KEYCODE_F6,
+    KEYCODE_F7,
+    KEYCODE_F8,
+    KEYCODE_F9,
+    KEYCODE_F10,
+    KEYCODE_NumLock,
+    KEYCODE_ScrollLock,
+    KEYCODE_Home, // Also Pad7
+    KEYCODE_Up, // Also Pad8
+    KEYCODE_PageUp, // Also Pad9
+    KEYCODE_PadMinus,
+    KEYCODE_Left, // Also Pad4
+    KEYCODE_Pad5,
+    KEYCODE_Right, // Also Pad6
+    KEYCODE_PadPlus,
+    KEYCODE_End, // Also Pad1
+    KEYCODE_Down, // Also Pad2
+    KEYCODE_PageDown, // Also Pad3
+    KEYCODE_Insert, // Also Pad0
+    KEYCODE_Delete, // Also PadDecimal
+    KEYCODE_Unknown84,
+    KEYCODE_Unknown85,
+    KEYCODE_NonUsBackslash,
+    KEYCODE_F11,
+    KEYCODE_F12,
+    KEYCODE_Pause,
+    KEYCODE_Unknown90,
+    KEYCODE_LeftGui,
+    KEYCODE_RightGui,
+    KEYCODE_Menu
+};
+
+// We will create a structure that sends a key event with scan code
+#define EVENT_KEYPRESS 0
+#define EVENT_KEYRELEASE 1
+struct KeyEvent {
+    unsigned char event : 1;
+    unsigned char shift_down : 1;
+    unsigned char ctrl_down : 1;
+    unsigned char alt_down : 1;
+    unsigned char keyCode;
+    char character;
+};
+struct KeyEvent key_event;
+
+/* Kernel callbacks */
+void on_key_event(struct KeyEvent event);

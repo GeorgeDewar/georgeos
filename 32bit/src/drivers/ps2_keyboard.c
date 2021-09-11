@@ -6,116 +6,6 @@
 // static char* _asdfghjkl = "asdfghjkl";
 // static char* _yxcvbnm = "yxcvbnm";
 
-enum keyboard_scancodes {
-    KEYCODE_None = 0,
-    KEYCODE_Escape,
-    KEYCODE_Num1,
-    KEYCODE_Num2,
-    KEYCODE_Num3,
-    KEYCODE_Num4,
-    KEYCODE_Num5,
-    KEYCODE_Num6,
-    KEYCODE_Num7,
-    KEYCODE_Num8,
-    KEYCODE_Num9,
-    KEYCODE_Num0,
-    KEYCODE_Minus,
-    KEYCODE_Equals,
-    KEYCODE_Backspace,
-    KEYCODE_Tab,
-    KEYCODE_Q,
-    KEYCODE_W,
-    KEYCODE_E,
-    KEYCODE_R,
-    KEYCODE_T,
-    KEYCODE_Y,
-    KEYCODE_U,
-    KEYCODE_I,
-    KEYCODE_O,
-    KEYCODE_P,
-    KEYCODE_LeftBracket,
-    KEYCODE_RightBracket,
-    KEYCODE_Enter,
-    KEYCODE_LeftControl,
-    KEYCODE_A,
-    KEYCODE_S,
-    KEYCODE_D,
-    KEYCODE_F,
-    KEYCODE_G,
-    KEYCODE_H,
-    KEYCODE_J,
-    KEYCODE_K,
-    KEYCODE_L,
-    KEYCODE_Semicolon,
-    KEYCODE_Apostrophe,
-    KEYCODE_Grave,
-    KEYCODE_LeftShift,
-    KEYCODE_Backslash,
-    KEYCODE_Z,
-    KEYCODE_X,
-    KEYCODE_C,
-    KEYCODE_V,
-    KEYCODE_B,
-    KEYCODE_N,
-    KEYCODE_M,
-    KEYCODE_Comma,
-    KEYCODE_Period,
-    KEYCODE_Slash,
-    KEYCODE_RightShift,
-    KEYCODE_PadMultiply, // Also PrintScreen
-    KEYCODE_LeftAlt,
-    KEYCODE_Space,
-    KEYCODE_CapsLock,
-    KEYCODE_F1,
-    KEYCODE_F2,
-    KEYCODE_F3,
-    KEYCODE_F4,
-    KEYCODE_F5,
-    KEYCODE_F6,
-    KEYCODE_F7,
-    KEYCODE_F8,
-    KEYCODE_F9,
-    KEYCODE_F10,
-    KEYCODE_NumLock,
-    KEYCODE_ScrollLock,
-    KEYCODE_Home, // Also Pad7
-    KEYCODE_Up, // Also Pad8
-    KEYCODE_PageUp, // Also Pad9
-    KEYCODE_PadMinus,
-    KEYCODE_Left, // Also Pad4
-    KEYCODE_Pad5,
-    KEYCODE_Right, // Also Pad6
-    KEYCODE_PadPlus,
-    KEYCODE_End, // Also Pad1
-    KEYCODE_Down, // Also Pad2
-    KEYCODE_PageDown, // Also Pad3
-    KEYCODE_Insert, // Also Pad0
-    KEYCODE_Delete, // Also PadDecimal
-    KEYCODE_Unknown84,
-    KEYCODE_Unknown85,
-    KEYCODE_NonUsBackslash,
-    KEYCODE_F11,
-    KEYCODE_F12,
-    KEYCODE_Pause,
-    KEYCODE_Unknown90,
-    KEYCODE_LeftGui,
-    KEYCODE_RightGui,
-    KEYCODE_Menu
-};
-
-// We will create a structure that sends a key event with scan code
-#define EVENT_KEYPRESS 0
-#define EVENT_KEYRELEASE 1
-struct KeyEvent {
-    unsigned char event : 1;
-    unsigned char shift_down : 1;
-    unsigned char ctrl_down : 1;
-    unsigned char alt_down : 1;
-    unsigned char keyCode;
-    char character;
-};
-struct KeyEvent key_event;
-
 // Scancode -> ASCII
 #define ESC 27
 const uint8_t lower_ascii_codes[256] = {
@@ -204,15 +94,9 @@ void keyboard_handler()
         if (scancode == KEYCODE_LeftAlt) {
             key_status.alt_down = 0;
         }
-
-        /* You can use this one to see if the user released the
-        *  shift, alt, or control keys... */
-       if (scancode - 128 == KEYCODE_A) {
-           print_string("Released A");
-       }
-    }
-    else
-    {
+        key_event.event = EVENT_KEYRELEASE;
+    } 
+    else {
         /* Here, a key was just pressed. Please note that if you
         *  hold a key down, you will get repeated key press
         *  interrupts. */
@@ -226,20 +110,16 @@ void keyboard_handler()
         if (scancode == KEYCODE_LeftAlt) {
             key_status.alt_down = 1;
         }
-
-        /* Just to show you how this works, we simply translate
-        *  the keyboard scancode into an ASCII value, and then
-        *  display it to the screen. You can get creative and
-        *  use some flags to see if a shift is pressed and use a
-        *  different layout, or you can add another 128 entries
-        *  to the above layout to correspond to 'shift' being
-        *  held. If shift is held using the larger lookup table,
-        *  you would add 128 to the scancode when you look for it */
-        const uint8_t* code_table = key_status.shift_down ? upper_ascii_codes : lower_ascii_codes;
-        if (code_table[scancode] > 0) {
-            print_char(code_table[scancode], WHITE_ON_BLACK);
-        }
+        key_event.event = EVENT_KEYPRESS;
     }
+
+    key_event.keyCode = scancode;
+    key_event.shift_down = key_status.shift_down;
+    key_event.ctrl_down = key_status.ctrl_down;
+    key_event.alt_down = key_status.alt_down;
+    const uint8_t* code_table = key_status.shift_down ? upper_ascii_codes : lower_ascii_codes;
+    key_event.character = code_table[scancode];
+    on_key_event(key_event);
 
     print_char_fixed('0' + key_status.shift_down, ROWS-1, 0, WHITE_ON_BLACK);
     print_char_fixed('0' + key_status.ctrl_down, ROWS-1, 1, WHITE_ON_BLACK);

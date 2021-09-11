@@ -21,3 +21,9 @@ void main () {
 
     for(;;);
 }
+
+void on_key_event(struct KeyEvent event) {
+    if(event.event == EVENT_KEYPRESS && event.character > 0) {
+        print_char(event.character, WHITE_ON_BLACK);
+    }
+}
