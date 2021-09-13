@@ -31,5 +31,5 @@ void timer_install()
 void delay(uint32_t ms) {
     uint32_t start_time = timer_ticks;
     uint32_t ticks_to_delay = ms / 55;
-    while(timer_ticks < start_time + 18);
+    while(timer_ticks < start_time + ticks_to_delay);
 }

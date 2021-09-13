@@ -30,7 +30,9 @@ void main () {
     print_string("Resetting floppy controller\n");
     ResetFloppy();
     print_string("Reading sector from floppy\n");
-    read_sector_lba(1);
+    read_sector_lba(20);
+
+    print_string(0x1000);
 
     for(;;);
 }
