@@ -39,21 +39,6 @@ enum FloppyExtendedCommandBits {
 	FDC_CMD_EXT_MULTITRACK	=	0x80	//10000000
 };
 
-// This is stored in memory by the BIOS
-typedef struct{
-  unsigned char steprate_headunload;
-  unsigned char headload_ndma;
-  unsigned char motor_delay_off; /*specified in clock ticks*/
-  unsigned char bytes_per_sector;
-  unsigned char sectors_per_track;
-  unsigned char gap_length;
-  unsigned char data_length; /*used only when bytes per sector == 0*/
-  unsigned char format_gap_length;
-  unsigned char filler;
-  unsigned char head_settle_time; /*specified in milliseconds*/
-  unsigned char motor_start_time; /*specified in 1/8 seconds*/
-}__attribute__ ((packed)) floppy_parameters;
-
 void lba_2_chs(uint32_t lba, uint16_t* cyl, uint16_t* head, uint16_t* sector)
 {
     *cyl    = lba / (2 * FLOPPY_144_SECTORS_PER_TRACK);
