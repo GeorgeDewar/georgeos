@@ -182,3 +182,9 @@ void write_string_serial(char *string);
 
 /* CMOS */
 uint8_t read_from_cmos(uint8_t register_num);
+
+/* Floppy */
+void ResetFloppy();
+void install_floppy();
+void read_sector_lba(uint16_t lba);
+void FloppyHandler();

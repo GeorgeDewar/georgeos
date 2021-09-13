@@ -18,12 +18,19 @@ void main () {
     timer_install();
     ps2_keyboard_install();
 
-    int floppy = read_from_cmos(0x10);
-    int floppy1 = (0xF0 & floppy) >> 4;
-    int floppy2 = (0x0F & floppy);
-    print_string("Floppy type: ");
-    print_char('0' + floppy1, WHITE_ON_BLACK);
-    print_string("\n");
+    // int floppy = read_from_cmos(0x10);
+    // int floppy1 = (0xF0 & floppy) >> 4;
+    // int floppy2 = (0x0F & floppy);
+    // print_string("Floppy type: ");
+    // print_char('0' + floppy1, WHITE_ON_BLACK);
+    // print_string("\n");
+
+    print_string("Configuring floppy\n");
+    install_floppy();
+    print_string("Resetting floppy controller\n");
+    ResetFloppy();
+    print_string("Reading sector from floppy\n");
+    read_sector_lba(1);
 
     for(;;);
 }
