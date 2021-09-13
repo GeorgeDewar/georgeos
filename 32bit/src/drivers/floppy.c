@@ -1,15 +1,22 @@
 #include "system.h"
 
+// Sectors per track for a 1.44MB floppy
 #define FLOPPY_144_SECTORS_PER_TRACK 18
-#define DISK_PARAMETER_ADDRESS 0x000fefc7 /* location where disk parameters */
-                                          /* is stored by bios */
+
+// Standard floppy timings in milliseconds
+#define FLOPPY_STEP_RATE    3
+#define FLOPPY_UNLOAD_TIME  240
+#define FLOPPY_LOAD_TIME    16
+
+// We are using DMA, so NDMA is false
+#define FLOPPY_NDMA         false
 
 enum FloppyRegisters
 {
-   DIGITAL_OUTPUT_REGISTER          = 0x3F2,
-   MAIN_STATUS_REGISTER             = 0x3F4, // read-only
-   DATA_FIFO                        = 0x3F5,
-   CONFIGURATION_CONTROL_REGISTER   = 0x3F7  // write-only
+   DIGITAL_OUTPUT_REGISTER          = 0x3F2,    // Handles controller reset and drive motors
+   MAIN_STATUS_REGISTER             = 0x3F4,    // Used to determine if the controller is ready for commands
+   DATA_FIFO                        = 0x3F5,    // Read/write data and command parameters
+   CONFIGURATION_CONTROL_REGISTER   = 0x3F7     // Used only to set the data rate
 };
 
 enum FloppyCommands
@@ -25,10 +32,10 @@ enum FloppyCommands
    SEEK =                       15      // * seek both heads to cylinder X
 };
 
-enum FLPYDSK_CMD_EXT {
- 
-	FDC_CMD_EXT_SKIP	=	0x20,	//00100000
-	FDC_CMD_EXT_DENSITY	=	0x40,	//01000000
+// These can be ORd with some floppy commands to set additional options
+enum FloppyExtendedCommandBits {
+ 	FDC_CMD_EXT_SKIP	=	0x20,	    //00100000
+	FDC_CMD_EXT_DENSITY	=	0x40,	    //01000000
 	FDC_CMD_EXT_MULTITRACK	=	0x80	//10000000
 };
 
@@ -46,8 +53,6 @@ typedef struct{
   unsigned char head_settle_time; /*specified in milliseconds*/
   unsigned char motor_start_time; /*specified in 1/8 seconds*/
 }__attribute__ ((packed)) floppy_parameters;
-
-floppy_parameters floppy_disk; /*declare variable of floppy_parameters type*/
 
 void lba_2_chs(uint32_t lba, uint16_t* cyl, uint16_t* head, uint16_t* sector)
 {
@@ -94,7 +99,6 @@ void dma_setup_write() {
 
 void install_floppy() {
     initial_dma_setup();
-    memcpy((uint8_t*) &floppy_disk, (unsigned char *)DISK_PARAMETER_ADDRESS, sizeof(floppy_parameters));
     irq_install_handler(6, FloppyHandler);
 }
 
@@ -175,8 +179,10 @@ uint8_t ResetFloppy()
 
     // configure the drive
     write_floppy_command(SPECIFY);
-    port_byte_out(DATA_FIFO, floppy_disk.steprate_headunload);
-    port_byte_out(DATA_FIFO, floppy_disk.headload_ndma);
+    //steprate=3ms, unload time=240ms, load time=16ms 3,16,240,true
+
+    port_byte_out(DATA_FIFO, ((FLOPPY_STEP_RATE & 0xF) << 4) | (FLOPPY_UNLOAD_TIME & 0xF)) ;
+    port_byte_out(DATA_FIFO, (FLOPPY_LOAD_TIME << 1) | FLOPPY_NDMA);
 
     return SUCCESS;
 }

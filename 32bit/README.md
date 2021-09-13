@@ -36,6 +36,11 @@ Desired features in order of priority:
 - https://www.youtube.com/playlist?list=PLHh55M_Kq4OApWScZyPl5HhgsTJS9MZ6M
   Lots of good content - although it's in C++, most of it translates
 
+### Floppy
+
+- http://www.brokenthorn.com/Resources/OSDev20.html
+- https://github.com/levex/osdev/blob/master/drivers/fdc.c
+- http://bos.asmhackers.net/docs/floppy/docs/floppy_tutorial.txt
 
 ### NASM
 
