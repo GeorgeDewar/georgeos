@@ -32,7 +32,7 @@ void main () {
     print_string("Reading sector from floppy\n");
     read_sector_lba(20);
 
-    print_string(0x1000);
+    print_string((char *) FLOPPY_BUFFER);
 
     for(;;);
 }
