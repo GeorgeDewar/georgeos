@@ -2,7 +2,7 @@
 
 /* This will keep track of how many ticks that the system
 *  has been running for */
-uint32_t timer_ticks = 0;
+volatile uint32_t timer_ticks = 0;
 
 /* Handles the timer. In this case, it's very simple: We
 *  increment the 'timer_ticks' variable every time the
@@ -26,4 +26,10 @@ void timer_install()
 {
     /* Installs 'timer_handler' to IRQ0 */
     irq_install_handler(0, timer_handler);
+}
+
+void delay(uint32_t ms) {
+    uint32_t start_time = timer_ticks;
+    uint32_t ticks_to_delay = ms / 55;
+    while(timer_ticks < start_time + 18);
 }

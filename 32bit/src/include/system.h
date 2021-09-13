@@ -9,6 +9,12 @@ typedef unsigned short uint16_t;
 typedef unsigned long uint32_t;
 typedef unsigned long long uint64_t;
 
+/* VALUE DEFINITIONS */
+#define false 0
+#define true 1
+#define SUCCESS 1
+#define FAILURE 0
+
 /* INTERRUPT HANDLING */
 
 /* This defines what the stack looks like after an ISR was running */
@@ -33,9 +39,11 @@ void port_word_out (unsigned short port, unsigned short data);
 
 /* Memory management & manipulation */
 void memset(uint8_t* source, uint8_t value, uint32_t length);
+void memcpy(uint8_t* source, uint8_t* dest, uint32_t length);
 
 /* Timer */
 void timer_install();
+void delay(uint32_t ms);
 
 /* Drivers */
 void ps2_keyboard_install();
