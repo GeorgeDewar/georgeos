@@ -61,7 +61,7 @@ void initial_dma_setup() {
     port_byte_out(0x04, 0x10);      // address to 0x10 (high byte)
     port_byte_out(ISA_DMA_CH0_3_FLIP_FLOP_RESET_REGISTER, 0xFF);      // reset the master flip-flop (again!!!)
     port_byte_out(0x05, 0xFF);      // count to 0x23ff (low byte)
-    port_byte_out(0x05, 0x00);      // count to 0x23ff (high byte),
+    port_byte_out(0x05, 0x23);      // count to 0x23ff (high byte),
     port_byte_out(ISA_DMA_CH2_PAGE_ADDRESS_REGISTER, 0);         // external page register to 0 for total address of 00 10 00
     port_byte_out(ISA_DMA_CH0_3_SINGLE_CHANNEL_MASK_REGISTER, 0x02);      // unmask DMA channel 2
 }
