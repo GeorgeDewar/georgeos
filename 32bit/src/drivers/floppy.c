@@ -36,9 +36,22 @@ enum FloppyCommands
 
 // These can be ORd with some floppy commands to set additional options
 enum FloppyExtendedCommandBits {
- 	FDC_CMD_EXT_SKIP	=	0x20,	    //00100000
-	FDC_CMD_EXT_DENSITY	=	0x40,	    //01000000
-	FDC_CMD_EXT_MULTITRACK	=	0x80	//10000000
+    FDC_CMD_EXT_SKIP	=	    0x20,	// 00100000
+    FDC_CMD_EXT_DENSITY	=	    0x40,	// 01000000
+    FDC_CMD_EXT_MULTITRACK	=	0x80	// 10000000
+};
+
+enum FLOPPY_DOR_MASKS {
+    FLOPPY_DOR_DRIVE0 =         0,      // 00000000
+    FLOPPY_DOR_DRIVE1 =         1,      // 00000001
+    FLOPPY_DOR_DRIVE2 =         2,      // 00000010
+    FLOPPY_DOR_DRIVE3 =         3,      // 00000011
+    FLOPPY_DOR_RESET =          4,      // 00000100
+    FLOPPY_DOR_DMA =            8,      // 00001000
+    FLOPPY_DOR_DRIVE0_MOTOR =   16,     // 00010000
+    FLOPPY_DOR_DRIVE1_MOTOR =   32,     // 00100000
+    FLOPPY_DOR_DRIVE2_MOTOR =   64,     // 01000000
+    FLOPPY_DOR_DRIVE3_MOTOR =   128	    // 10000000
 };
 
 // Calculate the head, cylinder and sector number for an LBA address
@@ -149,14 +162,22 @@ uint8_t wait_for_irq() {
     return FAILURE;
 }
 
+void set_motor(uint8_t on) {
+    if (on) {
+        port_byte_out(DIGITAL_OUTPUT_REGISTER, FLOPPY_DOR_RESET | FLOPPY_DOR_DMA | FLOPPY_DOR_DRIVE0 | FLOPPY_DOR_DRIVE0_MOTOR);
+    } else {
+        port_byte_out(DIGITAL_OUTPUT_REGISTER, FLOPPY_DOR_RESET | FLOPPY_DOR_DMA);
+    }
+}
+
 // Reset and configure the floppy controller
 uint8_t ResetFloppy()
 {
     ReceivedIRQ = false; // Setting this before the write will prevent the FDC from being faster than us!
 
     // Enter, then exit reset mode.
-    port_byte_out(DIGITAL_OUTPUT_REGISTER, 0x00);
-    port_byte_out(DIGITAL_OUTPUT_REGISTER, 0x0C);
+    port_byte_out(DIGITAL_OUTPUT_REGISTER, 0); // reset unset = reset
+    port_byte_out(DIGITAL_OUTPUT_REGISTER, FLOPPY_DOR_RESET | FLOPPY_DOR_DMA);
 
     // Wait for an IRQ to tell us the controller reset OK
     if(!wait_for_irq())
@@ -293,5 +314,9 @@ void read_sector_lba(uint16_t lba) {
     uint16_t cyl, head, sector;
 
     lba_2_chs(lba, &cyl, &head, &sector);
+    print_string("Turning on motor\n");
+    set_motor(1); // turn on the motor
+    delay(300); // give the motor time to get up to speed
     read_sector(sector, head, cyl, 0);
+    set_motor(0); // turn off the motor
 }
