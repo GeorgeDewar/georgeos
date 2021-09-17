@@ -12,41 +12,87 @@ char zap_vga16_psf[];
 
 #define CHAR_WIDTH      8
 #define CHAR_HEIGHT     16
-#define CHAR_SPACE      1
+#define CHAR_SPACE      0
 
-#define TEXT_ROWS=50
-#define TEXT_COLS=80
+#define TEXT_ROWS       30
+#define TEXT_COLS       80
 uint16_t cursor = 0;
 
 #define VGA_BLACK           0x00
 #define VGA_WHITE           0x07
 #define VGA_BRIGHT_WHITE    0x0F
 
-void putpixel(int pos_x, int pos_y, unsigned char VGA_COLOR)
+void vesa_putpixel(int pos_x, int pos_y, unsigned char VGA_COLOR)
 {
     unsigned char* location = (unsigned char*) video_memory + SCREEN_WIDTH * pos_y + pos_x;
     *location = VGA_COLOR;
 }
 
-void clear_screen_gfx() {
+void vesa_clear_screen() {
     video_memory = *frame_buffer_location_ptr;
     for (int x=0; x<SCREEN_WIDTH; x++) {
         for (int y=0; y<SCREEN_WIDTH; y++) {
-            putpixel(x, y, 0);
+            vesa_putpixel(x, y, 0);
         }
     }
 }
 
-void putchar(int row, int col, char char_num) {
+void vesa_putchar(int position, char char_num) {
+    uint16_t row = position / TEXT_COLS;
+    uint16_t col = position - (row * TEXT_COLS);
     uint16_t start_x = col * (CHAR_WIDTH + CHAR_SPACE);
     uint16_t start_y = row * (CHAR_HEIGHT + CHAR_SPACE);
     for(uint16_t x=0; x<CHAR_WIDTH; x++) {
         for(uint16_t y=0; y<CHAR_HEIGHT; y++) {
             char* letter = zap_vga16_psf + 4 + char_num*16;
             uint8_t pixel = letter[y] & 1 << (CHAR_WIDTH-x);
-            if(pixel) putpixel(start_x + x, start_y + y, VGA_WHITE);
+            if(pixel) vesa_putpixel(start_x + x, start_y + y, VGA_WHITE);
         }
     }
+}
+
+// Private functions
+static int vesa_get_screen_offset(char col, char row);
+
+void vesa_print_string(char *string) {
+    int i = 0;
+    while(string[i] != 0) {
+        vesa_print_char(string[i++]);
+    }
+}
+
+void vesa_print_char(char character) {
+    int offset = cursor;
+
+    if (character == '\n') {
+        // If we see a newline character, set offset to the end of
+        // current row, so it will be advanced to the first col
+        // of the next row.
+        int row = offset / TEXT_COLS;
+        offset = vesa_get_screen_offset(row, TEXT_COLS-1);
+    } else if (character == '\b') {
+        if (offset > 0) {
+            offset -= 2;
+            vesa_putchar(offset, ' ');
+        }
+    } else {
+        // Otherwise, write the character and its attribute byte to
+        // video memory at our calculated offset.
+        vesa_putchar(offset, character);
+    }
+    
+    // Advance the cursor
+    offset++;
+    cursor = offset;
+}
+
+void vesa_print_char_fixed(char character, char row, char col) {
+    int offset = vesa_get_screen_offset(row, col);
+    vesa_putchar(offset, character);
+}
+
+static int vesa_get_screen_offset(char row, char col) {
+    return (row * TEXT_COLS) + col;
 }
 
 char zap_vga16_psf[] = {

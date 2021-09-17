@@ -56,6 +56,11 @@ void print_string(char *string);
 void print_char(char character, char attribute_byte);
 void print_char_fixed(char character, char row, char col, char attribute_byte);
 void clear_screen();
+/* Gfx Mode */
+void vesa_print_string(char *string);
+void vesa_print_char(char character);
+void vesa_print_char_fixed(char character, char row, char col);
+void vesa_clear_screen();
 
 // Size of the screen in text mode
 #define ROWS 25
