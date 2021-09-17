@@ -2,7 +2,7 @@
 
 void main () {
     init_serial(115200);
-    clear_screen();
+    clear_screen_gfx();
     print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
 
     for(int i=0; i<COLS; i++) {

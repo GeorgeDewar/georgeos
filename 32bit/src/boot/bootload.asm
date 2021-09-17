@@ -152,6 +152,21 @@ stage2:
     ; int 10h                     ; Otherwise, print it
     ; jmp $
 
+    modeblock equ 0x9000
+
+    ; Switch to 1024x768x16bpp
+    mov ax, 0
+    mov es, ax
+    mov ax, 0x4f01 ; get vesa mode information
+    mov cx, 0x0101 ; 1024*768*64K linear frame buffer
+    mov di, modeblock
+    int 0x10
+
+    mov esi, [modeblock+0x28] ; save frame buffer base
+    mov ax, 0x4f02 ; set vesa mode
+    mov bx, 0x0101 ; mode, as per before
+    int 0x10
+
 
 switch_to_prot:
     mov si, switching_to_prot
