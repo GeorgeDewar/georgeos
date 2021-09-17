@@ -45,7 +45,7 @@ void vesa_putchar(int position, char char_num) {
     for(uint16_t x=0; x<CHAR_WIDTH; x++) {
         for(uint16_t y=0; y<CHAR_HEIGHT; y++) {
             char* letter = zap_vga16_psf + 4 + char_num*16;
-            uint8_t pixel = letter[y] & 1 << (CHAR_WIDTH-x);
+            uint8_t pixel = letter[y] & 1 << (CHAR_WIDTH-x-1);
             if(pixel) vesa_putpixel(start_x + x, start_y + y, VGA_WHITE);
         }
     }

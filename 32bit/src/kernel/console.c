@@ -31,20 +31,20 @@ void get_string(char *buffer, uint16_t limit, uint8_t echo) {
     while((c = get_char()) != '\n') { // loop ends on <Enter>
         if(c == '\b' && index > 0) { // Backspace
             if(echo == 1) {
-                print_char('\b', WHITE_ON_BLACK);    // Move the cursor back
-                print_char(' ', WHITE_ON_BLACK);     // Erase the character at that position
-                print_char('\b', WHITE_ON_BLACK);    // Move it back again
+                vesa_print_char('\b');    // Move the cursor back
+                vesa_print_char(' ');     // Erase the character at that position
+                vesa_print_char('\b');    // Move it back again
             }
             index--;                // Decrement the counter
         }
         else if (c >= 32 && c <= 126 && index < (limit - 1)) {
-            if(echo == 1) print_char(c, WHITE_ON_BLACK);
+            if(echo == 1) vesa_print_char(c);
             buffer[index] = c;
             index++;
         } else {
             // Unhandled character or limit reached
         }
     }
-    if(echo == 1) print_char('\n', WHITE_ON_BLACK);
+    if(echo == 1) vesa_print_char('\n');
     buffer[index] = 0; // NULL byte to end string
 }
