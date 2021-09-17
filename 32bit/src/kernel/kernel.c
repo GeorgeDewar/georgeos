@@ -28,6 +28,13 @@ void main () {
     print_string((char *) FLOPPY_BUFFER);
     print_string("\n");
 
+    extern void putchar(int row, int col, char char_num);
+    putchar(1,1,'H');
+    putchar(1,2,'e');
+    putchar(1,3,'l');
+    putchar(1,4,'l');
+    putchar(1,5,'o');
+
     // Start our shell
     shell_main();
 
