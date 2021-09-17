@@ -14,6 +14,9 @@ typedef unsigned long long uint64_t;
 #define true 1
 #define SUCCESS 1
 #define FAILURE 0
+#define UINT8_T_MAX     0xFF
+#define UINT16_T_MAX    0xFFFF
+#define UINT32_T_MAX    0xFFFFFFFF
 
 /* INTERRUPT HANDLING */
 
@@ -175,6 +178,9 @@ struct KeyEvent key_event;
 /* Console */
 void on_key_event(struct KeyEvent event);
 void get_string(char *buffer, uint16_t limit, uint8_t echo);
+
+/* String */
+char strcmp(char *string1, char *string2);
 
 /* Serial */
 int init_serial(uint32_t speed);
