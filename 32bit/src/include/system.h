@@ -172,8 +172,9 @@ struct KeyEvent {
 };
 struct KeyEvent key_event;
 
-/* Kernel callbacks */
+/* Console */
 void on_key_event(struct KeyEvent event);
+void get_string(char *buffer, uint16_t limit, uint8_t echo);
 
 /* Serial */
 int init_serial(uint32_t speed);
@@ -189,3 +190,6 @@ uint8_t ResetFloppy();
 void install_floppy();
 void read_sector_lba(uint16_t lba);
 void FloppyHandler();
+
+/* Shell*/
+void shell_main();

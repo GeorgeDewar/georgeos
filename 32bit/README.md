@@ -16,9 +16,10 @@ Desired features in order of priority:
   - Drive letters like Windows
   - Every file on a drive is under the drive, e.g. /drive/floppy1/file.txt
 - Networking support + TCP/IP stack
+- GUI
+- Simple web browser
 - Sound support
 - Multitasking
-- GUI
 - Successfully compile one or two existing programs for new OS
 - More advanced graphics support (higher res / mulitple monitors)
 - Support a USB device

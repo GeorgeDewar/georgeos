@@ -2,7 +2,7 @@ SRCDIR=./src
 OBJDIR=./build
 
 # Automatically generate lists of sources using wildcards .
-C_SOURCES = $(wildcard $(SRCDIR)/kernel/*.c $(SRCDIR)/drivers/*.c)
+C_SOURCES = $(wildcard $(SRCDIR)/kernel/*.c $(SRCDIR)/drivers/*.c $(SRCDIR)/user/*.c)
 HEADERS = $(wildcard $(SRCDIR)/include/kernel/*.h $(SRCDIR)/include/drivers/*.h)
 
 # TODO : Make sources dep on all header files .
