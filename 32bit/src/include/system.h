@@ -61,6 +61,7 @@ void vesa_print_string(char *string);
 void vesa_print_char(char character);
 void vesa_print_char_fixed(char character, char row, char col);
 void vesa_clear_screen();
+uint16_t cursor;
 
 // Size of the screen in text mode
 #define ROWS 25

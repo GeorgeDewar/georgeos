@@ -4,8 +4,8 @@
 uint32_t* frame_buffer_location_ptr = 0x9028; // set by bootloader
 char* video_memory = 0;
 
-#define SCREEN_WIDTH    640
-#define SCREEN_HEIGHT   480
+#define SCREEN_WIDTH    800
+#define SCREEN_HEIGHT   600
 
 unsigned char letters[95][13];
 char zap_vga16_psf[];
@@ -47,6 +47,7 @@ void vesa_putchar(int position, char char_num) {
             char* letter = zap_vga16_psf + 4 + char_num*16;
             uint8_t pixel = letter[y] & 1 << (CHAR_WIDTH-x-1);
             if(pixel) vesa_putpixel(start_x + x, start_y + y, VGA_WHITE);
+            else vesa_putpixel(start_x + x, start_y + y, VGA_BLACK);
         }
     }
 }
@@ -72,8 +73,9 @@ void vesa_print_char(char character) {
         offset = vesa_get_screen_offset(row, TEXT_COLS-1);
     } else if (character == '\b') {
         if (offset > 0) {
-            offset -= 2;
+            offset -= 1;
             vesa_putchar(offset, ' ');
+            offset -= 1;
         }
     } else {
         // Otherwise, write the character and its attribute byte to
@@ -84,6 +86,10 @@ void vesa_print_char(char character) {
     // Advance the cursor
     offset++;
     cursor = offset;
+
+    // Print cursor
+    vesa_putchar(offset, '_');
+    vesa_putchar(offset+1, ' ');
 }
 
 void vesa_print_char_fixed(char character, char row, char col) {
