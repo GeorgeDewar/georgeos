@@ -121,9 +121,9 @@ void keyboard_handler()
     key_event.character = code_table[scancode];
     on_key_event(key_event);
 
-    print_char_fixed('0' + key_status.shift_down, ROWS-1, 0, WHITE_ON_BLACK);
-    print_char_fixed('0' + key_status.ctrl_down, ROWS-1, 1, WHITE_ON_BLACK);
-    print_char_fixed('0' + key_status.alt_down, ROWS-1, 2, WHITE_ON_BLACK);
+    // print_char_fixed('0' + key_status.shift_down, ROWS-1, 0, WHITE_ON_BLACK);
+    // print_char_fixed('0' + key_status.ctrl_down, ROWS-1, 1, WHITE_ON_BLACK);
+    // print_char_fixed('0' + key_status.alt_down, ROWS-1, 2, WHITE_ON_BLACK);
 }
 
 /* Sets up the system clock by installing the timer handler

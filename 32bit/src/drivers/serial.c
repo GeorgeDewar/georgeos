@@ -71,3 +71,7 @@ void write_string_serial(char *string) {
         write_serial(string[i++]);
     }
 }
+
+// need to define devices - stdout (screen_console), com1 (serial)
+// fprintf(device, string)
+// devices are pointers to struct with print function?

@@ -52,8 +52,14 @@ void delay(uint32_t ms);
 void ps2_keyboard_install();
 
 /* Video */
+struct GraphicsDevice {
+    void (*put_pixel)(uint16_t, uint16_t, uint8_t);
+    void (*clear_screen)();
+};
+struct GraphicsDevice default_graphics_device;
+
 void print_string(char *string);
-void print_char(char character, char attribute_byte);
+// void print_char(char character);
 void print_char_fixed(char character, char row, char col, char attribute_byte);
 void clear_screen();
 /* Gfx Mode */
@@ -61,11 +67,23 @@ void vesa_print_string(char *string);
 void vesa_print_char(char character);
 void vesa_print_char_fixed(char character, char row, char col);
 void vesa_clear_screen();
-uint16_t cursor;
+#define VGA_BLACK           0x00
+#define VGA_WHITE           0x07
+#define VGA_BRIGHT_WHITE    0x0F
+struct GraphicsDevice vesa_graphics_device;
+// uint16_t cursor;
+char zap_vga16_psf[];
 
 // Size of the screen in text mode
 #define ROWS 25
 #define COLS 80
+
+struct StreamDevice {
+    void (*print_char)(char character);
+    void (*print_char_color)(char, uint8_t);
+};
+struct StreamDevice stdout;
+void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 
 // Attribute byte for our default colour scheme .
 #define WHITE_ON_BLACK 0x0f

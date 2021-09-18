@@ -14,14 +14,18 @@ void timer_handler()
     /* Increment our 'tick count' */
     timer_ticks++;
 
+    // Render the console to the screen
+    console_render(40,40,800,600);
+
     if (timer_ticks % 18 == 0) {
         int second = timer_ticks / 18;
-        vesa_print_char_fixed(second % 2 == 0 ? 'x' : ' ', ROWS-1, COLS-1);
+        char color = second % 2 == 0 ? VGA_WHITE : VGA_BRIGHT_WHITE;
+        // default_graphics_device.put_pixel(799,599,color);
     }
 
     if (timer_ticks % 9 == 0) {
         int second = timer_ticks / 9;
-        vesa_putchar(cursor, second % 2 == 0 ? '_' : ' ');
+        // vesa_putchar(cursor, second % 2 == 0 ? '_' : ' ');
     }
 }
 

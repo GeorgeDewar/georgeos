@@ -2,13 +2,18 @@
 
 void main () {
     init_serial(115200);
-    vesa_clear_screen();
-    vesa_print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
+    default_graphics_device = vesa_graphics_device;
+    default_graphics_device.clear_screen();
 
-    for(int i=0; i<COLS; i++) {
-        print_char_fixed(' ', ROWS-1, i, 0x9f);
-    }
+    // vesa_clear_screen();
+    print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
 
+console_render(40,40,800,600);
+
+    // for(int i=0; i<COLS; i++) {
+    //     print_char_fixed(' ', ROWS-1, i, 0x9f);
+    // }
+    // default_graphics_device.clear_screen();
     idt_install();
     irq_install();
 
@@ -17,25 +22,24 @@ void main () {
 
     timer_install();
     ps2_keyboard_install();
-
-    vesa_print_string("Configuring floppy\n");
+    
+    print_string("Configuring floppy\n");
     install_floppy();
-    vesa_print_string("Resetting floppy controller\n");
+    print_string("Resetting floppy controller\n");
     ResetFloppy();
-    vesa_print_string("Reading sector from floppy\n");
+    print_string("Reading sector from floppy\n");
     read_sector_lba(20);
 
-    vesa_print_string((char *) FLOPPY_BUFFER);
-    vesa_print_string("\n");
+    print_string((char *) FLOPPY_BUFFER);
+    print_string("\n");
 
-    vesa_putchar(61,'H');
-    vesa_putchar(62,'e');
-    vesa_putchar(63,'l');
-    vesa_putchar(64,'l');
-    vesa_putchar(65,'o');
+    // vesa_putchar(61,'H');
+    // vesa_putchar(62,'e');
+    // vesa_putchar(63,'l');
+    // vesa_putchar(64,'l');
+    // vesa_putchar(65,'o');
 
-
-    vesa_print_string("hey man\nI'm a string...");
+    print_string("hey man\nI'm a string...");
 
     // Start our shell
     shell_main();
