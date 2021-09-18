@@ -73,7 +73,7 @@ char zap_vga16_psf[];
 #define CONSOLE_CHAR_WIDTH      8
 #define CONSOLE_CHAR_HEIGHT     16
 #define CONSOLE_CHAR_SPACE      0
-// void draw_char(uint16_t start_x, uint16_t start_y, char char_num);
+void draw_char(uint16_t start_x, uint16_t start_y, char char_num);
 
 // Size of the screen in text mode
 #define ROWS 25
@@ -199,6 +199,16 @@ struct KeyEvent {
     char character;
 };
 struct KeyEvent key_event;
+
+struct KeyStatus {
+    uint8_t shift_down      : 1;
+    uint8_t ctrl_down       : 1;
+    uint8_t alt_down        : 1;
+    uint8_t caps_lock_on    : 1;
+    uint8_t numlock_on      : 1;
+    uint8_t scroll_lock_on  : 1;
+};
+struct KeyStatus key_status;
 
 /* Console */
 void on_key_event(struct KeyEvent event);

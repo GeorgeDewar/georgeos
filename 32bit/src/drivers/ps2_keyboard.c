@@ -62,14 +62,6 @@ const uint8_t upper_ascii_codes[256] = {
 };
 
 // Variable to keep track of key states
-struct KeyStatus {
-    uint8_t shift_down      : 1;
-    uint8_t ctrl_down       : 1;
-    uint8_t alt_down        : 1;
-    uint8_t caps_lock_on    : 1;
-    uint8_t numlock_on      : 1;
-    uint8_t scroll_lock_on  : 1;
-};
 struct KeyStatus key_status = {};
 
 /* Handles the keyboard interrupt */
@@ -120,10 +112,6 @@ void keyboard_handler()
     const uint8_t* code_table = key_status.shift_down ? upper_ascii_codes : lower_ascii_codes;
     key_event.character = code_table[scancode];
     on_key_event(key_event);
-
-    // print_char_fixed('0' + key_status.shift_down, ROWS-1, 0, WHITE_ON_BLACK);
-    // print_char_fixed('0' + key_status.ctrl_down, ROWS-1, 1, WHITE_ON_BLACK);
-    // print_char_fixed('0' + key_status.alt_down, ROWS-1, 2, WHITE_ON_BLACK);
 }
 
 /* Sets up the system clock by installing the timer handler

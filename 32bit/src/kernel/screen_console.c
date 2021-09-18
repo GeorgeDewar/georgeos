@@ -65,12 +65,5 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 void putchar(int row, int col, char char_num) {
     uint16_t start_x = col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
     uint16_t start_y = row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
-    for(uint16_t x=0; x<CONSOLE_CHAR_WIDTH; x++) {
-        for(uint16_t y=0; y<CONSOLE_CHAR_HEIGHT; y++) {
-            char* letter = zap_vga16_psf + 4 + char_num*16;
-            uint8_t pixel = letter[y] & 1 << (CONSOLE_CHAR_WIDTH-x-1);
-            if(pixel) default_graphics_device.put_pixel(start_x + x, start_y + y, VGA_WHITE);
-            else default_graphics_device.put_pixel(start_x + x, start_y + y, VGA_BLACK);
-        }
-    }
+    draw_char(start_x, start_y, char_num);
 }

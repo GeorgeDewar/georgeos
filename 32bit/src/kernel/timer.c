@@ -19,6 +19,9 @@ void timer_handler()
     // Render the console to the screen
     default_graphics_device.clear_screen();
     console_render(40,40,800,600);
+    if(key_status.shift_down) draw_char(0, 580, 'S');
+    if(key_status.ctrl_down) draw_char(10, 580, 'C');
+    if(key_status.alt_down) draw_char(20, 580, 'A');
     vesa_copy_buffer();
 
     if (timer_ticks % 18 == 0) {
