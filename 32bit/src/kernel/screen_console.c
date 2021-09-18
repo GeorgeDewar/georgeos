@@ -1,8 +1,6 @@
 #include "system.h"
 
-#define CHAR_WIDTH      8
-#define CHAR_HEIGHT     16
-#define CHAR_SPACE      0
+
 
 #define BUFFER_SIZE 12800 // 160 * 80
 char console_buffer[BUFFER_SIZE];
@@ -40,7 +38,7 @@ void print_string(char *string) {
 
 /** Draw the contents of the buffer onto the screen at the specified location */
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
-    uint16_t num_cols = width / (CHAR_WIDTH + CHAR_SPACE);
+    uint16_t num_cols = width / (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
 
     uint16_t row = 0;
     uint16_t col = 0;
@@ -65,12 +63,12 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 }
 
 void putchar(int row, int col, char char_num) {
-    uint16_t start_x = col * (CHAR_WIDTH + CHAR_SPACE);
-    uint16_t start_y = row * (CHAR_HEIGHT + CHAR_SPACE);
-    for(uint16_t x=0; x<CHAR_WIDTH; x++) {
-        for(uint16_t y=0; y<CHAR_HEIGHT; y++) {
+    uint16_t start_x = col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
+    uint16_t start_y = row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
+    for(uint16_t x=0; x<CONSOLE_CHAR_WIDTH; x++) {
+        for(uint16_t y=0; y<CONSOLE_CHAR_HEIGHT; y++) {
             char* letter = zap_vga16_psf + 4 + char_num*16;
-            uint8_t pixel = letter[y] & 1 << (CHAR_WIDTH-x-1);
+            uint8_t pixel = letter[y] & 1 << (CONSOLE_CHAR_WIDTH-x-1);
             if(pixel) default_graphics_device.put_pixel(start_x + x, start_y + y, VGA_WHITE);
             else default_graphics_device.put_pixel(start_x + x, start_y + y, VGA_BLACK);
         }

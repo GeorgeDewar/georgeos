@@ -70,6 +70,10 @@ void clear_screen();
 struct GraphicsDevice vesa_graphics_device;
 // uint16_t cursor;
 char zap_vga16_psf[];
+#define CONSOLE_CHAR_WIDTH      8
+#define CONSOLE_CHAR_HEIGHT     16
+#define CONSOLE_CHAR_SPACE      0
+// void draw_char(uint16_t start_x, uint16_t start_y, char char_num);
 
 // Size of the screen in text mode
 #define ROWS 25
