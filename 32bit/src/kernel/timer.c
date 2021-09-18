@@ -4,6 +4,8 @@
 *  has been running for */
 volatile uint32_t timer_ticks = 0;
 
+extern void vesa_copy_buffer();
+
 /* Handles the timer. In this case, it's very simple: We
 *  increment the 'timer_ticks' variable every time the
 *  timer fires. By default, the timer fires 18.222 times
@@ -17,6 +19,7 @@ void timer_handler()
     // Render the console to the screen
     default_graphics_device.clear_screen();
     console_render(40,40,800,600);
+    vesa_copy_buffer();
 
     if (timer_ticks % 18 == 0) {
         int second = timer_ticks / 18;

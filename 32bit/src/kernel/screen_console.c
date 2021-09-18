@@ -17,20 +17,17 @@ struct StreamDevice stdout = {
 
 /** Print the specified character to the screen console */
 static void print_char(char character) {
-    int offset = cursor;
-
     if (character == '\b') {
-        if (offset > 0) {
-            offset -= 1;
+        if (cursor > 0) {
+            cursor -= 1;
             return;
         }
     } else {
-        console_buffer[offset] = character;
+        console_buffer[cursor] = character;
     }
     
     // Advance the cursor
-    offset++;
-    cursor = offset;
+    cursor++;
 }
 
 /** Print the specified string to stdout */
@@ -49,6 +46,7 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
     uint16_t col = 0;
     for(uint16_t i=0; i<cursor; i++) {
         char character = console_buffer[i];
+        // Note: We should not have backspace characters in the buffer
         if (character == '\n') {
             row++;
             col = 0;

@@ -10,6 +10,8 @@ char* video_memory = 0;
 #define BYTES_PER_PIXEL     1
 #define VIDEO_MEMORY_SIZE   SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL
 
+uint8_t* back_buffer = 0x500000;
+
 // Declare the functions we will expose in the struct
 static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, uint8_t VGA_COLOR);
 static void vesa_clear_screen();
@@ -27,22 +29,17 @@ struct GraphicsDevice vesa_graphics_device = {
 /** Draw a pixel at the specified location */
 static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, uint8_t VGA_COLOR)
 {
-    unsigned char* location = (unsigned char*) video_memory + SCREEN_WIDTH * pos_y + pos_x;
+    unsigned char* location = (unsigned char*) back_buffer + SCREEN_WIDTH * pos_y + pos_x;
     *location = VGA_COLOR;
 }
 
 /** Fill the video memory with zeros to clear the screen */
 static void vesa_clear_screen() {
-    video_memory = *frame_buffer_location_ptr; // initialise video_memory ptr
-    uint32_t *video_memory_32 = (uint32_t *) video_memory;
+    video_memory = *frame_buffer_location_ptr; // initialise video_memory ptr, do not remove, but do move...
+    memset(back_buffer, 0, VIDEO_MEMORY_SIZE);
+}
 
-    for(uint32_t i=0; i<VIDEO_MEMORY_SIZE/4; i++) {
-        video_memory_32[i] = 0;
-    }
-    
-    // for (int x=0; x<SCREEN_WIDTH; x++) {
-    //     for (int y=0; y<SCREEN_HEIGHT; y++) {
-    //         vesa_putpixel(x, y, 0);
-    //     }
-    // }
+/** Copy the back buffer to the screen efficiently */
+void vesa_copy_buffer() {
+    memcpy(back_buffer, video_memory, VIDEO_MEMORY_SIZE);
 }
