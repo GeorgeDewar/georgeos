@@ -15,6 +15,7 @@ struct StreamDevice stdout = {
     print_char_color: 0
 };
 
+/** Print the specified character to the screen console */
 static void print_char(char character) {
     int offset = cursor;
 
@@ -32,6 +33,7 @@ static void print_char(char character) {
     cursor = offset;
 }
 
+/** Print the specified string to stdout */
 void print_string(char *string) {
     int i = 0;
     while(string[i] != 0) {
@@ -39,8 +41,7 @@ void print_string(char *string) {
     }
 }
 
-// you can write to it, it keeps a buffer, and it can render to a display of any size
-
+/** Draw the contents of the buffer onto the screen at the specified location */
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
     uint16_t num_cols = width / (CHAR_WIDTH + CHAR_SPACE);
 
@@ -61,12 +62,11 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
         col++;
     }
 
-    default_graphics_device.put_pixel(1,1,VGA_WHITE);
+    uint8_t cursor_visible = timer_ticks % 10 >= 5;
+    if (cursor_visible) putchar(row, col, '_');
 }
 
 void putchar(int row, int col, char char_num) {
-    // uint16_t row = position / TEXT_COLS;
-    // uint16_t col = position - (row * TEXT_COLS);
     uint16_t start_x = col * (CHAR_WIDTH + CHAR_SPACE);
     uint16_t start_y = row * (CHAR_HEIGHT + CHAR_SPACE);
     for(uint16_t x=0; x<CHAR_WIDTH; x++) {

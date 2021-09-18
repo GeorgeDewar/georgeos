@@ -47,6 +47,7 @@ void memcpy(uint8_t* source, uint8_t* dest, uint32_t length);
 /* Timer */
 void timer_install();
 void delay(uint32_t ms);
+volatile uint32_t timer_ticks; // todo: replace this with a way to register for timer events
 
 /* Drivers */
 void ps2_keyboard_install();
@@ -63,10 +64,6 @@ void print_string(char *string);
 void print_char_fixed(char character, char row, char col, char attribute_byte);
 void clear_screen();
 /* Gfx Mode */
-void vesa_print_string(char *string);
-void vesa_print_char(char character);
-void vesa_print_char_fixed(char character, char row, char col);
-void vesa_clear_screen();
 #define VGA_BLACK           0x00
 #define VGA_WHITE           0x07
 #define VGA_BRIGHT_WHITE    0x0F

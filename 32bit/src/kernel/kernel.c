@@ -8,8 +8,6 @@ void main () {
     // vesa_clear_screen();
     print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
 
-console_render(40,40,800,600);
-
     // for(int i=0; i<COLS; i++) {
     //     print_char_fixed(' ', ROWS-1, i, 0x9f);
     // }

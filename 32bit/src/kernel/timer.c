@@ -15,6 +15,7 @@ void timer_handler()
     timer_ticks++;
 
     // Render the console to the screen
+    default_graphics_device.clear_screen();
     console_render(40,40,800,600);
 
     if (timer_ticks % 18 == 0) {
