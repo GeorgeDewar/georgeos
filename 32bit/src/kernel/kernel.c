@@ -4,8 +4,8 @@
 
 void main () {
     init_serial(115200);
-    default_graphics_device = vesa_graphics_device;
-    default_graphics_device.clear_screen();
+    default_graphics_device = &vesa_graphics_device;
+    default_graphics_device->clear_screen();
 
     print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
 

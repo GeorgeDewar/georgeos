@@ -62,8 +62,10 @@ struct GraphicsDevice {
     void (*put_pixel)(uint16_t, uint16_t, color);
     void (*clear_screen)();
     void (*copy_buffer)();
+    uint16_t screen_width;
+    uint16_t screen_height;
 };
-struct GraphicsDevice default_graphics_device;
+struct GraphicsDevice* default_graphics_device;
 
 void print_string(char *string);
 // void print_char(char character);
@@ -75,8 +77,7 @@ void clear_screen();
 #define COLOR_WHITE         ((color) {0xAA, 0xAA, 0xAA})
 #define COLOR_BRIGHTWHITE   ((color) {0xFF, 0xFF, 0xFF})
 
-#define screen_width        800
-#define screen_height       600
+
 struct GraphicsDevice vesa_graphics_device;
 // uint16_t cursor;
 extern const char zap_vga16_psf[];
