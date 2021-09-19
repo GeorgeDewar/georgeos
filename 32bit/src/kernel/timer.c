@@ -4,8 +4,6 @@
 *  has been running for */
 volatile uint32_t timer_ticks = 0;
 
-extern void vesa_copy_buffer();
-
 /* Handles the timer. In this case, it's very simple: We
 *  increment the 'timer_ticks' variable every time the
 *  timer fires. By default, the timer fires 18.222 times
@@ -33,7 +31,7 @@ static void timer_handler()
     }
 
     // Copy the video buffer to the real video memory
-    vesa_copy_buffer();
+    default_graphics_device.copy_buffer();
 }
 
 /* Sets up the system clock by installing the timer handler

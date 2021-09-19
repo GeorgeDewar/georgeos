@@ -1,7 +1,5 @@
 #include "system.h"
 
-
-
 #define BUFFER_SIZE 12800 // 160 * 80
 char console_buffer[BUFFER_SIZE];
 static uint32_t cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)

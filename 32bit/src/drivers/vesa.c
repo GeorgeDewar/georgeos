@@ -15,11 +15,13 @@ uint8_t* back_buffer = (uint8_t*) 0x500000;
 // Declare the functions we will expose in the struct
 static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, color vga_color);
 static void vesa_clear_screen();
+static void vesa_copy_buffer();
 
 // Define the GraphicsDevice that points to our functions
 struct GraphicsDevice vesa_graphics_device = {
     put_pixel: &vesa_putpixel,
-    clear_screen: &vesa_clear_screen
+    clear_screen: &vesa_clear_screen,
+    copy_buffer: &vesa_copy_buffer
 };
 
 /***********************

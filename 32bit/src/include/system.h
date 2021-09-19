@@ -61,6 +61,7 @@ typedef struct Color {
 struct GraphicsDevice {
     void (*put_pixel)(uint16_t, uint16_t, color);
     void (*clear_screen)();
+    void (*copy_buffer)();
 };
 struct GraphicsDevice default_graphics_device;
 
