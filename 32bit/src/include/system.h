@@ -69,30 +69,6 @@ void print_string(char *string);
 void print_char_fixed(char character, char row, char col, char attribute_byte);
 void clear_screen();
 /* Gfx Mode */
-enum VGA_COLORS {
-    Black = 0,
-    Blue,
-    Green,
-    Cyan,
-    Red,
-    Magenta,
-    Brown,
-    White,
-    DarkGray,
-    LightBlue,
-    LightGreen,
-    LightCyan,
-    LightRed,
-    LightMagenta,
-    Yellow,
-    BrightWhite
-};
-
-enum RGB_COLORS {
-    BLACK = 0,
-    WHITE = 0xAAAAAA,
-    BRIGHT_WHITE = 0xFFFFFF
-};
 
 #define COLOR_BLACK         ((color) {0x00, 0x00, 0x00})
 #define COLOR_WHITE         ((color) {0xAA, 0xAA, 0xAA})
@@ -102,7 +78,7 @@ enum RGB_COLORS {
 #define screen_height       600
 struct GraphicsDevice vesa_graphics_device;
 // uint16_t cursor;
-char zap_vga16_psf[];
+extern const char zap_vga16_psf[];
 #define CONSOLE_CHAR_WIDTH      8
 #define CONSOLE_CHAR_HEIGHT     16
 #define CONSOLE_CHAR_SPACE      0

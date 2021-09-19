@@ -36,8 +36,3 @@ void main () {
 
     for(;;);
 }
-
-void draw_taskbar() {
-
-    fill_rect(0, screen_height-TASKBAR_HEIGHT, screen_width, TASKBAR_HEIGHT, White);
-}

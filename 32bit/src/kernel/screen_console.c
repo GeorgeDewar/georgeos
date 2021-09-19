@@ -28,6 +28,14 @@ static void print_char(char character) {
     cursor++;
 }
 
+/** Draw the specified character at a certain character position */
+static void putchar(int row, int col, char char_num) {
+    uint16_t start_x = col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
+    uint16_t start_y = row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
+    draw_char(start_x, start_y, char_num);
+}
+
+
 /** Print the specified string to stdout */
 void print_string(char *string) {
     int i = 0;
@@ -60,10 +68,4 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
 
     uint8_t cursor_visible = timer_ticks % 10 >= 5;
     if (cursor_visible) putchar(row, col, '_');
-}
-
-void putchar(int row, int col, char char_num) {
-    uint16_t start_x = col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
-    uint16_t start_y = row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
-    draw_char(start_x, start_y, char_num);
 }
