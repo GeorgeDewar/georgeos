@@ -6,8 +6,16 @@ void draw_char(uint16_t start_x, uint16_t start_y, char char_num) {
         for(uint16_t y=0; y<CONSOLE_CHAR_HEIGHT; y++) {
             char* letter = zap_vga16_psf + 4 + char_num*16;
             uint8_t pixel = letter[y] & 1 << (CONSOLE_CHAR_WIDTH-x-1);
-            if(pixel) default_graphics_device.put_pixel(start_x + x, start_y + y, VGA_WHITE);
-            else default_graphics_device.put_pixel(start_x + x, start_y + y, VGA_BLACK);
+            if(pixel) default_graphics_device.put_pixel(start_x + x, start_y + y, White);
+            else default_graphics_device.put_pixel(start_x + x, start_y + y, Black);
+        }
+    }
+}
+
+void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, uint8_t color) {
+    for(uint16_t x=0; x<width; x++) {
+        for(uint16_t y=0; y<height; y++) {
+            default_graphics_device.put_pixel(start_x + x, start_y + y, color);
         }
     }
 }

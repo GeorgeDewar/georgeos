@@ -1,5 +1,7 @@
 #include "system.h"
 
+#define TASKBAR_HEIGHT  10
+
 void main () {
     init_serial(115200);
     default_graphics_device = vesa_graphics_device;
@@ -36,5 +38,6 @@ void main () {
 }
 
 void draw_taskbar() {
-    
+
+    fill_rect(0, screen_height-TASKBAR_HEIGHT, screen_width, TASKBAR_HEIGHT, White);
 }

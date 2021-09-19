@@ -20,6 +20,7 @@ void timer_handler()
     default_graphics_device.clear_screen();
     console_render(0,0,800,600);
     // Indicate the status of the modifier keys, just for fun
+    fill_rect(0, screen_height-20, screen_width, 20, LightBlue);
     if(key_status.shift_down) draw_char(0, 580, 'S');
     if(key_status.ctrl_down) draw_char(10, 580, 'C');
     if(key_status.alt_down) draw_char(20, 580, 'A');
@@ -27,7 +28,7 @@ void timer_handler()
     if (timer_ticks % 18 == 0) {
         // Just to show the timer is working
         int second = timer_ticks / 18;
-        char color = second % 2 == 0 ? VGA_BLACK : VGA_BRIGHT_WHITE;
+        char color = second % 2 == 0 ? Black : BrightWhite;
         default_graphics_device.put_pixel(799,599,color);
     }
 

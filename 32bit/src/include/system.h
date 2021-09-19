@@ -64,16 +64,36 @@ void print_string(char *string);
 void print_char_fixed(char character, char row, char col, char attribute_byte);
 void clear_screen();
 /* Gfx Mode */
-#define VGA_BLACK           0x00
-#define VGA_WHITE           0x07
-#define VGA_BRIGHT_WHITE    0x0F
+enum VGA_COLORS {
+    Black = 0,
+    Blue,
+    Green,
+    Cyan,
+    Red,
+    Magenta,
+    Brown,
+    White,
+    DarkGray,
+    LightBlue,
+    LightGreen,
+    LightCyan,
+    LightRed,
+    LightMagenta,
+    Yellow,
+    BrightWhite
+};
+
+#define screen_width        800
+#define screen_height       600
 struct GraphicsDevice vesa_graphics_device;
 // uint16_t cursor;
 char zap_vga16_psf[];
 #define CONSOLE_CHAR_WIDTH      8
 #define CONSOLE_CHAR_HEIGHT     16
 #define CONSOLE_CHAR_SPACE      0
+/* Graphics */
 void draw_char(uint16_t start_x, uint16_t start_y, char char_num);
+void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, uint8_t color);
 
 // Size of the screen in text mode
 #define ROWS 25
