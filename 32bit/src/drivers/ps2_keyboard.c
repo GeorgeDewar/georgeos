@@ -1,11 +1,5 @@
 #include "system.h"
 
-// Define some constants for the rows of keys
-// static char* numbers = "123456789";
-// static char* _qwertzuiop = "qwertzuiop";
-// static char* _asdfghjkl = "asdfghjkl";
-// static char* _yxcvbnm = "yxcvbnm";
-
 // Scancode -> ASCII
 #define ESC 27
 const uint8_t lower_ascii_codes[256] = {

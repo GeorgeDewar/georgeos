@@ -5,13 +5,11 @@ void main () {
     default_graphics_device = vesa_graphics_device;
     default_graphics_device.clear_screen();
 
-    // vesa_clear_screen();
     print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
 
     // for(int i=0; i<COLS; i++) {
     //     print_char_fixed(' ', ROWS-1, i, 0x9f);
     // }
-    // default_graphics_device.clear_screen();
     idt_install();
     irq_install();
 
@@ -31,16 +29,12 @@ void main () {
     print_string((char *) FLOPPY_BUFFER);
     print_string("\n");
 
-    // vesa_putchar(61,'H');
-    // vesa_putchar(62,'e');
-    // vesa_putchar(63,'l');
-    // vesa_putchar(64,'l');
-    // vesa_putchar(65,'o');
-
-    print_string("hey man\nI'm a string...");
-
     // Start our shell
     shell_main();
 
     for(;;);
+}
+
+void draw_taskbar() {
+    
 }
