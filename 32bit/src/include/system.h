@@ -53,8 +53,13 @@ volatile uint32_t timer_ticks; // todo: replace this with a way to register for 
 void ps2_keyboard_install();
 
 /* Video */
+typedef struct Color {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+} color;
 struct GraphicsDevice {
-    void (*put_pixel)(uint16_t, uint16_t, uint8_t);
+    void (*put_pixel)(uint16_t, uint16_t, color);
     void (*clear_screen)();
 };
 struct GraphicsDevice default_graphics_device;
@@ -83,6 +88,16 @@ enum VGA_COLORS {
     BrightWhite
 };
 
+enum RGB_COLORS {
+    BLACK = 0,
+    WHITE = 0xAAAAAA,
+    BRIGHT_WHITE = 0xFFFFFF
+};
+
+#define COLOR_BLACK         ((color) {0x00, 0x00, 0x00})
+#define COLOR_WHITE         ((color) {0xAA, 0xAA, 0xAA})
+#define COLOR_BRIGHTWHITE   ((color) {0xFF, 0xFF, 0xFF})
+
 #define screen_width        800
 #define screen_height       600
 struct GraphicsDevice vesa_graphics_device;
@@ -93,7 +108,7 @@ char zap_vga16_psf[];
 #define CONSOLE_CHAR_SPACE      0
 /* Graphics */
 void draw_char(uint16_t start_x, uint16_t start_y, char char_num);
-void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, uint8_t color);
+void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, color color);
 
 // Size of the screen in text mode
 #define ROWS 25

@@ -7,13 +7,13 @@ char* video_memory = 0;
 // TODO: Read this from the mode information block at 0x9000
 #define SCREEN_WIDTH        800
 #define SCREEN_HEIGHT       600
-#define BYTES_PER_PIXEL     1
+#define BYTES_PER_PIXEL     2
 #define VIDEO_MEMORY_SIZE   SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL
 
 uint8_t* back_buffer = 0x500000;
 
 // Declare the functions we will expose in the struct
-static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, uint8_t VGA_COLOR);
+static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, color vga_color);
 static void vesa_clear_screen();
 
 // Define the GraphicsDevice that points to our functions
@@ -27,10 +27,11 @@ struct GraphicsDevice vesa_graphics_device = {
  **********************/
 
 /** Draw a pixel at the specified location */
-static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, uint8_t VGA_COLOR)
+static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, color vga_color)
 {
-    unsigned char* location = (unsigned char*) back_buffer + SCREEN_WIDTH * pos_y + pos_x;
-    *location = VGA_COLOR;
+    uint16_t* location = (uint16_t*) back_buffer + (SCREEN_WIDTH * pos_y + pos_x);
+    
+    *location = (vga_color.red & 0b11111000) <<8 | ((vga_color.green & 0b11111100)<<3) | (vga_color.blue>>3);
 }
 
 /** Fill the video memory with zeros to clear the screen */
