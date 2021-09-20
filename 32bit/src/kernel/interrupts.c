@@ -152,11 +152,11 @@ char *exception_messages[] = {
 
 void fault_handler(struct regs *r) {
     if (r->int_no < 16) {
-        print_string(exception_messages[r->int_no]);
+        printf(exception_messages[r->int_no]);
     } else if (r->int_no < 32) {
-        print_string("Reserved exception");
+        printf("Reserved exception");
     }
-    print_string("\n");
+    printf("\n");
     
     for(;;);
 }

@@ -67,19 +67,11 @@ struct GraphicsDevice {
 };
 struct GraphicsDevice* default_graphics_device;
 
-void print_string(char *string);
-// void print_char(char character);
-void print_char_fixed(char character, char row, char col, char attribute_byte);
-void clear_screen();
-/* Gfx Mode */
-
 #define COLOR_BLACK         ((Color) {0x00, 0x00, 0x00})
 #define COLOR_WHITE         ((Color) {0xAA, 0xAA, 0xAA})
 #define COLOR_BRIGHTWHITE   ((Color) {0xFF, 0xFF, 0xFF})
 
-
-struct GraphicsDevice vesa_graphics_device;
-// uint16_t cursor;
+extern struct GraphicsDevice vesa_graphics_device;
 extern const char zap_vga16_psf[];
 #define CONSOLE_CHAR_WIDTH      8
 #define CONSOLE_CHAR_HEIGHT     16
@@ -92,12 +84,19 @@ void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t heig
 #define ROWS 25
 #define COLS 80
 
+// Stream/file
+#define stdout      0
+#define stderr      1
+#define stddebug    2
 struct StreamDevice {
     void (*print_char)(char character);
     void (*print_char_color)(char, uint8_t);
 };
-struct StreamDevice stdout;
+extern struct StreamDevice sd_screen_console;
+extern struct StreamDevice sd_com1;
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+void printf(char* string);
+void fprintf(int16_t fp, char* string);
 
 // Attribute byte for our default colour scheme .
 #define WHITE_ON_BLACK 0x0f
@@ -247,3 +246,6 @@ void FloppyHandler();
 
 /* Shell*/
 void shell_main();
+
+/* Other */
+void die(char* message);

@@ -4,15 +4,15 @@
 char console_buffer[BUFFER_SIZE];
 static uint32_t cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)
 
-static void print_char(char character);
+static void console_print_char(char character);
 
-struct StreamDevice stdout = {
-    print_char: &print_char,
+struct StreamDevice sd_screen_console = {
+    print_char: &console_print_char,
     print_char_color: 0
 };
 
 /** Print the specified character to the screen console */
-static void print_char(char character) {
+static void console_print_char(char character) {
     if (character == '\b') {
         if (cursor > 0) {
             cursor -= 1;
@@ -27,19 +27,10 @@ static void print_char(char character) {
 }
 
 /** Draw the specified character at a certain character position */
-static void putchar(int row, int col, char char_num) {
+static void console_putchar(int row, int col, char char_num) {
     uint16_t start_x = col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
     uint16_t start_y = row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
     draw_char(start_x, start_y, char_num);
-}
-
-
-/** Print the specified string to stdout */
-void print_string(char *string) {
-    int i = 0;
-    while(string[i] != 0) {
-        stdout.print_char(string[i++]);
-    }
 }
 
 /** Draw the contents of the buffer onto the screen at the specified location */
@@ -60,10 +51,10 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
             row++;
             col = 0;
         }
-        putchar(row, col, character);
+        console_putchar(row, col, character);
         col++;
     }
 
     uint8_t cursor_visible = timer_ticks % 10 >= 5;
-    if (cursor_visible) putchar(row, col, '_');
+    if (cursor_visible) console_putchar(row, col, '_');
 }

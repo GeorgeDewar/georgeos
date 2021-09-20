@@ -31,20 +31,20 @@ void get_string(char *buffer, uint16_t limit, uint8_t echo) {
     while((c = get_char()) != '\n') { // loop ends on <Enter>
         if(c == '\b' && index > 0) { // Backspace
             if(echo == 1) {
-                stdout.print_char('\b');    // Move the cursor back
-                stdout.print_char(' ');     // Erase the character at that position
-                stdout.print_char('\b');    // Move it back again
+                sd_screen_console.print_char('\b');    // Move the cursor back
+                sd_screen_console.print_char(' ');     // Erase the character at that position
+                sd_screen_console.print_char('\b');    // Move it back again
             }
             index--;                // Decrement the counter
         }
         else if (c >= 32 && c <= 126 && index < (limit - 1)) {
-            if(echo == 1) stdout.print_char(c);
+            if(echo == 1) sd_screen_console.print_char(c);
             buffer[index] = c;
             index++;
         } else {
             // Unhandled character or limit reached
         }
     }
-    if(echo == 1) stdout.print_char('\n');
+    if(echo == 1) sd_screen_console.print_char('\n');
     buffer[index] = 0; // NULL byte to end string
 }

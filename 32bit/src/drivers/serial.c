@@ -12,6 +12,11 @@
 #define ERR_SPEED_TOO_LOW   -2
 #define ERR_SERIAL_FAULT    -3
 
+struct StreamDevice sd_com1 = {
+    print_char: &write_serial,
+    print_char_color: 0
+};
+
 int init_serial(uint32_t speed) {
     if (FULL_SPEED % speed != 0) {
         return ERR_SPEED_INVALID;
@@ -56,22 +61,12 @@ int is_transmit_empty() {
 }
  
 void write_serial(char a) {
-   while (is_transmit_empty() == 0);
+    while (is_transmit_empty() == 0);
  
-   port_byte_out(PORT, a);
-}
+    port_byte_out(PORT, a);
 
-void write_string_serial(char *string) {
-    int i = 0;
-    while(string[i] != 0) {
-        if (string[i] == '\n') {
-            // If we see a newline, we need a carriage return too
-            write_serial('\r');
-        }
-        write_serial(string[i++]);
+    // If we are writing a newline, we need a carriage return too
+    if (a == '\n') {
+        write_serial('\r');
     }
 }
-
-// need to define devices - stdout (screen_console), com1 (serial)
-// fprintf(device, string)
-// devices are pointers to struct with print function?

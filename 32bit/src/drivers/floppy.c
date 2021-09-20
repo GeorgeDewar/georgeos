@@ -114,7 +114,7 @@ void install_floppy() {
 void FloppyHandler()
 {
     ReceivedIRQ = true;
-    print_string("Received IRQ 0x06\n");
+    fprintf(stddebug, "Received IRQ 0x06\n");
 }
 
 // Wait until the Main Status Register signals that data is ready - this is also required before sending a command.
@@ -136,7 +136,7 @@ int8_t write_floppy_command(char command){
 	    port_byte_out(DATA_FIFO, command);
         return SUCCESS;
     } else {	
-	    print_string("Floppy Error: Timeout while sending command\n");
+	    fprintf(stderr, "Floppy Error: Timeout while sending command\n");
         return FAILURE;
     }
 }
@@ -148,14 +148,14 @@ uint8_t read_data_byte()
     if (ready == SUCCESS) {
 	    return port_byte_in(DATA_FIFO);
     } else {	
-	    print_string("Floppy Error: Timeout while reading data byte\n");
+	    fprintf(stderr, "Floppy Error: Timeout while reading data byte\n");
         return FAILURE;
     }
 }
 
 uint8_t wait_for_irq() {
     for(int i = 0; i < 10; i++) {
-        print_string(".");
+        fprintf(stddebug, ".");
         if (ReceivedIRQ) return SUCCESS;
         delay(200);
     }
@@ -182,7 +182,7 @@ uint8_t ResetFloppy()
     // Wait for an IRQ to tell us the controller reset OK
     if(!wait_for_irq())
     {
-        print_string("Timed out while waiting for IRQ\n");
+        fprintf(stderr, "Timed out while waiting for IRQ\n");
         return FAILURE;
     }
 
@@ -230,7 +230,7 @@ uint8_t seek_track(uint8_t head, uint8_t cyl)
         // Wait for an IRQ to tell us there are results to be read
 		if(!wait_for_irq())
 		{
-			print_string("Timed out while waiting for IRQ\n");
+			fprintf(stderr, "Timed out while waiting for IRQ\n");
 			return FAILURE;
 		}
 
@@ -241,10 +241,10 @@ uint8_t seek_track(uint8_t head, uint8_t cyl)
 			return SUCCESS;
         } else {
             // The seek failed
-            print_string("Seek failed; retrying\n");
+            fprintf(stddebug, "Seek failed; retrying\n");
         }
 	}
-    print_string("Seek failed\n");
+    fprintf(stderr, "Seek failed\n");
 	return FAILURE;
 }
 
@@ -266,19 +266,19 @@ enum FLPYDSK_GAP3_LENGTH {
 // Read a single sector from the drive
 uint8_t read_sector(unsigned char sector,unsigned char head,unsigned char cylinder,unsigned char drive)
 {
-    print_string("Reading sector\n");
+    fprintf(stddebug, "Reading sector\n");
     uint8_t st0, cy1;
 
-    print_string("Seeking\n");
+    fprintf(stddebug, "Seeking\n");
     seek_track(head,cylinder);
 
-    print_string("Preparing DMA\n");
+    fprintf(stddebug, "Preparing DMA\n");
     dma_setup_read();
 
-    print_string("Waiting for head to settle\n");
+    fprintf(stddebug, "Waiting for head to settle\n");
     delay(100);
 
-    print_string("Sending read commands\n");
+    fprintf(stddebug, "Sending read commands\n");
     ReceivedIRQ = false;
     write_floppy_command(READ_DATA | FDC_CMD_EXT_MULTITRACK | FDC_CMD_EXT_SKIP | FDC_CMD_EXT_DENSITY);
     write_floppy_command(head<<2|drive);
@@ -290,10 +290,10 @@ uint8_t read_sector(unsigned char sector,unsigned char head,unsigned char cylind
     write_floppy_command(FLPYDSK_GAP3_LENGTH_3_5);        /*27 default gap3 value*/
     write_floppy_command(0xff);       /*default value for data length*/
 
-    print_string("Waiting for interrupt\n");
+    fprintf(stddebug, "Waiting for interrupt\n");
     if(!wait_for_irq())
     {
-        print_string("Timed out while waiting for IRQ\n");
+        fprintf(stderr, "Timed out while waiting for IRQ\n");
         return FAILURE;
     }
 
@@ -303,9 +303,9 @@ uint8_t read_sector(unsigned char sector,unsigned char head,unsigned char cylind
     }
 
     ReceivedIRQ = false;
-    print_string("Waiting for sense\n");
+    fprintf(stddebug, "Waiting for sense\n");
     check_interrupt_status(&st0,&cy1);
-    print_string("Successful read\n");
+    fprintf(stddebug, "Successful read\n");
     return SUCCESS;
 }
 
@@ -314,7 +314,7 @@ void read_sector_lba(uint16_t lba) {
     uint16_t cyl, head, sector;
 
     lba_2_chs(lba, &cyl, &head, &sector);
-    print_string("Turning on motor\n");
+    fprintf(stddebug, "Turning on motor\n");
     set_motor(1); // turn on the motor
     delay(300); // give the motor time to get up to speed
     read_sector(sector, head, cyl, 0);

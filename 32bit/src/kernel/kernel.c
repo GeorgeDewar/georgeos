@@ -7,32 +7,39 @@ void main () {
     default_graphics_device = &vesa_graphics_device;
     default_graphics_device->clear_screen();
 
-    print_string("Kernel loaded successfully. Welcome to GeorgeOS!\n");
+    printf("Kernel loaded successfully. Welcome to GeorgeOS!\n");
+    fprintf(stddebug, "Serial connected\n");
 
-    // for(int i=0; i<COLS; i++) {
-    //     print_char_fixed(' ', ROWS-1, i, 0x9f);
-    // }
+    // Set up interrupts
     idt_install();
     irq_install();
 
     // Only now is it safe to enable interrupts
     __asm__ __volatile__ ("sti");
 
+    // Initialise hardware that relies on interrupts
     timer_install();
     ps2_keyboard_install();
     
-    print_string("Configuring floppy\n");
     install_floppy();
-    print_string("Resetting floppy controller\n");
     ResetFloppy();
-    print_string("Reading sector from floppy\n");
     read_sector_lba(20);
 
-    print_string((char *) FLOPPY_BUFFER);
-    print_string("\n");
+    fprintf(4, "Floppy read: ");
+    printf((char *) FLOPPY_BUFFER);
+    printf("\n");
 
     // Start our shell
     shell_main();
 
+    for(;;);
+}
+
+/** Handle an unrecoverable error by stopping the system */
+void die(char* message) {
+    // Print the message - may not be seen if rendering system isn't working
+    printf(message);
+    printf("\nSystem halted");
+    // Hang so that we can debug
     for(;;);
 }
