@@ -16,7 +16,7 @@ uint8_t* video_memory = 0;
 uint8_t* back_buffer = (uint8_t*) 0x500000;
 
 // Declare the functions we will expose in the struct
-static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, color vga_color);
+static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, Color vga_color);
 static void vesa_clear_screen();
 static void vesa_copy_buffer();
 
@@ -32,7 +32,7 @@ struct GraphicsDevice vesa_graphics_device = {
  **********************/
 
 /** Draw a pixel at the specified location */
-static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, color vga_color)
+static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, Color vga_color)
 {
     uint16_t* location = (uint16_t*) back_buffer + (vesa_graphics_device.screen_width * pos_y + pos_x);
     *location = (vga_color.red & 0b11111000) <<8 | ((vga_color.green & 0b11111100)<<3) | (vga_color.blue>>3);

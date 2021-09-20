@@ -12,7 +12,7 @@ void draw_char(uint16_t start_x, uint16_t start_y, char char_num) {
     }
 }
 
-void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, color color) {
+void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, Color color) {
     for(uint16_t x=0; x<width; x++) {
         for(uint16_t y=0; y<height; y++) {
             default_graphics_device->put_pixel(start_x + x, start_y + y, color);
