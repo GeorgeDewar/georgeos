@@ -310,13 +310,27 @@ uint8_t read_sector(unsigned char sector,unsigned char head,unsigned char cylind
 }
 
 // Read a single sector from the drive given its LBA address. The sector will be placed at memory location 0x1000
-void read_sector_lba(uint16_t lba) {
-    uint16_t cyl, head, sector;
+void floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
+    if (device_num != 0) {
+        die("Only floppy drive 0 is supported");
+    }
 
+    uint16_t cyl, head, sector;
     lba_2_chs(lba, &cyl, &head, &sector);
     fprintf(stddebug, "Turning on motor\n");
     set_motor(1); // turn on the motor
     delay(300); // give the motor time to get up to speed
     read_sector(sector, head, cyl, 0);
     set_motor(0); // turn off the motor
+
+    // Copy data to the user-supplied buffer
+    memcpy(FLOPPY_BUFFER, buffer, 512);
 }
+
+/**
+ * Interface to the rest of the OS
+ */
+
+DiskDeviceDriver disk_device_floppy = {
+    read_sector: &floppy_read_sector_lba
+};

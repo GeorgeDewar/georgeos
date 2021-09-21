@@ -23,11 +23,19 @@ void main () {
     
     install_floppy();
     ResetFloppy();
-    read_sector_lba(20);
+    // read_sector_lba(20);
 
-    fprintf(4, "Floppy read: ");
-    printf((char *) FLOPPY_BUFFER);
-    printf("\n");
+    // printf("Floppy read: ");
+    // printf((char *) FLOPPY_BUFFER);
+    // printf("\n");
+
+    printf("Dir:\n");
+    DirEntry dirbuf[16];
+    uint16_t num_entries;
+    list_dir("path", dirbuf, &num_entries);
+    for (int i=0; i<num_entries; i++) {
+        printf(dirbuf[i].filename);
+    }
 
     // Start our shell
     shell_main();

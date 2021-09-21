@@ -2,7 +2,7 @@ SRCDIR=./src
 OBJDIR=./build
 
 # Automatically generate lists of sources using wildcards .
-C_SOURCES = $(wildcard $(SRCDIR)/kernel/*.c $(SRCDIR)/drivers/*.c $(SRCDIR)/user/*.c)
+C_SOURCES = $(wildcard $(SRCDIR)/kernel/*.c $(SRCDIR)/drivers/*.c $(SRCDIR)/drivers/fs/*.c $(SRCDIR)/user/*.c)
 HEADERS = $(wildcard $(SRCDIR)/include/kernel/*.h $(SRCDIR)/include/drivers/*.h)
 
 # TODO : Make sources dep on all header files .
@@ -18,7 +18,7 @@ debug: all
 	gdb.exe -ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
-		-ex "break kernel.c:23" \
+		-ex "break kernel.c:10" \
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu 

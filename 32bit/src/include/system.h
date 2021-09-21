@@ -9,11 +9,15 @@ typedef unsigned short uint16_t;
 typedef unsigned long uint32_t;
 typedef unsigned long long uint64_t;
 
+/** Success or failure, true or false */
+typedef uint8_t bool;
+
 /* VALUE DEFINITIONS */
-#define false 0
-#define true 1
-#define SUCCESS 1
-#define FAILURE 0
+#define null            0
+#define false           0
+#define true            1
+#define SUCCESS         1
+#define FAILURE         0
 #define UINT8_T_MAX     0xFF
 #define UINT16_T_MAX    0xFFFF
 #define UINT32_T_MAX    0xFFFFFFFF
@@ -241,11 +245,44 @@ uint8_t read_from_cmos(uint8_t register_num);
 #define FLOPPY_BUFFER 0x1000
 uint8_t ResetFloppy();
 void install_floppy();
-void read_sector_lba(uint16_t lba);
 void FloppyHandler();
 
 /* Shell*/
 void shell_main();
+
+/* Filesystem / Disk */
+
+/** A filesystem-agnostic representation of a directory entry (file or directory) */
+typedef struct {
+    char filename[256];
+
+    uint32_t location_on_disk;
+    uint32_t file_size;
+
+    // Bit field
+    unsigned char read_only      : 1;
+    unsigned char hidden         : 1;
+    unsigned char system         : 1;
+    unsigned char directory      : 1;
+    unsigned char archive        : 1;
+} DirEntry;
+
+typedef struct {
+    // TODO: combine in device num by using virtual lookup table pattern
+    // TODO: need to know sector size
+    bool (*read_sector)(uint8_t device_num, uint32_t lba, uint8_t* buffer);
+} DiskDeviceDriver;
+extern DiskDeviceDriver disk_device_floppy;
+
+/** The set of methods that a filesystem driver exposes */
+typedef struct {
+    bool (*list_dir)(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+    bool (*read_file)(DiskDeviceDriver* device, uint8_t device_num, char* path, uint8_t* buffer, uint16_t* length_out);
+} FileSystemDriver;
+extern FileSystemDriver fs_fat12;
+
+bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, uint8_t* buffer);
+bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 
 /* Other */
 void die(char* message);
