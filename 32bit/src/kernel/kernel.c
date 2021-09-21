@@ -34,8 +34,9 @@ void main () {
     uint16_t num_entries;
     list_dir("path", dirbuf, &num_entries);
     for (int i=0; i<num_entries; i++) {
-        printf(dirbuf[i].filename);
+        printf("%s\n", dirbuf[i].filename);
     }
+    printf("Number of files: %d\n", num_entries);
 
     // Start our shell
     shell_main();

@@ -33,8 +33,58 @@ uint8_t get_stream_device(int16_t fp, struct StreamDevice* sd_out) {
     return 1;
 }
 
-void printf(char* string) {
-    fprintf(stdout, string);
+void intToString(int number, char* string) {
+    int index = 0;
+    char buffer[16] = "";
+    int len;
+
+    do {
+        int thisPlace = number % 10;
+        buffer[index++] = '0' + thisPlace;
+        number = number / 10;
+    } while(number > 0);
+    
+    // Reverse it
+    len = index;
+    index = 0;
+    for(index; index < len; index++) {
+        string[index] = buffer[len-index-1];
+    }
+    string[index] = 0;
+}
+
+void printf(char* string, ...) {
+    va_list argp;
+    va_start(argp, string);
+
+    vfprintf(stdout, string, argp);
+    va_end(argp);
+}
+
+void vfprintf(int16_t fp, char* string, va_list argp) {
+    struct StreamDevice sd = {};
+    get_stream_device(fp, &sd);
+
+    while(*string != 0) {
+        if (*string == '%') {
+            string++;
+            if(*string == '%'){ // %% escapes %
+                sd.print_char(*string);
+            } else if (*string == 's') {
+                char* str = va_arg(argp, int);
+                fprintf(fp, str);
+            } else if (*string == 'd') {
+                int number = va_arg(argp, int);
+                char num_string[16];
+                intToString(number, num_string);
+                fprintf(fp, num_string);
+            }
+        } else {
+            sd.print_char(*string);
+        }
+        string++;
+    }
+
 }
 
 void fprintf(int16_t fp, char* string) {
