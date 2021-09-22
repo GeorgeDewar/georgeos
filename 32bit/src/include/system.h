@@ -117,6 +117,7 @@ extern struct StreamDevice sd_com1;
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 void printf(char* string, ...);
 void fprintf(int16_t fp, char* string);
+void fprintlen(int16_t fp, char* data, uint32_t len);
 
 // Attribute byte for our default colour scheme .
 #define WHITE_ON_BLACK 0x0f
@@ -292,6 +293,7 @@ extern DiskDeviceDriver disk_device_floppy;
 
 /** The set of methods that a filesystem driver exposes */
 typedef struct {
+    bool (*init)(DiskDeviceDriver* device, uint8_t device_num);
     bool (*list_dir)(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
     bool (*read_file)(DiskDeviceDriver* device, uint8_t device_num, char* path, uint8_t* buffer, uint16_t* length_out);
 } FileSystemDriver;
@@ -299,6 +301,7 @@ extern FileSystemDriver fs_fat12;
 
 bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, uint8_t* buffer);
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);
 
 /* Other */
 void die(char* message);

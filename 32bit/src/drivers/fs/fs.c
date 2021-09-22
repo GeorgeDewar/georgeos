@@ -26,4 +26,11 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
-bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);
+bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
+    DiskDeviceDriver device;
+    uint8_t device_num;
+    // Get the device
+    get_device_for_path(path, &device, &device_num);
+    // List the files
+    return fs_fat12.read_file(&device, device_num, path, buffer, length_out);
+}

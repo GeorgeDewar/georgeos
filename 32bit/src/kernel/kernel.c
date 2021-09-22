@@ -23,6 +23,7 @@ void main () {
     
     install_floppy();
     ResetFloppy();
+    fs_fat12.init(&disk_device_floppy, 0);
 
     // Start our shell
     shell_main();

@@ -102,3 +102,12 @@ void fprintf(int16_t fp, char* string) {
     // }
 
 }
+
+void fprintlen(int16_t fp, char* data, uint32_t len) {
+    struct StreamDevice sd = {};
+    get_stream_device(fp, &sd);
+
+    for(uint32_t i=0; i<len; i++) {
+        sd.print_char(data[i]);
+    }
+}

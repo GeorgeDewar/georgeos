@@ -13,6 +13,12 @@ void shell_main() {
             printf("Hi!\n");
         } else if (strcmp(command, "dir")) {
             print_directory_listing();
+        } else if (strcmp(command, "cat")) {
+            uint8_t buffer[10000];
+            volatile uint16_t length;
+            read_file("/EXAMPLE.TXT", buffer, &length);
+            printf("Read %d bytes\n", length);
+            fprintlen(stdout, buffer, length);
         } else if (command[0] == 0) {
             // Nothing was typed
         } else {
