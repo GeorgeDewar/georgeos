@@ -4,6 +4,14 @@
 *  has been running for */
 volatile uint32_t timer_ticks = 0;
 
+typedef struct {
+    void (*callback)();
+} TimerCallback;
+
+#define MAX_CALLBACKS       100
+static TimerCallback* callbacks;
+static uint8_t callbacks_count = 0;
+
 /* Handles the timer. In this case, it's very simple: We
 *  increment the 'timer_ticks' variable every time the
 *  timer fires. By default, the timer fires 18.222 times
@@ -32,6 +40,10 @@ static void timer_handler()
 
     // Copy the video buffer to the real video memory
     default_graphics_device->copy_buffer();
+
+    for(uint8_t i=0; i<callbacks_count; i++) {
+        callbacks[i].callback();
+    }
 }
 
 /* Sets up the system clock by installing the timer handler
@@ -40,14 +52,19 @@ void timer_install()
 {
     /* Installs 'timer_handler' to IRQ0 */
     irq_install_handler(0, timer_handler);
+
+    callbacks = malloc(MAX_CALLBACKS * sizeof(TimerCallback));
 }
 
+/** Busy wait for the specified duration */
 void delay(uint32_t ms) {
     uint32_t start_time = timer_ticks;
     uint32_t ticks_to_delay = ms / 55;
     while(timer_ticks < start_time + ticks_to_delay);
 }
 
-uint32_t get_timer_ticks() {
-    return timer_ticks;
+/** Ask to receive a callback on each timer tick */
+uint8_t timer_register_callback(void (*callback)()) {
+    callbacks[callbacks_count].callback = callback;
+    return callbacks_count++;
 }

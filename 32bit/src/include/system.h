@@ -67,6 +67,7 @@ void memcpy(uint8_t* source, uint8_t* dest, uint32_t length);
 void timer_install();
 void delay(uint32_t ms);
 volatile uint32_t timer_ticks; // todo: replace this with a way to register for timer events
+uint8_t timer_register_callback(void (*callback)());
 
 /* Drivers */
 void ps2_keyboard_install();

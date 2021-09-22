@@ -319,7 +319,7 @@ void floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
     lba_2_chs(lba, &cyl, &head, &sector);
     fprintf(stddebug, "Turning on motor\n");
     set_motor(1); // turn on the motor
-    delay(300); // give the motor time to get up to speed
+    //delay(300); // give the motor time to get up to speed
     read_sector(sector, head, cyl, 0);
     set_motor(0); // turn off the motor
 
