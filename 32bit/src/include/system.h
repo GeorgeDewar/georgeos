@@ -9,6 +9,8 @@ typedef unsigned short uint16_t;
 typedef unsigned long uint32_t;
 typedef unsigned long long uint64_t;
 
+typedef unsigned long size_t;
+
 /** Success or failure, true or false */
 typedef uint8_t bool;
 
@@ -56,6 +58,8 @@ void port_byte_out (unsigned short port, unsigned char data);
 void port_word_out (unsigned short port, unsigned short data);
 
 /* Memory management & manipulation */
+void *malloc(size_t size);
+void free(void *ptr);
 void memset(uint8_t* source, uint8_t value, uint32_t length);
 void memcpy(uint8_t* source, uint8_t* dest, uint32_t length);
 
