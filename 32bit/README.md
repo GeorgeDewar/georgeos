@@ -23,6 +23,7 @@ Desired features in order of priority:
 - Successfully compile one or two existing programs for new OS
 - More advanced graphics support (higher res / mulitple monitors)
 - Support a USB device
+  - Mass storage
 
 ## Resources
 
