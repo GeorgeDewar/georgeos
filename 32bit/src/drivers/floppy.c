@@ -11,6 +11,8 @@
 // We are using DMA, so NDMA is false
 #define FLOPPY_NDMA         false
 
+#define FLOPPY_MOTOR_ON_TIME    2000 // ms
+
 // The registers we need to read from and write to to control the drive
 enum FloppyRegisters
 {
@@ -65,6 +67,10 @@ void lba_2_chs(uint32_t lba, uint16_t* cyl, uint16_t* head, uint16_t* sector)
 // Set to true by the IRQ 6 interrupt handler
 volatile uint8_t ReceivedIRQ = false;
 
+// Keep track of when drive was last used so we know when we can turn the motor off
+// 0 = motor is off
+uint32_t motor_on_since = 0;
+
 // The ports we will need to write to to set up DMA for the floppy drive
 enum FLOPPY_ISA_DMA_REGISTERS {
     DMA_START_ADDRESS_REGISTER =        0x04,   // for ch2/6
@@ -102,12 +108,6 @@ void dma_setup_write() {
     port_byte_out(DMA_MODE_REGISTER, 0x56);      // 01010110
                                     // single transfer, address increment, autoinit, read, channel2)
     port_byte_out(DMA_SINGLE_CHANNEL_MASK_REGISTER, 0x02);      // unmask DMA channel 2
-}
-
-// Set up DMA and IRQ handling
-void install_floppy() {
-    initial_dma_setup();
-    irq_install_handler(6, FloppyHandler);
 }
 
 // This function gets called when an IRQ6 is generated.
@@ -309,6 +309,24 @@ uint8_t read_sector(unsigned char sector,unsigned char head,unsigned char cylind
     return SUCCESS;
 }
 
+void ensure_motor_on() {
+    if (motor_on_since == 0) {
+        // Motor is off
+        fprintf(stddebug, "Turning on motor\n");
+        set_motor(1);   // turn on the motor
+        delay(300);     // give the motor time to get up to speed
+    }
+    motor_on_since = timer_ticks;
+}
+
+void turn_motor_off_if_idle() {
+    if (motor_on_since > 0 && timer_ticks - motor_on_since > (18 * FLOPPY_MOTOR_ON_TIME / 1000)) {
+        fprintf(stddebug, "Turning off motor\n");
+        set_motor(0);
+        motor_on_since = 0;
+    }
+}
+
 // Read a single sector from the drive given its LBA address. The sector will be placed at memory location 0x1000
 void floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
     if (device_num != 0) {
@@ -317,14 +335,18 @@ void floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
 
     uint16_t cyl, head, sector;
     lba_2_chs(lba, &cyl, &head, &sector);
-    fprintf(stddebug, "Turning on motor\n");
-    set_motor(1); // turn on the motor
-    //delay(300); // give the motor time to get up to speed
+    ensure_motor_on();
     read_sector(sector, head, cyl, 0);
-    set_motor(0); // turn off the motor
 
     // Copy data to the user-supplied buffer
     memcpy(FLOPPY_BUFFER, buffer, 512);
+}
+
+// Set up DMA and IRQ handling
+void install_floppy() {
+    initial_dma_setup();
+    irq_install_handler(6, FloppyHandler);
+    timer_register_callback(turn_motor_off_if_idle);
 }
 
 /**
