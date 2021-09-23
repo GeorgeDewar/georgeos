@@ -23,12 +23,12 @@ void shell_main() {
     while(1) {
         printf("%s> ", cwd);
         char command_string[COMMAND_BUFFER_SIZE];
-        get_string(command_string, COMMAND_BUFFER_SIZE, true);
+        syscall_get_string(command_string, COMMAND_BUFFER_SIZE, true);
         tokenise_command(command_string, ' ');
         int token=0;
         char* command = command_tokens[token++];
         if (strcmp(command, "sayhi")) {
-            printf("Hi!\n");
+            syscall_print("Hi!\n");
         } else if (strcmp(command, "dir")) {
             print_directory_listing();
         } else if (strcmp(command, "cd")) {

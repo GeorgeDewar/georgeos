@@ -306,5 +306,10 @@ bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);
 
+/* Syscall */
+#define SYSCALL_VECTOR  0x7F
+void handle_syscall(struct regs *r);
+extern void make_syscall(int op);
+
 /* Other */
 void die(char* message);

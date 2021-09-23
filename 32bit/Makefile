@@ -18,7 +18,7 @@ debug: all
 	gdb.exe -ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
-		-ex "break kernel.c:10" \
+		-ex "break handle_syscall" \
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu 

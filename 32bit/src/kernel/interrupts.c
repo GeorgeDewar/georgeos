@@ -32,6 +32,7 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void isr127();
 
 /* Defines an IDT entry */
 struct idt_entry
@@ -126,6 +127,7 @@ void idt_install()
     idt_set_gate(29, &isr29);
     idt_set_gate(30, &isr30);
     idt_set_gate(31, &isr31);
+    idt_set_gate(SYSCALL_VECTOR, &isr127);
 }
 
 char *exception_messages[] = {
@@ -152,11 +154,12 @@ char *exception_messages[] = {
 
 void fault_handler(struct regs *r) {
     if (r->int_no < 16) {
-        printf(exception_messages[r->int_no]);
+        printf("%s\n", exception_messages[r->int_no]);
+        for(;;);
     } else if (r->int_no < 32) {
-        printf("Reserved exception");
+        printf("Reserved exception\n");
+        for(;;);
+    } else if (r->int_no == SYSCALL_VECTOR) {
+        handle_syscall(r);
     }
-    printf("\n");
-    
-    for(;;);
 }

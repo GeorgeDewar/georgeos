@@ -50,6 +50,7 @@ isr_noerror 28
 isr_noerror 29
 isr_noerror 30
 isr_noerror 31
+isr_noerror 127 ; = 0x7F, i.e. SYSCALL_VECTOR
 
 ; We call a C function in here. We need to let the assembler know
 ; that '_fault_handler' exists in another file
