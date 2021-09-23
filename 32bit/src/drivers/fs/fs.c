@@ -1,5 +1,7 @@
 #include "system.h"
 
+char cwd[256];
+
 bool get_device_for_path(char* path, DiskDeviceDriver* device_out, uint8_t* device_num_out) {
     // /fd0 = floppy 0, etc, may need lookup table, but for now...
     *device_out = disk_device_floppy;
@@ -20,7 +22,9 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
     DiskDeviceDriver device;
     uint8_t device_num;
     // Get the device
-    get_device_for_path(path, &device, &device_num);
+    if(!get_device_for_path(path, &device, &device_num)) {
+        return FAILURE;
+    };
     // List the files
     return fs_fat12.list_dir(&device, device_num, path, dir_entry_list_out, num_entries_out);
 }
@@ -30,7 +34,9 @@ bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
     DiskDeviceDriver device;
     uint8_t device_num;
     // Get the device
-    get_device_for_path(path, &device, &device_num);
+    if(!get_device_for_path(path, &device, &device_num)) {
+        return FAILURE;
+    };
     // List the files
     return fs_fat12.read_file(&device, device_num, path, buffer, length_out);
 }

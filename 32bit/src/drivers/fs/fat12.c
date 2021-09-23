@@ -190,7 +190,7 @@ static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, uint8_t *fat) {
  */
 bool find_file(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_out) {
     if (*path++ != '/') {
-        fprintf(stderr, "Not a valid path");
+        fprintf(stderr, "Not a valid path\n");
         return FAILURE;
     }
     DirEntry dir_entry_list[ROOT_DIR_ENTRIES];

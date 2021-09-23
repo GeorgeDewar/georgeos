@@ -21,9 +21,11 @@ void main () {
     timer_install();
     ps2_keyboard_install();
     
+    // Initialise disk subsystem
     install_floppy();
     ResetFloppy();
     fs_fat12.init(&disk_device_floppy, 0);
+    strcpy("/fd0", cwd);
 
     // Start our shell
     shell_main();

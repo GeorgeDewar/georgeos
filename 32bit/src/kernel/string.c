@@ -21,3 +21,11 @@ char strcmp_wl(char *string1, char *string2, uint32_t length_to_compare) {
 char strcmp(char *string1, char *string2) {
     return strcmp_wl(string1, string2, UINT32_T_MAX);
 }
+
+/** copy a string from src to dest, stopping at the NULL byte */
+void strcpy(char *src, char *dest) {
+    while(*src != 0) {
+        *dest++ = *src++;
+    }
+    *dest = 0;
+}

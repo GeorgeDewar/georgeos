@@ -23,7 +23,7 @@ void stream_init() {
 }
 
 uint8_t get_stream_device(int16_t fp, struct StreamDevice* sd_out) {
-    if (fp == stdout) {
+    if (fp == stdout || fp == stderr) {
         *sd_out = sd_screen_console;
     } else if (fp == stddebug) {
         *sd_out = sd_com1;

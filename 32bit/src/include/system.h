@@ -249,6 +249,7 @@ void get_string(char *buffer, uint16_t limit, uint8_t echo);
 
 /* String */
 char strcmp(char *string1, char *string2);
+void strcpy(char *src, char *dest);
 
 /* Serial */
 int init_serial(uint32_t speed);
@@ -298,6 +299,8 @@ typedef struct {
     bool (*read_file)(DiskDeviceDriver* device, uint8_t device_num, char* path, uint8_t* buffer, uint16_t* length_out);
 } FileSystemDriver;
 extern FileSystemDriver fs_fat12;
+
+extern char cwd[256];
 
 bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, uint8_t* buffer);
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
