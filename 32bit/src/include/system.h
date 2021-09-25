@@ -25,10 +25,6 @@ typedef uint8_t bool;
 #define UINT32_T_MAX    0xFFFFFFFF
 
 /* BUILTIN FUNCTIONS */
-// #define va_start(ap,v) ap=((uint8t*)&v)+4
-// #define va_arg(ap,type) (ap+=sizeof(type),*(type*)((void*)ap-sizeof(type)))
-// #define va_end(ap) ((void)0)
-
 #define va_start(v,l)        __builtin_va_start(v,l)
 #define va_end(v)        __builtin_va_end(v)
 #define va_arg(v,l)        __builtin_va_arg(v,l)
@@ -116,7 +112,7 @@ extern struct StreamDevice sd_screen_console;
 extern struct StreamDevice sd_com1;
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 void printf(char* string, ...);
-void fprintf(int16_t fp, char* string);
+void fprintf(int16_t fp, char* string, ...);
 void fprintlen(int16_t fp, char* data, uint32_t len);
 
 // Attribute byte for our default colour scheme .
@@ -264,6 +260,9 @@ uint8_t read_from_cmos(uint8_t register_num);
 uint8_t ResetFloppy();
 void install_floppy();
 void FloppyHandler();
+
+/* Processes */
+bool exec(char* filename);
 
 /* Shell*/
 void shell_main();

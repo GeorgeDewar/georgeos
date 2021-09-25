@@ -77,10 +77,12 @@ bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, Di
     // Assume root dir for now, and just read one sector
     read_sectors_lba(device, device_num, ROOT_DIR_START, SECTORS_PER_DIR, dir_entry_buffer);
     for (int i=0; i<ROOT_DIR_ENTRIES; i++) {
+        // printf("Checking entry %d\n", i);
         Fat12DirectoryEntry fat12entry = dir_entry_buffer[i];
 
         if (fat12entry.name[0] == 0) {
             *num_entries_out = i;
+            fprintf(stddebug, "No more entries");
             return SUCCESS; // no more entries
         }
         // Copy filename

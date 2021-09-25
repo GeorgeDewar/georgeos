@@ -3,7 +3,9 @@
 static uint32_t syscalls[] = {
 	/* System Call Table */
 	(uint32_t)&printf,               /* 0 */
-	(uint32_t)&get_string
+	(uint32_t)&get_string,
+	(uint32_t)&malloc,
+	(uint32_t)&free
 };
 #define NUM_SYSCALLS 2
 

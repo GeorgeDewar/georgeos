@@ -28,6 +28,5 @@ start_protected_mode:
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov ebp, 0x2ffff   ; Update our stack position so it is right
-    mov esp, ebp       ; at the top of the free space.
-
+    mov ebp, 0x40000   ; Update our stack position
+    mov esp, ebp

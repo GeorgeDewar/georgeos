@@ -19,31 +19,28 @@ void tokenise_command(char *string, char separator) {
     }
 }
 
-void shell_main() {
+void main() {
     while(1) {
-        printf("%s> ", cwd);
+        printf("UserShell> ");
         char command_string[COMMAND_BUFFER_SIZE];
-        get_string(command_string, COMMAND_BUFFER_SIZE, true);
+        syscall_get_string(command_string, COMMAND_BUFFER_SIZE, 1);
         tokenise_command(command_string, ' ');
         int token=0;
         char* command = command_tokens[token++];
         if (strcmp(command, "sayhi")) {
             printf("Hi!\n");
         } else if (strcmp(command, "dir")) {
-            print_directory_listing();
+            //print_directory_listing();
         } else if (strcmp(command, "cd")) {
-            char* new_dir = command_tokens[token++];
-            strcpy(new_dir, cwd);
+            // char* new_dir = command_tokens[token++];
+            // strcpy(new_dir, cwd);
         } else if (strcmp(command, "cat")) {
-            char* filename = command_tokens[token++];
-            uint8_t buffer[10000];
-            volatile uint16_t length;
-            read_file(filename, buffer, &length);
-            printf("Read %d bytes\n", length);
-            fprintlen(stdout, buffer, length);
-        } else if (strcmp(command, "exec")) {
-            char* filename = command_tokens[token++];
-            exec(filename);
+            // char* filename = command_tokens[token++];
+            // uint8_t buffer[10000];
+            // volatile uint16_t length;
+            // read_file(filename, buffer, &length);
+            // printf("Read %d bytes\n", length);
+            // fprintlen(stdout, buffer, length);
         } else if (command[0] == 0) {
             // Nothing was typed
         } else {
@@ -52,12 +49,12 @@ void shell_main() {
     }
 }
 
-void print_directory_listing() {
-    DirEntry dirbuf[16];
-    uint16_t num_entries;
-    list_dir("path", dirbuf, &num_entries);
-    for (int i=0; i<num_entries; i++) {
-        printf("%s\n", dirbuf[i].filename);
-    }
-    printf("Number of files: %d\n", num_entries);
-}
+// void print_directory_listing() {
+//     DirEntry dirbuf[16];
+//     uint16_t num_entries;
+//     list_dir("path", dirbuf, &num_entries);
+//     for (int i=0; i<num_entries; i++) {
+//         printf("%s\n", dirbuf[i].filename);
+//     }
+//     printf("Number of files: %d\n", num_entries);
+// }

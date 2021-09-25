@@ -152,12 +152,21 @@ char *exception_messages[] = {
     "Machine Check Exception"
 };
 
+void force_render() {
+    default_graphics_device->clear_screen();
+    console_render(0,0,default_graphics_device->screen_height,default_graphics_device->screen_width);
+    default_graphics_device->copy_buffer();
+}
+
 void fault_handler(struct regs *r) {
     if (r->int_no < 16) {
+        fprintf(stddebug, "%s\n", exception_messages[r->int_no]);
         printf("%s\n", exception_messages[r->int_no]);
+        // force_render();
         for(;;);
     } else if (r->int_no < 32) {
         printf("Reserved exception\n");
+        force_render();
         for(;;);
     } else if (r->int_no == SYSCALL_VECTOR) {
         handle_syscall(r);

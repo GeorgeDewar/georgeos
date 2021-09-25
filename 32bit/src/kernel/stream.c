@@ -61,6 +61,14 @@ void printf(char* string, ...) {
     va_end(argp);
 }
 
+void fprintf(int16_t fp, char* string, ...) {
+    va_list argp;
+    va_start(argp, string);
+
+    vfprintf(fp, string, argp);
+    va_end(argp);
+}
+
 void vfprintf(int16_t fp, char* string, va_list argp) {
     struct StreamDevice sd = {};
     get_stream_device(fp, &sd);
@@ -84,22 +92,6 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
         }
         string++;
     }
-
-}
-
-void fprintf(int16_t fp, char* string) {
-    struct StreamDevice sd = {};
-    get_stream_device(fp, &sd);
-
-    int i = 0;
-    while(string[i] != 0) {
-        sd.print_char(string[i++]);
-    }
-    // void (*print_fn)(char character);
-    // FilePointer fp_obj = files[fp];
-    // if (fp_obj.fp_type == STREAM) {
-    //     print_fn = fp_obj.stream_device.print_char;
-    // }
 
 }
 
