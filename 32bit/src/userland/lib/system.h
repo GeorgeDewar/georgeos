@@ -32,3 +32,18 @@ void *malloc(uint32_t size);
 void free(void *ptr);
 void memset(uint8_t* source, uint8_t value, uint32_t length);
 void memcpy(uint8_t* source, uint8_t* dest, uint32_t length);
+
+/** A filesystem-agnostic representation of a directory entry (file or directory) */
+typedef struct {
+    char filename[256];
+
+    uint32_t location_on_disk;
+    uint32_t file_size;
+
+    // Bit field
+    unsigned char read_only      : 1;
+    unsigned char hidden         : 1;
+    unsigned char system         : 1;
+    unsigned char directory      : 1;
+    unsigned char archive        : 1;
+} DirEntry;

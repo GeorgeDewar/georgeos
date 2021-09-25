@@ -2,6 +2,7 @@
 
 DEFN_SYSCALL1(print, 0, const char *);
 DEFN_SYSCALL3(get_string, 1, char *, int, int);
+DEFN_SYSCALL3(list_dir, 2, char *, char *, int *);
 // Todo: Change to read and write, add exit (for now, works by restarting shell like in DOS), add exec (CreateProcess)
 // getcwd, chdir, listdir
 
@@ -48,13 +49,13 @@ void vsprintf(char* buffer, char* string, va_list argp) {
             } else if (*string == 's') {
                 char* str = va_arg(argp, int);
                 strcpy(str, buffer);
-                buffer--; // erase null byte
+                buffer += strlen(str); // erase null byte
             } else if (*string == 'd') {
                 int number = va_arg(argp, int);
                 char num_string[16];
                 intToString(number, num_string);
                 strcpy(num_string, buffer);
-                buffer--; // erase null byte
+                buffer += strlen(num_string); // erase null byte
             }
         } else {
             *buffer++ = *string;
@@ -120,4 +121,12 @@ void strcpy(char *src, char *dest) {
         *dest++ = *src++;
     }
     *dest = 0;
+}
+
+int strlen(char *str) {
+    int len = 0;
+    while(*str++ != 0) {
+        len++;
+    }
+    return len;
 }

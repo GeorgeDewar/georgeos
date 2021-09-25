@@ -21,7 +21,7 @@ void tokenise_command(char *string, char separator) {
 
 void main() {
     while(1) {
-        printf("UserShell> ");
+        printf("UserShell:/fd0> ");
         char command_string[COMMAND_BUFFER_SIZE];
         sys_get_string(command_string, COMMAND_BUFFER_SIZE, 1);
         tokenise_command(command_string, ' ');
@@ -30,7 +30,7 @@ void main() {
         if (strcmp(command, "sayhi")) {
             printf("Hi!\n");
         } else if (strcmp(command, "dir")) {
-            //print_directory_listing();
+            print_directory_listing();
         } else if (strcmp(command, "cd")) {
             // char* new_dir = command_tokens[token++];
             // strcpy(new_dir, cwd);
@@ -49,12 +49,12 @@ void main() {
     }
 }
 
-// void print_directory_listing() {
-//     DirEntry dirbuf[16];
-//     uint16_t num_entries;
-//     list_dir("path", dirbuf, &num_entries);
-//     for (int i=0; i<num_entries; i++) {
-//         printf("%s\n", dirbuf[i].filename);
-//     }
-//     printf("Number of files: %d\n", num_entries);
-// }
+void print_directory_listing() {
+    DirEntry *dirbuf = malloc(16 * sizeof(DirEntry));
+    uint16_t num_entries;
+    sys_list_dir("/", dirbuf, &num_entries);
+    for (int i=0; i<num_entries; i++) {
+        printf("%s\n", dirbuf[i].filename);
+    }
+    printf("Number of files: %d\n", num_entries);
+}
