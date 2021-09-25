@@ -40,8 +40,8 @@ void main () {
     strcpy("/fd0", cwd);
 
     // Start shell from disk
-    printf("Loading SHELL.BIN... ");
-    exec("/SHELL.BIN");
+    printf("Loading SHELL.EXE... ");
+    exec("/SHELL.EXE");
 
     // Start our shell
     // shell_main();

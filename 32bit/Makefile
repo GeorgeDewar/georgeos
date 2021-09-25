@@ -23,7 +23,7 @@ debug: all
 		-ex "display/10i \$$pc"
 	pkill qemu 
 
-georgeos_1440.img: bootload.bin kernel.bin src/data/*
+georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	echo Initializing disk image...
 	rm -f build/$@
 	mkfs.fat -F 12 -R 2 -C build/$@ 1440
@@ -42,6 +42,10 @@ kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 bootload.bin: src/boot/*.asm
 	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/bootload.bin src/boot/bootload.asm
 
+userland:
+	$(MAKE) -C src/userland
+	cp $(OBJDIR)/userland/programs/*.exe src/data/
+
 # Generic rule for compiling C code to an object file
 # For simplicity , we C files depend on all header files .
 $(OBJDIR)/%.o: $(SRCDIR)/%.c ${HEADERS}
@@ -51,5 +55,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.asm
 	nasm -f elf -o $@ $<
 
 clean:
-	find ./build -name '*.o' -delete
+	find ./build -name '*.img' -delete
+	find ./build -name '*.bin' -delete
+	find ./build -name '*.elf' -delete
 	find ./build -name '*.o' -delete
