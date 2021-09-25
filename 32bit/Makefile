@@ -2,13 +2,13 @@ SRCDIR=./src
 OBJDIR=./build
 
 # Automatically generate lists of sources using wildcards .
-C_SOURCES = $(wildcard $(SRCDIR)/kernel/*.c $(SRCDIR)/drivers/*.c $(SRCDIR)/drivers/fs/*.c $(SRCDIR)/user/*.c)
-HEADERS = $(wildcard $(SRCDIR)/include/kernel/*.h $(SRCDIR)/include/drivers/*.h)
+C_SOURCES = $(wildcard $(SRCDIR)/kernel/core/*.c $(SRCDIR)/kernel/drivers/*.c $(SRCDIR)/kernel/drivers/fs/*.c)
+HEADERS = $(wildcard $(SRCDIR)/include/*.h)
 
 # TODO : Make sources dep on all header files .
 # Convert the *.c filenames to *.o to give a list of object files to build
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(C_SOURCES))
-OBJ += $(OBJDIR)/kernel/kernel_entry.o $(OBJDIR)/kernel/idt.o $(OBJDIR)/kernel/irq_asm.o $(OBJDIR)/fonts/zap-vga16.o
+OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fonts/zap-vga16.o
 # Default build target
 all: georgeos_1440.img
 run: all
@@ -35,7 +35,7 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/*
 	mcopy -i build/$@ build/kernel.bin ::/
 	mcopy -i build/$@ src/data/* ::/
 
-kernel.bin: build/kernel/kernel_entry.o ${OBJ}
+kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
 	objcopy -O binary --remove-section .note.gnu.property build/kernel.elf build/$@
 
@@ -45,7 +45,7 @@ bootload.bin: src/boot/*.asm
 # Generic rule for compiling C code to an object file
 # For simplicity , we C files depend on all header files .
 $(OBJDIR)/%.o: $(SRCDIR)/%.c ${HEADERS}
-	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/include -g
+	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/kernel/include -g
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
 	nasm -f elf -o $@ $<
