@@ -23,7 +23,7 @@ void main() {
     while(1) {
         printf("UserShell> ");
         char command_string[COMMAND_BUFFER_SIZE];
-        syscall_get_string(command_string, COMMAND_BUFFER_SIZE, 1);
+        sys_get_string(command_string, COMMAND_BUFFER_SIZE, 1);
         tokenise_command(command_string, ' ');
         int token=0;
         char* command = command_tokens[token++];

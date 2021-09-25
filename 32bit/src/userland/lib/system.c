@@ -36,7 +36,7 @@ void printf(char* string, ...) {
 void vfprintf(int16_t fp, char* string, va_list argp) {
     char buffer[128];
     vsprintf(buffer, string, argp);
-    syscall_print(buffer);
+    sys_print(buffer);
 }
 
 void vsprintf(char* buffer, char* string, va_list argp) {
