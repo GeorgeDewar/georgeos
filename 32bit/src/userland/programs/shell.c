@@ -41,6 +41,9 @@ void main() {
             // read_file(filename, buffer, &length);
             // printf("Read %d bytes\n", length);
             // fprintlen(stdout, buffer, length);
+        } else if (strcmp(command, "exec")) {
+            char* filename = command_tokens[token++];
+            sys_exec(filename);
         } else if (command[0] == 0) {
             // Nothing was typed
         } else {

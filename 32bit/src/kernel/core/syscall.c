@@ -4,16 +4,17 @@ static uint32_t syscalls[] = {
 	/* System Call Table */
 	(uint32_t)&printf,               /* 0 */
 	(uint32_t)&get_string,
-	(uint32_t)&list_dir
+	(uint32_t)&list_dir,
+	(uint32_t)&exec
 };
-#define NUM_SYSCALLS 3
+#define NUM_SYSCALLS 4
 
 void handle_syscall(struct regs *r) {
     __asm__ __volatile__ ("sti"); // so we can get interrupts that are needed to fulfil the call (e.g. keypress)
 
 	fprintf(stddebug, "Handling syscall %d\n", r->eax);
 
-    if (r->eax > NUM_SYSCALLS) {
+    if (r->eax >= NUM_SYSCALLS) {
         die("Invalid syscall");
     }
 
