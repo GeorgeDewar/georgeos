@@ -15,13 +15,13 @@ PROGRAM_BINS = $(patsubst $(SRCDIR)/programs/%.c,$(OBJDIR)/programs/%.exe,$(PROG
 # Generic rule for compiling C code to an object file
 # For simplicity , we C files depend on all header files .
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(LIB_HEADERS)
-	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/lib -g
+	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/lib -g -fdata-sections -ffunction-sections
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
 	nasm -f elf -o $@ $<
 
 $(OBJDIR)/programs/%.exe: $(OBJDIR)/user_entry.o $(OBJDIR)/lib/system.o $(OBJDIR)/programs/%.o 
-	ld -o $@.elf -T ./linker.ld -m elf_i386 -nostdlib $^
+	ld -o $@.elf -T ./linker.ld -m elf_i386 -nostdlib $^ --gc-sections
 	objcopy -O binary --remove-section .note.gnu.property $@.elf $@
 
 all: $(PROGRAM_BINS)
