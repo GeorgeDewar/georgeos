@@ -1,13 +1,27 @@
 #include "system.h"
 
+// System calls implemented directly in this file
+static void getcwd(char* path);
+static bool chdir(const char* path);
+
 static uint32_t syscalls[] = {
 	/* System Call Table */
 	(uint32_t)&printf,               /* 0 */
 	(uint32_t)&get_string,
 	(uint32_t)&list_dir,
-	(uint32_t)&exec
+	(uint32_t)&exec,
+	(uint32_t)&getcwd,
+	(uint32_t)&chdir,
 };
-#define NUM_SYSCALLS 4
+#define NUM_SYSCALLS 6
+
+static void getcwd(char* path) {
+	strcpy(cwd, path);
+}
+
+static bool chdir(const char* path) {
+	strcpy(path, cwd);
+}
 
 void handle_syscall(struct regs *r) {
     __asm__ __volatile__ ("sti"); // so we can get interrupts that are needed to fulfil the call (e.g. keypress)

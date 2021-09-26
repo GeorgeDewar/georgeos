@@ -82,7 +82,7 @@ bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, Di
 
         if (fat12entry.name[0] == 0) {
             *num_entries_out = i;
-            fprintf(stddebug, "No more entries");
+            fprintf(stddebug, "No more entries\n");
             return SUCCESS; // no more entries
         }
         // Copy filename

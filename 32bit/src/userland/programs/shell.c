@@ -21,7 +21,9 @@ void tokenise_command(char *string, char separator) {
 
 void main() {
     while(1) {
-        printf("UserShell:/fd0> ");
+        char cwd[256];
+        sys_getcwd(cwd);
+        printf("UserShell:%s> ", cwd);
         char command_string[COMMAND_BUFFER_SIZE];
         sys_get_string(command_string, COMMAND_BUFFER_SIZE, 1);
         tokenise_command(command_string, ' ');
@@ -32,8 +34,8 @@ void main() {
         } else if (strcmp(command, "dir")) {
             print_directory_listing();
         } else if (strcmp(command, "cd")) {
-            // char* new_dir = command_tokens[token++];
-            // strcpy(new_dir, cwd);
+            char* new_dir = command_tokens[token++];
+            sys_chdir(new_dir);
         } else if (strcmp(command, "cat")) {
             // char* filename = command_tokens[token++];
             // uint8_t buffer[10000];

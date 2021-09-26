@@ -4,8 +4,10 @@ DEFN_SYSCALL1(print, 0, const char *);
 DEFN_SYSCALL3(get_string, 1, char *, int, int);
 DEFN_SYSCALL3(list_dir, 2, char *, char *, int *);
 DEFN_SYSCALL1(exec, 3, const char *);
-// Todo: Change to read and write, add exit (for now, works by restarting shell like in DOS), add exec (CreateProcess)
-// getcwd, chdir, listdir
+DEFN_SYSCALL1(getcwd, 4, char *);
+DEFN_SYSCALL1(chdir, 5, const char *);
+
+// Todo: Change to read and write, add exit (for now, works by restarting shell like in DOS)
 
 void intToString(int number, char* string) {
     int index = 0;
