@@ -83,7 +83,13 @@ struct GraphicsDevice {
 };
 struct GraphicsDevice* default_graphics_device;
 
-#define COLOR_BLACK         ((Color) {0x00, 0x00, 0x00})
+#define COLOR_BLACK         ((Color) {0, 0, 0})
+#define COLOR_RED           ((Color) {222, 56, 43})
+#define COLOR_GREEN         ((Color) {19, 161, 14})
+#define COLOR_YELLOW        ((Color) {255, 199, 6})
+#define COLOR_BLUE          ((Color) {0x2f, 0x5b, 0xdc})
+#define COLOR_MAGENTA       ((Color) {118, 38, 113})
+#define COLOR_CYAN          ((Color) {44, 181, 233})
 #define COLOR_WHITE         ((Color) {0xAA, 0xAA, 0xAA})
 #define COLOR_BRIGHTWHITE   ((Color) {0xFF, 0xFF, 0xFF})
 
@@ -93,7 +99,7 @@ extern const char zap_vga16_psf[];
 #define CONSOLE_CHAR_HEIGHT     16
 #define CONSOLE_CHAR_SPACE      0
 /* Graphics */
-void draw_char(uint16_t start_x, uint16_t start_y, char char_num);
+void draw_char(uint16_t start_x, uint16_t start_y, char char_num, Color color);
 void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, Color color);
 
 // Size of the screen in text mode
