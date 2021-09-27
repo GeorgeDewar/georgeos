@@ -12,9 +12,10 @@
 #define ERR_SPEED_TOO_LOW   -2
 #define ERR_SERIAL_FAULT    -3
 
+void write_serial(char* data, int len);
+
 struct StreamDevice sd_com1 = {
-    print_char: &write_serial,
-    print_char_color: 0
+    write: &write_serial
 };
 
 int init_serial(uint32_t speed) {
@@ -59,14 +60,20 @@ char read_serial() {
 int is_transmit_empty() {
    return port_byte_in(PORT + 5) & 0x20;
 }
- 
-void write_serial(char a) {
+
+void write_serial_byte(char a) {
     while (is_transmit_empty() == 0);
  
     port_byte_out(PORT, a);
 
     // If we are writing a newline, we need a carriage return too
     if (a == '\n') {
-        write_serial('\r');
+        write_serial_byte('\r');
+    }
+}
+
+void write_serial(char* data, int len) {
+    for(int i=0; i<len; i++) {
+        write_serial_byte(*data++);
     }
 }

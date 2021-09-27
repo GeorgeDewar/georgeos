@@ -4,12 +4,18 @@
 char console_buffer[BUFFER_SIZE];
 static uint32_t cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)
 
+static void console_write(char* data, int length);
 static void console_print_char(char character);
 
 struct StreamDevice sd_screen_console = {
-    print_char: &console_print_char,
-    print_char_color: 0
+    write: &console_write,
 };
+
+static void console_write(char* data, int length) {
+    for(int i=0; i<length; i++) {
+        console_print_char(*data++);
+    }
+}
 
 /** Print the specified character to the screen console */
 static void console_print_char(char character) {

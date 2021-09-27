@@ -77,7 +77,7 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
         if (*string == '%') {
             string++;
             if(*string == '%'){ // %% escapes %
-                sd.print_char(*string);
+                sd.write(string, 1);
             } else if (*string == 's') {
                 char* str = va_arg(argp, int);
                 fprintf(fp, str);
@@ -88,11 +88,10 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
                 fprintf(fp, num_string);
             }
         } else {
-            sd.print_char(*string);
+            sd.write(string, 1);
         }
         string++;
     }
-
 }
 
 void fprintlen(int16_t fp, char* data, uint32_t len) {
@@ -100,6 +99,6 @@ void fprintlen(int16_t fp, char* data, uint32_t len) {
     get_stream_device(fp, &sd);
 
     for(uint32_t i=0; i<len; i++) {
-        sd.print_char(data[i]);
+        sd.write(&data[i], 1);
     }
 }

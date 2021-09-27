@@ -105,8 +105,8 @@ void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t heig
 #define stderr      1
 #define stddebug    2
 struct StreamDevice {
-    void (*print_char)(char character);
-    void (*print_char_color)(char, uint8_t);
+    // void (*print_char)(char character);
+    void (*write)(char* data, int length);
 };
 extern struct StreamDevice sd_screen_console;
 extern struct StreamDevice sd_com1;
@@ -249,8 +249,6 @@ void strcpy(char *src, char *dest);
 
 /* Serial */
 int init_serial(uint32_t speed);
-void write_serial(char a);
-void write_string_serial(char *string);
 
 /* CMOS */
 uint8_t read_from_cmos(uint8_t register_num);
