@@ -33,6 +33,12 @@ uint8_t get_stream_device(int16_t fp, struct StreamDevice* sd_out) {
     return 1;
 }
 
+bool write(int16_t fp, char* buffer, int len) {
+    struct StreamDevice sd = {};
+    get_stream_device(fp, &sd);
+    sd.write(buffer, len);
+}
+
 void intToString(int number, char* string) {
     int index = 0;
     char buffer[16] = "";

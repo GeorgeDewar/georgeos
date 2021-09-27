@@ -1,5 +1,6 @@
 #include "system.h"
 
 void main() {
-    sys_print("Hi\n");
+    char* string = "Hi\n";
+    sys_write(stdout, "Hi\n", strlen(string));
 }

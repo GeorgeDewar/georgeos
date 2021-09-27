@@ -1,6 +1,6 @@
 #include "system.h"
 
-DEFN_SYSCALL1(print, 0, const char *);
+DEFN_SYSCALL3(write, 0, int, const char *, int);
 DEFN_SYSCALL3(get_string, 1, char *, int, int);
 DEFN_SYSCALL3(list_dir, 2, char *, char *, int *);
 DEFN_SYSCALL1(exec, 3, const char *);
@@ -40,7 +40,7 @@ void printf(char* string, ...) {
 void vfprintf(int16_t fp, char* string, va_list argp) {
     char buffer[128];
     vsprintf(buffer, string, argp);
-    sys_print(buffer);
+    sys_write(stdout, buffer, strlen(buffer));
 }
 
 void vsprintf(char* buffer, char* string, va_list argp) {

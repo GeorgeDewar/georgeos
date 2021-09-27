@@ -6,7 +6,7 @@ static bool chdir(const char* path);
 
 static uint32_t syscalls[] = {
 	/* System Call Table */
-	(uint32_t)&printf,               /* 0 */
+	(uint32_t)&write,               /* 0 */
 	(uint32_t)&get_string,
 	(uint32_t)&list_dir,
 	(uint32_t)&exec,
@@ -21,6 +21,10 @@ static void getcwd(char* path) {
 
 static bool chdir(const char* path) {
 	strcpy(path, cwd);
+}
+
+static bool sys_write(int fd, const char* buffer, int length) {
+	
 }
 
 void handle_syscall(struct regs *r) {
