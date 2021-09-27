@@ -87,6 +87,9 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
             } else if (*string == 's') {
                 char* str = va_arg(argp, int);
                 fprintf(fp, str);
+            } else if (*string == 'c') {
+                char c = va_arg(argp, int);
+                sd.write(&c, 1);
             } else if (*string == 'd') {
                 int number = va_arg(argp, int);
                 char num_string[16];

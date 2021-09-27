@@ -23,7 +23,7 @@ void main() {
     while(1) {
         char cwd[256];
         sys_getcwd(cwd);
-        printf("UserShell:%s> ", cwd);
+        printf("UserShell:\1[36m%s\1[0m> ", cwd);
         char command_string[COMMAND_BUFFER_SIZE];
         sys_get_string(command_string, COMMAND_BUFFER_SIZE, 1);
         tokenise_command(command_string, ' ');

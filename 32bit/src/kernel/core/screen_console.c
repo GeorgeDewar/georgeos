@@ -12,8 +12,22 @@ struct StreamDevice sd_screen_console = {
 };
 
 static void console_write(char* data, int length) {
+    fprintf(stddebug, "Console write\n");
     for(int i=0; i<length; i++) {
-        console_print_char(*data++);
+        Color color = COLOR_WHITE;
+        if (data[i] == '\1') { // start of an ANSI color escape
+            i += 2; // advance past bracket
+            if (data[i++] == '0') { // check for reset and skip the first digit
+                color = COLOR_WHITE;
+                fprintf(stddebug, "Color reset\n");
+            } else {
+                char color_chr = data[i++]; // read the second digit
+                color = COLOR_BRIGHTWHITE; // testing
+                fprintf(stddebug, "Color set to %c\n", color_chr);
+            }
+            i++; // skip the 'm'
+        }
+        console_print_char(data[i]);
     }
 }
 
