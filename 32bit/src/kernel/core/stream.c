@@ -1,8 +1,5 @@
 #include "system.h"
 
-
-
-
 // typedef struct {
 //     uint8_t fp_type     : 4;
 //     uint8_t can_read    : 1;
@@ -17,6 +14,8 @@
 
 // /** array of currently open files */
 // FilePointer files[16];
+
+static void vfprintf(int16_t fp, char* string, va_list argp);
 
 void stream_init() {
     
@@ -37,9 +36,10 @@ bool write(int16_t fp, char* buffer, int len) {
     struct StreamDevice sd = {};
     get_stream_device(fp, &sd);
     sd.write(buffer, len);
+    return SUCCESS;
 }
 
-void intToString(int number, char* string) {
+static void intToString(int number, char* string) {
     int index = 0;
     char buffer[16] = "";
     int len;
@@ -53,7 +53,7 @@ void intToString(int number, char* string) {
     // Reverse it
     len = index;
     index = 0;
-    for(index; index < len; index++) {
+    for(; index < len; index++) {
         string[index] = buffer[len-index-1];
     }
     string[index] = 0;
@@ -75,7 +75,7 @@ void fprintf(int16_t fp, char* string, ...) {
     va_end(argp);
 }
 
-void vfprintf(int16_t fp, char* string, va_list argp) {
+static void vfprintf(int16_t fp, char* string, va_list argp) {
     struct StreamDevice sd = {};
     get_stream_device(fp, &sd);
 
@@ -85,7 +85,7 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
             if(*string == '%'){ // %% escapes %
                 sd.write(string, 1);
             } else if (*string == 's') {
-                char* str = va_arg(argp, int);
+                char* str = (char*) va_arg(argp, int);
                 fprintf(fp, str);
             } else if (*string == 'c') {
                 char c = va_arg(argp, int);
@@ -100,14 +100,5 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
             sd.write(string, 1);
         }
         string++;
-    }
-}
-
-void fprintlen(int16_t fp, char* data, uint32_t len) {
-    struct StreamDevice sd = {};
-    get_stream_device(fp, &sd);
-
-    for(uint32_t i=0; i<len; i++) {
-        sd.write(&data[i], 1);
     }
 }

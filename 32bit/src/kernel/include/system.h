@@ -57,7 +57,7 @@ void port_word_out (unsigned short port, unsigned short data);
 void *malloc(size_t size);
 void free(void *ptr);
 void memset(uint8_t* source, uint8_t value, uint32_t length);
-void memcpy(uint8_t* source, uint8_t* dest, uint32_t length);
+void memcpy(void* source, void* dest, uint32_t length);
 
 /* Timer */
 void timer_install();
@@ -120,10 +120,6 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 bool write(int16_t fp, char* buffer, int len); // handles write system call + internal use
 void printf(char* string, ...);
 void fprintf(int16_t fp, char* string, ...);
-void fprintlen(int16_t fp, char* data, uint32_t len);
-
-// Attribute byte for our default colour scheme .
-#define WHITE_ON_BLACK 0x0f
 
 /* Keyboard */
 enum keyboard_scancodes {
@@ -269,9 +265,6 @@ void FloppyHandler();
 /* Processes */
 bool exec(char* filename);
 
-/* Shell*/
-void shell_main();
-
 /* Filesystem / Disk */
 
 /** A filesystem-agnostic representation of a directory entry (file or directory) */
@@ -306,14 +299,13 @@ extern FileSystemDriver fs_fat12;
 
 extern char cwd[256];
 
-bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, uint8_t* buffer);
+bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, void* buffer);
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);
 
 /* Syscall */
 #define SYSCALL_VECTOR  0x7F
 void handle_syscall(struct regs *r);
-extern void make_syscall(int op);
 
 /* Other */
 void die(char* message);

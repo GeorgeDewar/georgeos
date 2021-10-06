@@ -21,10 +21,7 @@ static void getcwd(char* path) {
 
 static bool chdir(const char* path) {
 	strcpy(path, cwd);
-}
-
-static bool sys_write(int fd, const char* buffer, int length) {
-	
+    return SUCCESS; // in future, check dir exists
 }
 
 void handle_syscall(struct regs *r) {

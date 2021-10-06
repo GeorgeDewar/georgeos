@@ -51,15 +51,16 @@ void main () {
 
 bool exec(char* filename) {
     int (*program)(void) = (int (*)(void)) 0x80000;
-    uint8_t *buffer = 0x80000;
-    volatile uint16_t length;
+    uint8_t *buffer = (uint8_t *) 0x80000;
+    uint16_t length;
     // Read the program into memory - this will replace the shell!
-    read_file(filename, buffer, &length);
+    if (!read_file(filename, buffer, &length)) return FAILURE;
     printf("Read %d bytes\n", length);
     program();
 
-    // Read the shell back in so when we return back to it, it's there
+    // Read the shell back in so when we return to it, it's there
     read_file("/SHELL.EXE", buffer, &length);
+    return SUCCESS;
 }
 
 /** Handle an unrecoverable error by stopping the system */

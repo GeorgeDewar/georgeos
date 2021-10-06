@@ -10,7 +10,7 @@ bool get_device_for_path(char* path, DiskDeviceDriver* device_out, uint8_t* devi
 }
 
 // array of disks
-bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, uint8_t* buffer) {
+bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, void* buffer) {
     for (uint32_t i=0; i<count; i++) {
         device->read_sector(device_num, lba + i, buffer + (512 * i));
     }

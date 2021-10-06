@@ -1,7 +1,7 @@
 #include "system.h"
 
 #define HEAP_START  0xA00000    // 16 MB
-void *free_memory_start = HEAP_START;
+void *free_memory_start = (void *) HEAP_START;
 
 /** A super-simple 'watermark' allocator which cannot free memory */
 void *malloc(size_t size) {
@@ -21,8 +21,8 @@ void memset(uint8_t* source, uint8_t value, uint32_t length) {
     }
 }
 
-void memcpy(uint8_t* source, uint8_t* dest, uint32_t length) {
+void memcpy(void* source, void* dest, uint32_t length) {
     for(uint32_t i=0; i<length; i++) {
-        dest[i] = source[i];
+        ((uint8_t *) dest)[i] = ((uint8_t *) source)[i];
     }
 }

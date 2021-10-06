@@ -210,7 +210,6 @@ void check_interrupt_status(uint8_t *st0, uint8_t *cylinder) {
     write_floppy_command(SENSE_INTERRUPT);  // Send the command
     *st0 = read_data_byte();                // Read status register 0
     *cylinder = read_data_byte();           // Read present cylinder number
-    return;
 }
 
 // Command the drive to seek to a track (cylinder) and wait for it to get there
@@ -328,7 +327,7 @@ void turn_motor_off_if_idle() {
 }
 
 // Read a single sector from the drive given its LBA address. The sector will be placed at memory location 0x1000
-void floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
+bool floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
     if (device_num != 0) {
         die("Only floppy drive 0 is supported");
     }
@@ -336,10 +335,13 @@ void floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
     uint16_t cyl, head, sector;
     lba_2_chs(lba, &cyl, &head, &sector);
     ensure_motor_on();
-    read_sector(sector, head, cyl, 0);
+    if (!read_sector(sector, head, cyl, 0)) {
+        return FAILURE;
+    }
 
     // Copy data to the user-supplied buffer
-    memcpy(FLOPPY_BUFFER, buffer, 512);
+    memcpy((void *) FLOPPY_BUFFER, buffer, 512);
+    return SUCCESS;
 }
 
 // Set up DMA and IRQ handling
@@ -354,5 +356,5 @@ void install_floppy() {
  */
 
 DiskDeviceDriver disk_device_floppy = {
-    read_sector: &floppy_read_sector_lba
+    .read_sector = &floppy_read_sector_lba
 };
