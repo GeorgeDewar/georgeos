@@ -45,9 +45,9 @@ static void console_print_char(char character) {
 }
 
 /** Draw the specified character at a certain character position */
-static void console_putchar(int row, int col, char char_num, Color color) {
-    uint16_t start_x = col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
-    uint16_t start_y = row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
+static void console_putchar(int x_offset, int y_offset, int row, int col, char char_num, Color color) {
+    uint16_t start_x = x_offset + col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
+    uint16_t start_y = y_offset + row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
     draw_char(start_x, start_y, char_num, color);
 }
 
@@ -63,11 +63,9 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
             i += 2; // advance past bracket
             if (console_buffer[i++] == '0') { // check for reset and skip the first digit
                 color = COLOR_WHITE;
-                fprintf(stddebug, "Color reset\n");
             } else {
                 char color_chr = console_buffer[i++]; // read the second digit
-                color = ansi_colors[color_chr - '0']; // testing
-                fprintf(stddebug, "Color set to %c\n", color_chr);
+                color = ansi_colors[color_chr - '0']; // set the color
             }
             i++; // skip the 'm'
         }
@@ -80,14 +78,17 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
             col = 0;
             continue;
         }
+
+        console_putchar(x, y, row, col, character, color);
+        col++;
+
         if (col == num_cols) {
+            fprintf(stddebug, "row=%d col=%d", row, col);
             row++;
             col = 0;
         }
-        console_putchar(row, col, character, color);
-        col++;
     }
 
     uint8_t cursor_visible = timer_ticks % 10 >= 5;
-    if (cursor_visible) console_putchar(row, col, '_', color);
+    if (cursor_visible) console_putchar(x, y, row, col, '_', color);
 }

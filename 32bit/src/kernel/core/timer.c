@@ -24,7 +24,7 @@ static void timer_handler()
 
     // Render the console to the screen
     default_graphics_device->clear_screen();
-    console_render(0,0,default_graphics_device->screen_height,default_graphics_device->screen_width);
+    console_render(0,0,default_graphics_device->screen_width,default_graphics_device->screen_height);
     // Indicate the status of the modifier keys, just for fun
     fill_rect(0, default_graphics_device->screen_height-20, default_graphics_device->screen_width, 20, (Color) {45, 79, 135});
     if(key_status.shift_down) draw_char(0, 580, 'S', COLOR_WHITE);
