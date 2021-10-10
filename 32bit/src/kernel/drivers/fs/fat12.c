@@ -47,10 +47,10 @@ uint8_t *fat;
 /**
  * Header section
  */
-bool fat12_init(DiskDeviceDriver* device, uint8_t device_num);
-bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, uint32_t cluster, uint8_t* buffer);
-static bool fat12_read_fat(DiskDeviceDriver* device, uint8_t device_num);
+bool fat12_init(DiskDevice* device);
+bool fat12_list_dir(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+bool fat12_read_file(DiskDevice* device, uint32_t cluster, uint8_t* buffer);
+static bool fat12_read_fat(DiskDevice* device);
 static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, const uint8_t *fat);
 
 FileSystemDriver fs_fat12 = {
@@ -63,18 +63,18 @@ FileSystemDriver fs_fat12 = {
  * Implementation
  */
 
-bool fat12_init(DiskDeviceDriver* device, uint8_t device_num) {
+bool fat12_init(DiskDevice* device) {
     // Allocate buffer to store File Allocation Table
     fat = malloc(SECTORS_PER_FAT * BYTES_PER_SECTOR);
-    fat12_read_fat(device, device_num);
+    fat12_read_fat(device);
     return SUCCESS;
 }
 
 /** List the files in a directory into dir_entry_list_out, and set num_entries_out */
-bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+bool fat12_list_dir(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
     Fat12DirectoryEntry dir_entry_buffer[ROOT_DIR_ENTRIES];
     // Assume root dir for now, and just read one sector
-    read_sectors_lba(device, device_num, ROOT_DIR_START, SECTORS_PER_DIR, dir_entry_buffer);
+    read_sectors_lba(device,  ROOT_DIR_START, SECTORS_PER_DIR, dir_entry_buffer);
     for (int i=0; i<ROOT_DIR_ENTRIES; i++) {
         // printf("Checking entry %d\n", i);
         Fat12DirectoryEntry fat12entry = dir_entry_buffer[i];
@@ -118,12 +118,11 @@ bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, Di
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
-bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, uint32_t cluster, uint8_t* buffer) {
+bool fat12_read_file(DiskDevice* device, uint32_t cluster, uint8_t* buffer) {
     int cluster_index = 1; // we print the first cluster outside the loop
-    int read_result;
 
     fprintf(stddebug, "Reading cluster\n");
-    if (!read_sectors_lba(device, device_num, cluster + DATA_START, 1, buffer)) {
+    if (!read_sectors_lba(device,  cluster + DATA_START, 1, buffer)) {
         fprintf(stderr, "Read failure\n");
         return FAILURE;
     }
@@ -133,7 +132,7 @@ bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, uint32_t clus
         cluster = fat12_decode_fat_entry(cluster, fat);
         if(cluster == 0xFFF) break; // we've read the last cluster already
 
-        if (!read_sectors_lba(device, device_num, cluster + DATA_START, 1, buffer + (BYTES_PER_SECTOR * cluster_index))) {
+        if (!read_sectors_lba(device,  cluster + DATA_START, 1, buffer + (BYTES_PER_SECTOR * cluster_index))) {
             fprintf(stderr, "Read failure\n");
             return FAILURE;
         }
@@ -149,8 +148,8 @@ bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, uint32_t clus
  */
 
 /** Read the whole FAT into a buffer */
-static bool fat12_read_fat(DiskDeviceDriver* device, uint8_t device_num) {
-    return read_sectors_lba(device, device_num, FAT_0_START, SECTORS_PER_FAT, fat);
+static bool fat12_read_fat(DiskDevice* device) {
+    return read_sectors_lba(device, FAT_0_START, SECTORS_PER_FAT, fat);
 }
 
 /** Return the location of the next cluster, if any, given a cluster number */

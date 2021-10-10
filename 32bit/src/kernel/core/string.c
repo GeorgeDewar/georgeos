@@ -23,7 +23,7 @@ char strcmp(char *string1, char *string2) {
 }
 
 /** copy a string from src to dest, stopping at the NULL byte */
-void strcpy(char *src, char *dest) {
+void strcpy(const char *src, char *dest) {
     while(*src != 0) {
         *dest++ = *src++;
     }

@@ -36,7 +36,7 @@ void main () {
     // Initialise disk subsystem
     install_floppy();
     ResetFloppy();
-    fs_fat12.init(&disk_device_floppy, 0);
+    fs_fat12.init(&floppy0);
     strcpy("/fd0", cwd);
 
     // Start shell from disk

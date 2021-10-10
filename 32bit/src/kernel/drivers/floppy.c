@@ -327,8 +327,8 @@ void turn_motor_off_if_idle() {
 }
 
 // Read a single sector from the drive given its LBA address. The sector will be placed at memory location 0x1000
-bool floppy_read_sector_lba(uint8_t device_num, uint32_t lba, uint8_t* buffer) {
-    if (device_num != 0) {
+bool floppy_read_sector_lba(DiskDevice *device, uint32_t lba, uint8_t* buffer) {
+    if (device->device_num != 0) {
         die("Only floppy drive 0 is supported");
     }
 
@@ -355,6 +355,11 @@ void install_floppy() {
  * Interface to the rest of the OS
  */
 
-DiskDeviceDriver disk_device_floppy = {
+DiskDeviceDriver floppy_driver = {
     .read_sector = &floppy_read_sector_lba
+};
+
+DiskDevice floppy0 = {
+    .device_num = 0,
+    .driver = &floppy_driver
 };

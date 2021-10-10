@@ -248,7 +248,7 @@ void get_string(char *buffer, uint16_t limit, uint8_t echo);
 
 /* String */
 char strcmp(char *string1, char *string2);
-void strcpy(char *src, char *dest);
+void strcpy(const char *src, char *dest);
 
 /* Serial */
 int init_serial(uint32_t speed);
@@ -282,24 +282,29 @@ typedef struct {
     unsigned char archive        : 1;
 } DirEntry;
 
+struct DiskDevice;
+typedef struct DiskDevice DiskDevice;
 typedef struct {
-    // TODO: combine in device num by using virtual lookup table pattern
     // TODO: need to know sector size
-    bool (*read_sector)(uint8_t device_num, uint32_t lba, uint8_t* buffer);
+    bool (*read_sector)(DiskDevice* device, uint32_t lba, uint8_t* buffer);
 } DiskDeviceDriver;
-extern DiskDeviceDriver disk_device_floppy;
+struct DiskDevice {
+    uint8_t device_num;
+    DiskDeviceDriver* driver;
+};
+extern DiskDevice floppy0;
 
 /** The set of methods that a filesystem driver exposes */
 typedef struct {
-    bool (*init)(DiskDeviceDriver* device, uint8_t device_num);
-    bool (*list_dir)(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-    bool (*read_file)(DiskDeviceDriver* device, uint8_t device_num, uint32_t location_on_disk, uint8_t* buffer);
+    bool (*init)(DiskDevice* device);
+    bool (*list_dir)(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+    bool (*read_file)(DiskDevice* device, uint32_t location_on_disk, uint8_t* buffer);
 } FileSystemDriver;
 extern FileSystemDriver fs_fat12;
 
 extern char cwd[256];
 
-bool read_sectors_lba(DiskDeviceDriver* device, uint8_t device_num, uint32_t lba, uint32_t count, void* buffer);
+bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* buffer);
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);
 
