@@ -2,6 +2,8 @@
 
 char cwd[256];
 
+static bool find_file(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_out);
+
 bool get_device_for_path(char* path, DiskDeviceDriver* device_out, uint8_t* device_num_out) {
     // /fd0 = floppy 0, etc, may need lookup table, but for now...
     *device_out = disk_device_floppy;
@@ -37,6 +39,42 @@ bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
     if(!get_device_for_path(path, &device, &device_num)) {
         return FAILURE;
     };
+    DirEntry dir_entry;
+    if(!find_file(&device, device_num, path, &dir_entry)) {
+        return FAILURE;
+    }
     // List the files
-    return fs_fat12.read_file(&device, device_num, path, buffer, length_out);
+    if(!fs_fat12.read_file(&device, device_num, dir_entry.location_on_disk, buffer)) {
+        return FAILURE;
+    }
+    *length_out = dir_entry.file_size;
+    return SUCCESS;
+}
+
+/*
+ * Find a file and return the location of its directory entry
+ *
+ * Returns -1 if the file cannot be found
+ */
+static bool find_file(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_out) {
+    if (*path++ != '/') {
+        fprintf(stderr, "Not a valid path\n");
+        return FAILURE;
+    }
+    DirEntry dir_entry_list[16];
+    uint16_t num_entries;
+
+    // Read the root directory
+    bool list_res = fs_fat12.list_dir(device, device_num, path, dir_entry_list, &num_entries);
+    if (!list_res) return FAILURE;
+
+    // Loop through the files
+    for(uint16_t i=0; i<num_entries; i++) {
+        if (strcmp(dir_entry_list[i].filename, path) != 0) {
+            *dir_entry_out = dir_entry_list[i];
+            return SUCCESS;
+        }
+    }
+
+    return FAILURE;
 }

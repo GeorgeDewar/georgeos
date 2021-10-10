@@ -293,7 +293,7 @@ extern DiskDeviceDriver disk_device_floppy;
 typedef struct {
     bool (*init)(DiskDeviceDriver* device, uint8_t device_num);
     bool (*list_dir)(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-    bool (*read_file)(DiskDeviceDriver* device, uint8_t device_num, char* path, uint8_t* buffer, uint16_t* length_out);
+    bool (*read_file)(DiskDeviceDriver* device, uint8_t device_num, uint32_t location_on_disk, uint8_t* buffer);
 } FileSystemDriver;
 extern FileSystemDriver fs_fat12;
 

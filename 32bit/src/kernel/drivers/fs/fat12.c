@@ -49,8 +49,7 @@ uint8_t *fat;
  */
 bool fat12_init(DiskDeviceDriver* device, uint8_t device_num);
 bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, char* path, uint8_t* buffer, uint16_t* length_out);
-bool find_file(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_out);
+bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, uint32_t cluster, uint8_t* buffer);
 static bool fat12_read_fat(DiskDeviceDriver* device, uint8_t device_num);
 static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, const uint8_t *fat);
 
@@ -75,9 +74,7 @@ bool fat12_init(DiskDeviceDriver* device, uint8_t device_num) {
 bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
     Fat12DirectoryEntry dir_entry_buffer[ROOT_DIR_ENTRIES];
     // Assume root dir for now, and just read one sector
-    if (!read_sectors_lba(device, device_num, ROOT_DIR_START, SECTORS_PER_DIR, dir_entry_buffer)) {
-        return FAILURE;
-    }
+    read_sectors_lba(device, device_num, ROOT_DIR_START, SECTORS_PER_DIR, dir_entry_buffer);
     for (int i=0; i<ROOT_DIR_ENTRIES; i++) {
         // printf("Checking entry %d\n", i);
         Fat12DirectoryEntry fat12entry = dir_entry_buffer[i];
@@ -121,17 +118,9 @@ bool fat12_list_dir(DiskDeviceDriver* device, uint8_t device_num, char* path, Di
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
-bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, char* path, uint8_t* buffer, uint16_t* length_out) {
+bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, uint32_t cluster, uint8_t* buffer) {
     int cluster_index = 1; // we print the first cluster outside the loop
-
-    // Find the first cluster number from the directory entry
-    DirEntry dir_entry;
-    if (!find_file(device, device_num, path, &dir_entry)) {
-        fprintf(stderr, "File not found\n");
-        return FAILURE;
-    }
-
-    uint16_t cluster = dir_entry.location_on_disk;
+    int read_result;
 
     fprintf(stddebug, "Reading cluster\n");
     if (!read_sectors_lba(device, device_num, cluster + DATA_START, 1, buffer)) {
@@ -152,7 +141,6 @@ bool fat12_read_file(DiskDeviceDriver* device, uint8_t device_num, char* path, u
         cluster_index++;
     }
 
-    *length_out = dir_entry.file_size;
     return SUCCESS;
 }
 
@@ -184,32 +172,4 @@ static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, const uint8_t *fat)
         b2 = *(fat + offset + 2);
         return b2 << 4 | ((0xf0 & b1) >> 4);
     }
-}
-
-/*
- * Find a file and return the location of its directory entry
- * 
- * Returns -1 if the file cannot be found
- */
-bool find_file(DiskDeviceDriver* device, uint8_t device_num, char* path, DirEntry* dir_entry_out) {
-    if (*path++ != '/') {
-        fprintf(stderr, "Not a valid path\n");
-        return FAILURE;
-    }
-    DirEntry dir_entry_list[ROOT_DIR_ENTRIES];
-    uint16_t num_entries;
-    
-    // Read the root directory
-    bool list_res = fat12_list_dir(device, device_num, path, dir_entry_list, &num_entries);
-    if (!list_res) return FAILURE;
-    
-    // Loop through the files
-    for(uint16_t i=0; i<num_entries; i++) {
-        if (strcmp(dir_entry_list[i].filename, path) != 0) {
-            *dir_entry_out = dir_entry_list[i];
-            return SUCCESS;
-        }
-    }
-
-    return FAILURE;
 }
