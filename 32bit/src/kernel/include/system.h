@@ -12,14 +12,14 @@ typedef unsigned long long uint64_t;
 typedef unsigned long size_t;
 
 /** Success or failure, true or false */
-typedef uint8_t bool;
+typedef int8_t bool;
 
 /* VALUE DEFINITIONS */
 #define null            0
 #define false           0
 #define true            1
 #define SUCCESS         1
-#define FAILURE         0
+#define FAILURE         -1
 #define UINT8_T_MAX     0xFF
 #define UINT16_T_MAX    0xFFFF
 #define UINT32_T_MAX    0xFFFFFFFF
@@ -261,7 +261,7 @@ uint8_t read_from_cmos(uint8_t register_num);
 
 /* Floppy */
 #define FLOPPY_BUFFER 0x1000
-uint8_t ResetFloppy();
+bool ResetFloppy();
 void install_floppy();
 void FloppyHandler();
 

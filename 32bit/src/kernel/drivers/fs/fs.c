@@ -30,7 +30,7 @@ int open_file(char* path) {
 
     // Find file in FS
     DirEntry dir_entry;
-    if (!find_file(&device, path, &dir_entry)) {
+    if (find_file(&device, path, &dir_entry) < 0) {
         return -1;
     }
 
@@ -40,7 +40,7 @@ int open_file(char* path) {
     handle->file_descriptor.filesystem = &floppy0_fs;
     handle->file_descriptor.location_on_disk = dir_entry.location_on_disk;
     strcpy(path, handle->file_descriptor.path);
-    
+
     return fp;
 }
 
@@ -59,7 +59,7 @@ static int next_file_handle() {
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
     DiskDevice device;
     // Get the device
-    if(!get_device_for_path(path, &device)) {
+    if(get_device_for_path(path, &device) < 0) {
         return FAILURE;
     };
     // List the files
@@ -70,16 +70,16 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
     DiskDevice device;
     // Get the device
-    if(!get_device_for_path(path, &device)) {
+    if(get_device_for_path(path, &device) < 0) {
         return FAILURE;
     };
     DirEntry dir_entry;
-    if(!find_file(&device, path, &dir_entry)) {
+    if(find_file(&device, path, &dir_entry) < 0) {
         return FAILURE;
     }
     // List the files
     FileSystem *fs = &floppy0_fs;
-    if(!fs->driver->read_file(fs, dir_entry.location_on_disk, buffer)) {
+    if(fs->driver->read_file(fs, dir_entry.location_on_disk, buffer) < 0) {
         return FAILURE;
     }
     *length_out = dir_entry.file_size;

@@ -54,7 +54,7 @@ void main () {
 
     // Start shell from disk
     printf("Loading SHELL.EXE... ");
-    if(!exec("/SHELL.EXE")) {
+    if(exec("/SHELL.EXE") < 0) {
         printf("Failed to execute shell!\n");
     };
 

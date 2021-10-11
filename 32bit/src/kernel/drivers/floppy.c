@@ -131,7 +131,7 @@ int8_t wait_data_ready() {
 // Write a command to the floppy controller after waiting for it to become ready
 int8_t write_floppy_command(char command){
     // Wait for the main status register
-    uint8_t ready = wait_data_ready();
+    int8_t ready = wait_data_ready();
     if (ready == SUCCESS) {
 	    port_byte_out(DATA_FIFO, command);
         return SUCCESS;
@@ -144,16 +144,16 @@ int8_t write_floppy_command(char command){
 uint8_t read_data_byte()
 {
     // Wait for the main status register
-    uint8_t ready = wait_data_ready();
+    int8_t ready = wait_data_ready();
     if (ready == SUCCESS) {
 	    return port_byte_in(DATA_FIFO);
     } else {	
 	    fprintf(stderr, "Floppy Error: Timeout while reading data byte\n");
-        return FAILURE;
+        return 0; // TODO: Handle better - return value is never checked
     }
 }
 
-uint8_t wait_for_irq() {
+bool wait_for_irq() {
     for(int i = 0; i < 10; i++) {
         fprintf(stddebug, ".");
         if (ReceivedIRQ) return SUCCESS;
@@ -171,7 +171,7 @@ void set_motor(uint8_t on) {
 }
 
 // Reset and configure the floppy controller
-uint8_t ResetFloppy()
+bool ResetFloppy()
 {
     ReceivedIRQ = false; // Setting this before the write will prevent the FDC from being faster than us!
 
@@ -180,7 +180,7 @@ uint8_t ResetFloppy()
     port_byte_out(DIGITAL_OUTPUT_REGISTER, FLOPPY_DOR_RESET | FLOPPY_DOR_DMA);
 
     // Wait for an IRQ to tell us the controller reset OK
-    if(!wait_for_irq())
+    if(wait_for_irq() < 0)
     {
         fprintf(stderr, "Timed out while waiting for IRQ\n");
         return FAILURE;
@@ -213,7 +213,7 @@ void check_interrupt_status(uint8_t *st0, uint8_t *cylinder) {
 }
 
 // Command the drive to seek to a track (cylinder) and wait for it to get there
-uint8_t seek_track(uint8_t head, uint8_t cyl)
+int8_t seek_track(uint8_t head, uint8_t cyl)
 {
 	uint8_t st0, current_cylinder;
 
@@ -227,7 +227,7 @@ uint8_t seek_track(uint8_t head, uint8_t cyl)
 		write_floppy_command(cyl);
 
         // Wait for an IRQ to tell us there are results to be read
-		if(!wait_for_irq())
+		if(wait_for_irq() < 0)
 		{
 			fprintf(stderr, "Timed out while waiting for IRQ\n");
 			return FAILURE;
@@ -263,7 +263,7 @@ enum FLPYDSK_GAP3_LENGTH {
 };
 
 // Read a single sector from the drive
-uint8_t read_sector(unsigned char sector,unsigned char head,unsigned char cylinder,unsigned char drive)
+bool read_sector(unsigned char sector,unsigned char head,unsigned char cylinder,unsigned char drive)
 {
     fprintf(stddebug, "Reading sector\n");
     uint8_t st0, cy1;
@@ -290,7 +290,7 @@ uint8_t read_sector(unsigned char sector,unsigned char head,unsigned char cylind
     write_floppy_command(0xff);       /*default value for data length*/
 
     fprintf(stddebug, "Waiting for interrupt\n");
-    if(!wait_for_irq())
+    if(wait_for_irq() < 0)
     {
         fprintf(stderr, "Timed out while waiting for IRQ\n");
         return FAILURE;
