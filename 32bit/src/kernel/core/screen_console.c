@@ -8,7 +8,8 @@ static void console_write(char* data, int length);
 static void console_print_char(char character);
 
 struct StreamDevice sd_screen_console = {
-    write: &console_write,
+    .read = &get_string, // TODO: Move in here?
+    .write = &console_write
 };
 
 static Color ansi_colors[] = {
@@ -23,7 +24,7 @@ static Color ansi_colors[] = {
 };
 
 static void console_write(char* data, int length) {
-    fprintf(stddebug, "Console write\n");
+    //fprintf(stddebug, "Console write\n");
     for(int i=0; i<length; i++) {
         console_print_char(data[i]);
     }

@@ -42,7 +42,7 @@
         }
 
 DECL_SYSCALL3(write, int, const char *, int);
-DECL_SYSCALL3(get_string, char *, int, int);
+DECL_SYSCALL3(read, int, char *, int);
 DECL_SYSCALL3(list_dir, char *, char *, int *);
 DECL_SYSCALL1(exec, const char *);
 DECL_SYSCALL1(getcwd, char *);

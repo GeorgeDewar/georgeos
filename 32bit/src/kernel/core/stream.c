@@ -2,6 +2,22 @@
 
 static void vfprintf(int16_t fp, char* string, va_list argp);
 
+/** Read from a file into the specified buffer, up to *len* bytes */
+bool read(int16_t fp, char* buffer, int len) {
+    FileHandle handle = open_files[fp];
+    if (handle.type == NULL) {
+        // The handle does not exist
+        return FAILURE;
+    } else if(handle.type == STREAM) {
+        handle.stream_device.read(buffer, len, true);
+        return SUCCESS;
+    } else {
+        // Unsupported handle type
+        return FAILURE;
+    }
+}
+
+/** Write to a file from the specified buffer, *len* bytes */
 bool write(int16_t fp, char* buffer, int len) {
     FileHandle handle = open_files[fp];
     if (handle.type == NULL) {

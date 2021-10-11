@@ -22,6 +22,8 @@ void main () {
     default_graphics_device = &vesa_graphics_device;
     default_graphics_device->clear_screen();
 
+    open_files[stdin].type = STREAM;
+    open_files[stdin].stream_device = sd_screen_console;
     open_files[stdout].type = STREAM;
     open_files[stdout].stream_device = sd_screen_console;
     open_files[stderr].type = STREAM;
@@ -55,9 +57,6 @@ void main () {
     if(!exec("/SHELL.EXE")) {
         printf("Failed to execute shell!\n");
     };
-
-    // Start our shell
-    // shell_main();
 
     for(;;);
 }

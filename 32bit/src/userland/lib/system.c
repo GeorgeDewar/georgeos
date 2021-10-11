@@ -1,7 +1,7 @@
 #include "system.h"
 
 DEFN_SYSCALL3(write, 0, int, const char *, int);
-DEFN_SYSCALL3(get_string, 1, char *, int, int);
+DEFN_SYSCALL3(read, 1, int, char *, int);
 DEFN_SYSCALL3(list_dir, 2, char *, char *, int *);
 DEFN_SYSCALL1(exec, 3, const char *);
 DEFN_SYSCALL1(getcwd, 4, char *);

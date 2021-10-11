@@ -107,15 +107,19 @@ void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t heig
 #define COLS 80
 
 // Stream/file
-#define stdout      0
-#define stderr      1
-#define stddebug    2
+#define stdin       0
+#define stdout      1
+#define stderr      2
+// TODO: Consider removal in favour of kernel_debug function
+#define stddebug    3
 struct StreamDevice {
+    void (*read)(char* data, uint16_t limit, uint8_t echo);
     void (*write)(char* data, int length);
 };
 extern struct StreamDevice sd_screen_console;
 extern struct StreamDevice sd_com1;
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+bool read(int16_t fp, char* buffer, int len);
 bool write(int16_t fp, char* buffer, int len); // handles write system call + internal use
 void printf(char* string, ...);
 void fprintf(int16_t fp, char* string, ...);

@@ -15,7 +15,8 @@
 void write_serial(char* data, int len);
 
 struct StreamDevice sd_com1 = {
-    write: &write_serial
+    .read = 0, // TODO: Implement
+    .write = &write_serial
 };
 
 int init_serial(uint32_t speed) {

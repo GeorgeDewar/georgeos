@@ -24,8 +24,9 @@ typedef unsigned long long uint64_t;
 typedef __builtin_va_list va_list;
 
 /* SPECIAL FILES */
-#define stdout      0
-#define stderr      1
+#define stdin       0
+#define stdout      1
+#define stderr      2
 
 /* Memory management & manipulation */
 void *malloc(uint32_t size);

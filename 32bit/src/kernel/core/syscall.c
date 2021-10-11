@@ -7,7 +7,7 @@ static bool chdir(const char* path);
 static uint32_t syscalls[] = {
 	/* System Call Table */
 	(uint32_t)&write,               /* 0 */
-	(uint32_t)&get_string,
+	(uint32_t)&read,
 	(uint32_t)&list_dir,
 	(uint32_t)&exec,
 	(uint32_t)&getcwd,
