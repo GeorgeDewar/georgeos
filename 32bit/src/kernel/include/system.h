@@ -265,7 +265,9 @@ void FloppyHandler();
 /* Processes */
 bool exec(char* filename);
 
-/* Filesystem / Disk */
+/**
+ * Filesystem / Disk
+ */
 
 /** A filesystem-agnostic representation of a directory entry (file or directory) */
 typedef struct {
@@ -282,6 +284,7 @@ typedef struct {
     unsigned char archive        : 1;
 } DirEntry;
 
+/** Disk device declarations */
 struct DiskDevice;
 typedef struct DiskDevice DiskDevice;
 typedef struct {
@@ -292,15 +295,29 @@ struct DiskDevice {
     uint8_t device_num;
     DiskDeviceDriver* driver;
 };
+
+/** Statically defined disk device (implemented in floppy.c) */
 extern DiskDevice floppy0;
 
-/** The set of methods that a filesystem driver exposes */
+/** File system declarations */
+struct FileSystem;
+typedef struct FileSystem FileSystem;
 typedef struct {
-    bool (*init)(DiskDevice* device);
+    /** create an instance of a filesystem for a particular device */
+    bool (*init)(DiskDevice* device, FileSystem* filesystem_out);
     bool (*list_dir)(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-    bool (*read_file)(DiskDevice* device, uint32_t location_on_disk, uint8_t* buffer);
+    bool (*read_file)(FileSystem* fs, uint32_t location_on_disk, uint8_t* buffer);
 } FileSystemDriver;
+struct FileSystem {
+    DiskDevice* device;
+    FileSystemDriver* driver;
+    void* instance_data; // e.g. FAT; points to struct inside FS driver
+};
+
+/** Statically defined file system driver (implemented in fat12.c) */
 extern FileSystemDriver fs_fat12;
+/** Statically defined file system for floppy0 (set in kernel.c) */
+extern FileSystem floppy0_fs;
 
 extern char cwd[256];
 

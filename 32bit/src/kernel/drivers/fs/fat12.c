@@ -41,16 +41,13 @@ typedef struct {
     uint32_t fileSize;                                                                      // 28-32
 } __attribute__((packed)) Fat12DirectoryEntry;
 
-// Todo: malloc these per FS or as needed
-uint8_t *fat;
-
 /**
  * Header section
  */
-bool fat12_init(DiskDevice* device);
+bool fat12_init(DiskDevice* device, FileSystem* filesystem_out);
 bool fat12_list_dir(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-bool fat12_read_file(DiskDevice* device, uint32_t cluster, uint8_t* buffer);
-static bool fat12_read_fat(DiskDevice* device);
+bool fat12_read_file(FileSystem * fs, uint32_t cluster, uint8_t* buffer);
+static bool fat12_read_fat(DiskDevice* device, uint8_t *fat);
 static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, const uint8_t *fat);
 
 FileSystemDriver fs_fat12 = {
@@ -63,10 +60,16 @@ FileSystemDriver fs_fat12 = {
  * Implementation
  */
 
-bool fat12_init(DiskDevice* device) {
+bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
     // Allocate buffer to store File Allocation Table
-    fat = malloc(SECTORS_PER_FAT * BYTES_PER_SECTOR);
-    fat12_read_fat(device);
+    uint8_t *fat = malloc(SECTORS_PER_FAT * BYTES_PER_SECTOR);
+    // Allocate memory for FileSystem object
+//    FileSystem *filesystem = malloc(sizeof(FileSystem));
+    filesystem_out->driver = &fs_fat12;
+    filesystem_out->device = device;
+    filesystem_out->instance_data = fat;
+    // Read the FAT
+    fat12_read_fat(device, fat);
     return SUCCESS;
 }
 
@@ -118,21 +121,21 @@ bool fat12_list_dir(DiskDevice* device, char* path, DirEntry* dir_entry_list_out
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
-bool fat12_read_file(DiskDevice* device, uint32_t cluster, uint8_t* buffer) {
+bool fat12_read_file(FileSystem * fs, uint32_t cluster, uint8_t* buffer) {
     int cluster_index = 1; // we print the first cluster outside the loop
 
     fprintf(stddebug, "Reading cluster\n");
-    if (!read_sectors_lba(device,  cluster + DATA_START, 1, buffer)) {
+    if (!read_sectors_lba(fs->device,  cluster + DATA_START, 1, buffer)) {
         fprintf(stderr, "Read failure\n");
         return FAILURE;
     }
 
     for(;;) {
         fprintf(stddebug, "Reading cluster\n");
-        cluster = fat12_decode_fat_entry(cluster, fat);
+        cluster = fat12_decode_fat_entry(cluster, fs->instance_data);
         if(cluster == 0xFFF) break; // we've read the last cluster already
 
-        if (!read_sectors_lba(device,  cluster + DATA_START, 1, buffer + (BYTES_PER_SECTOR * cluster_index))) {
+        if (!read_sectors_lba(fs->device,  cluster + DATA_START, 1, buffer + (BYTES_PER_SECTOR * cluster_index))) {
             fprintf(stderr, "Read failure\n");
             return FAILURE;
         }
@@ -148,7 +151,7 @@ bool fat12_read_file(DiskDevice* device, uint32_t cluster, uint8_t* buffer) {
  */
 
 /** Read the whole FAT into a buffer */
-static bool fat12_read_fat(DiskDevice* device) {
+static bool fat12_read_fat(DiskDevice* device, uint8_t *fat) {
     return read_sectors_lba(device, FAT_0_START, SECTORS_PER_FAT, fat);
 }
 

@@ -41,7 +41,8 @@ bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
         return FAILURE;
     }
     // List the files
-    if(!fs_fat12.read_file(&device, dir_entry.location_on_disk, buffer)) {
+    FileSystem *fs = &floppy0_fs;
+    if(!fs->driver->read_file(fs, dir_entry.location_on_disk, buffer)) {
         return FAILURE;
     }
     *length_out = dir_entry.file_size;

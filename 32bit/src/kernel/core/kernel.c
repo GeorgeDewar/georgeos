@@ -14,6 +14,8 @@
     0xFD000000   Video memory (maybe)
 */
 
+FileSystem floppy0_fs;
+
 void main () {
     init_serial(115200);
     default_graphics_device = &vesa_graphics_device;
@@ -36,12 +38,15 @@ void main () {
     // Initialise disk subsystem
     install_floppy();
     ResetFloppy();
-    fs_fat12.init(&floppy0);
+    // Create a FileSystem instance for FAT12 on floppy0
+    fs_fat12.init(&floppy0, &floppy0_fs);
     strcpy("/fd0", cwd);
 
     // Start shell from disk
     printf("Loading SHELL.EXE... ");
-    exec("/SHELL.EXE");
+    if(!exec("/SHELL.EXE")) {
+        printf("Failed to execute shell!\n");
+    };
 
     // Start our shell
     // shell_main();
