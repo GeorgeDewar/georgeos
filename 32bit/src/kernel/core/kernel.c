@@ -15,11 +15,19 @@
 */
 
 FileSystem floppy0_fs;
+FileHandle open_files[16];
 
 void main () {
     init_serial(115200);
     default_graphics_device = &vesa_graphics_device;
     default_graphics_device->clear_screen();
+
+    open_files[stdout].type = STREAM;
+    open_files[stdout].stream_device = sd_screen_console;
+    open_files[stderr].type = STREAM;
+    open_files[stderr].stream_device = sd_screen_console;
+    open_files[stddebug].type = STREAM;
+    open_files[stddebug].stream_device = sd_com1;
 
     printf("Kernel loaded successfully. Welcome to GeorgeOS!\n");
     fprintf(stddebug, "Serial connected\n");

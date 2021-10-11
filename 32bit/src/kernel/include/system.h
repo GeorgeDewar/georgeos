@@ -111,7 +111,6 @@ void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t heig
 #define stderr      1
 #define stddebug    2
 struct StreamDevice {
-    // void (*print_char)(char character);
     void (*write)(char* data, int length);
 };
 extern struct StreamDevice sd_screen_console;
@@ -319,6 +318,28 @@ extern FileSystemDriver fs_fat12;
 /** Statically defined file system for floppy0 (set in kernel.c) */
 extern FileSystem floppy0_fs;
 
+/** Working directory and open files */
+enum FileHandleType {
+    NULL = 0,
+    FILE = 1,
+    STREAM = 2
+};
+
+typedef struct {
+    char path[256];
+    FileSystem *filesystem;
+    uint32_t location_on_disk;
+} FileDescriptor;
+
+typedef struct {
+    char type;
+    union { // it's *one* of these
+        FileDescriptor file_descriptor;
+        struct StreamDevice stream_device;
+    };
+} FileHandle;
+
+extern FileHandle open_files[16];
 extern char cwd[256];
 
 bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* buffer);

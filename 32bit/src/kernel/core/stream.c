@@ -1,42 +1,19 @@
 #include "system.h"
 
-// typedef struct {
-//     uint8_t fp_type     : 4;
-//     uint8_t can_read    : 1;
-//     uint8_t can_write   : 1;
-//     struct StreamDevice stream_device;
-// } FilePointer;
-// enum FPType {
-//     RESERVED = 0,
-//     STREAM,
-//     FILE
-// };
-
-// /** array of currently open files */
-// FilePointer files[16];
-
 static void vfprintf(int16_t fp, char* string, va_list argp);
 
-void stream_init() {
-    
-}
-
-uint8_t get_stream_device(int16_t fp, struct StreamDevice* sd_out) {
-    if (fp == stdout || fp == stderr) {
-        *sd_out = sd_screen_console;
-    } else if (fp == stddebug) {
-        *sd_out = sd_com1;
-    } else {
-        die("Unknown stream device");
-    }
-    return 1;
-}
-
 bool write(int16_t fp, char* buffer, int len) {
-    struct StreamDevice sd = {};
-    get_stream_device(fp, &sd);
-    sd.write(buffer, len);
-    return SUCCESS;
+    FileHandle handle = open_files[fp];
+    if (handle.type == NULL) {
+        // The handle does not exist
+        return FAILURE;
+    } else if(handle.type == STREAM) {
+        handle.stream_device.write(buffer, len);
+        return SUCCESS;
+    } else {
+        // Unsupported handle type
+        return FAILURE;
+    }
 }
 
 static void intToString(int number, char* string) {
@@ -76,20 +53,17 @@ void fprintf(int16_t fp, char* string, ...) {
 }
 
 static void vfprintf(int16_t fp, char* string, va_list argp) {
-    struct StreamDevice sd = {};
-    get_stream_device(fp, &sd);
-
     while(*string != 0) {
         if (*string == '%') {
             string++;
             if(*string == '%'){ // %% escapes %
-                sd.write(string, 1);
+                write(fp, string, 1);
             } else if (*string == 's') {
                 char* str = (char*) va_arg(argp, int);
                 fprintf(fp, str);
             } else if (*string == 'c') {
                 char c = va_arg(argp, int);
-                sd.write(&c, 1);
+                write(fp, &c, 1);
             } else if (*string == 'd') {
                 int number = va_arg(argp, int);
                 char num_string[16];
@@ -97,7 +71,7 @@ static void vfprintf(int16_t fp, char* string, va_list argp) {
                 fprintf(fp, num_string);
             }
         } else {
-            sd.write(string, 1);
+            write(fp, string, 1);
         }
         string++;
     }
