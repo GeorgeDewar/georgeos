@@ -52,18 +52,18 @@ void main() {
 
 void cat_file(char *filename) {
     uint8_t buffer[10000];
-    volatile uint16_t length;
     int fp = sys_open(filename);
     if (fp < 0) {
         printf("Could not open %s\n", filename);
         return;
     }
-    if (!sys_read(fp, buffer, 10000)) {
+    int length = sys_read(fp, buffer, 10000);
+    if (length < 0) {
         printf("Could not read file\n");
         return;
     }
-    // printf("Read %d bytes\n", length);
-    sys_write(stdout, buffer, 50);
+    printf("Read %d bytes\n", length);
+    sys_write(stdout, buffer, length);
     printf("\n");
 }
 

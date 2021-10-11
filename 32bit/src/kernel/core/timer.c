@@ -12,6 +12,8 @@ typedef struct {
 static TimerCallback* callbacks;
 static uint8_t callbacks_count = 0;
 
+volatile bool console_modified = false;
+
 /* Handles the timer. In this case, it's very simple: We
 *  increment the 'timer_ticks' variable every time the
 *  timer fires. By default, the timer fires 18.222 times
@@ -23,13 +25,17 @@ static void timer_handler()
     timer_ticks++;
 
     // Render the console to the screen
-    default_graphics_device->clear_screen();
-    console_render(0,0,default_graphics_device->screen_width,default_graphics_device->screen_height);
+    if (console_modified || timer_ticks % 10 == 0) {
+        default_graphics_device->clear_screen();
+        console_render(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
+        console_modified = false;
+    }
     // Indicate the status of the modifier keys, just for fun
-    fill_rect(0, default_graphics_device->screen_height-20, default_graphics_device->screen_width, 20, (Color) {45, 79, 135});
-    if(key_status.shift_down) draw_char(0, 580, 'S', COLOR_WHITE);
-    if(key_status.ctrl_down) draw_char(10, 580, 'C', COLOR_WHITE);
-    if(key_status.alt_down) draw_char(20, 580, 'A', COLOR_WHITE);
+    fill_rect(0, default_graphics_device->screen_height - 20, default_graphics_device->screen_width, 20,
+              (Color) {45, 79, 135});
+    if (key_status.shift_down) draw_char(0, 580, 'S', COLOR_WHITE);
+    if (key_status.ctrl_down) draw_char(10, 580, 'C', COLOR_WHITE);
+    if (key_status.alt_down) draw_char(20, 580, 'A', COLOR_WHITE);
 
     if (timer_ticks % 18 == 0) {
         // Just to show the timer is working

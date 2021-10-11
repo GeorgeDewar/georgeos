@@ -39,6 +39,7 @@ int open_file(char* path) {
     handle->type = FILE;
     handle->file_descriptor.filesystem = &floppy0_fs;
     handle->file_descriptor.location_on_disk = dir_entry.location_on_disk;
+    handle->file_descriptor.size = dir_entry.file_size;
     strcpy(path, handle->file_descriptor.path);
 
     return fp;

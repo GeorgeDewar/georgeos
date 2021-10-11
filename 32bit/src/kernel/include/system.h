@@ -119,7 +119,7 @@ struct StreamDevice {
 extern struct StreamDevice sd_screen_console;
 extern struct StreamDevice sd_com1;
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-bool read(int16_t fp, char* buffer, int len);
+int32_t read(int16_t fp, char* buffer, int len);
 bool write(int16_t fp, char* buffer, int len); // handles write system call + internal use
 void printf(char* string, ...);
 void fprintf(int16_t fp, char* string, ...);
@@ -248,6 +248,7 @@ struct KeyStatus key_status;
 /* Console */
 void on_key_event(struct KeyEvent event);
 void get_string(char *buffer, uint16_t limit, uint8_t echo);
+extern volatile bool console_modified;
 
 /* String */
 char strcmp(char *string1, char *string2);
@@ -335,6 +336,7 @@ typedef struct {
     char path[256];
     FileSystem *filesystem;
     uint32_t location_on_disk;
+    uint32_t size;
 } FileDescriptor;
 
 typedef struct {

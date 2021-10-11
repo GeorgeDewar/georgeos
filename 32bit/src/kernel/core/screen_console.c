@@ -43,6 +43,7 @@ static void console_print_char(char character) {
     
     // Advance the cursor
     cursor++;
+    console_modified = true;
 }
 
 /** Draw the specified character at a certain character position */
@@ -84,12 +85,12 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
         col++;
 
         if (col == num_cols) {
-            fprintf(stddebug, "row=%d col=%d", row, col);
+//            fprintf(stddebug, "row=%d col=%d", row, col);
             row++;
             col = 0;
         }
     }
 
-    uint8_t cursor_visible = timer_ticks % 10 >= 5;
+    uint8_t cursor_visible = timer_ticks % 20 == 0;
     if (cursor_visible) console_putchar(x, y, row, col, '_', color);
 }
