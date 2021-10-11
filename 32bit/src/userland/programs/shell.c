@@ -37,12 +37,8 @@ void main() {
             char* new_dir = command_tokens[token++];
             sys_chdir(new_dir);
         } else if (strcmp(command, "cat")) {
-            // char* filename = command_tokens[token++];
-            // uint8_t buffer[10000];
-            // volatile uint16_t length;
-            // read_file(filename, buffer, &length);
-            // printf("Read %d bytes\n", length);
-            // fprintlen(stdout, buffer, length);
+            char* filename = command_tokens[token++];
+            cat_file(filename);
         } else if (strcmp(command, "exec")) {
             char* filename = command_tokens[token++];
             sys_exec(filename);
@@ -52,6 +48,23 @@ void main() {
             printf("Unknown command\n");
         }
     }
+}
+
+void cat_file(char *filename) {
+    uint8_t buffer[10000];
+    volatile uint16_t length;
+    int fp = sys_open(filename);
+    if (fp < 0) {
+        printf("Could not open %s\n", filename);
+        return;
+    }
+    if (!sys_read(fp, buffer, 10000)) {
+        printf("Could not read file\n");
+        return;
+    }
+    // printf("Read %d bytes\n", length);
+    sys_write(stdout, buffer, 50);
+    printf("\n");
 }
 
 void print_directory_listing() {

@@ -14,8 +14,8 @@
     0xFD000000   Video memory (maybe)
 */
 
+// TODO: Move / make dynamic
 FileSystem floppy0_fs;
-FileHandle open_files[16];
 
 void main () {
     init_serial(115200);

@@ -6,6 +6,7 @@ DEFN_SYSCALL3(list_dir, 2, char *, char *, int *);
 DEFN_SYSCALL1(exec, 3, const char *);
 DEFN_SYSCALL1(getcwd, 4, char *);
 DEFN_SYSCALL1(chdir, 5, const char *);
+DEFN_SYSCALL1(open, 6, const char *);
 
 // Todo: Change to read and write, add exit (for now, works by restarting shell like in DOS)
 

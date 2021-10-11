@@ -12,7 +12,7 @@ OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fon
 # Default build target
 all: georgeos_1440.img
 run: all
-	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy
+	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy -serial stdio
 debug: all
 	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy -s -S -serial stdio &
 	gdb.exe -ex "file build/kernel.elf" \

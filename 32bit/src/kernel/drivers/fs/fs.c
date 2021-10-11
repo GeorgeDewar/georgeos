@@ -1,8 +1,10 @@
 #include "system.h"
 
 char cwd[256];
+FileHandle open_files[MAX_FILES];
 
 static bool find_file(DiskDevice* device, char* path, DirEntry* dir_entry_out);
+static int next_file_handle();
 
 bool get_device_for_path(char* path, DiskDevice* device_out) {
     // /fd0 = floppy 0, etc, may need lookup table, but for now...
@@ -16,6 +18,41 @@ bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* bu
         device->driver->read_sector(device, lba + i, buffer + (512 * i));
     }
     return SUCCESS;
+}
+
+int open_file(char* path) {
+    int fp = next_file_handle();
+    if (fp == NULL) return -1;
+
+    // Find device
+    DiskDevice device;
+    get_device_for_path(path, &device);
+
+    // Find file in FS
+    DirEntry dir_entry;
+    if (!find_file(&device, path, &dir_entry)) {
+        return -1;
+    }
+
+    // Create the file handle
+    FileHandle* handle = &open_files[fp];
+    handle->type = FILE;
+    handle->file_descriptor.filesystem = &floppy0_fs;
+    handle->file_descriptor.location_on_disk = dir_entry.location_on_disk;
+    strcpy(path, handle->file_descriptor.path);
+    
+    return fp;
+}
+
+void close_file(int fd) {
+    open_files[fd].type = NULL;
+}
+
+static int next_file_handle() {
+    for(int i=0; i<MAX_FILES; i++) {
+        if(open_files[i].type == NULL) return i;
+    }
+    return -1; // no free file handles
 }
 
 /** List the files in a directory into dir_entry_list_out, and set num_entries_out */

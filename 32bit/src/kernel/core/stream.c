@@ -4,15 +4,24 @@ static void vfprintf(int16_t fp, char* string, va_list argp);
 
 /** Read from a file into the specified buffer, up to *len* bytes */
 bool read(int16_t fp, char* buffer, int len) {
+    fprintf(stddebug, "Attempting to read from file %d\n", fp);
     FileHandle handle = open_files[fp];
     if (handle.type == NULL) {
         // The handle does not exist
+        fprintf(stddebug, "Attempted to read from a NULL handle\n");
         return FAILURE;
     } else if(handle.type == STREAM) {
         handle.stream_device.read(buffer, len, true);
         return SUCCESS;
+    } else if(handle.type == FILE) {
+        fprintf(stddebug, "Reading file\n");
+        FileDescriptor fd = handle.file_descriptor;
+        FileSystem *filesystem = handle.file_descriptor.filesystem;
+        filesystem->driver->read_file(filesystem, fd.location_on_disk, buffer); // TODO: Len
+        return SUCCESS;
     } else {
         // Unsupported handle type
+        fprintf(stddebug, "Unsupported handle type\n");
         return FAILURE;
     }
 }

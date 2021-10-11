@@ -47,3 +47,4 @@ DECL_SYSCALL3(list_dir, char *, char *, int *);
 DECL_SYSCALL1(exec, const char *);
 DECL_SYSCALL1(getcwd, char *);
 DECL_SYSCALL1(chdir, const char *);
+DECL_SYSCALL1(open, const char *);

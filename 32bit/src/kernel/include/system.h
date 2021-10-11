@@ -323,6 +323,8 @@ extern FileSystemDriver fs_fat12;
 extern FileSystem floppy0_fs;
 
 /** Working directory and open files */
+#define MAX_FILES   16
+
 enum FileHandleType {
     NULL = 0,
     FILE = 1,
@@ -349,6 +351,7 @@ extern char cwd[256];
 bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* buffer);
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);
+int open_file(char* path);
 
 /* Syscall */
 #define SYSCALL_VECTOR  0x7F

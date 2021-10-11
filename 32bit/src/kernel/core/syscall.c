@@ -6,14 +6,15 @@ static bool chdir(const char* path);
 
 static uint32_t syscalls[] = {
 	/* System Call Table */
-	(uint32_t)&write,               /* 0 */
+	(uint32_t)&write,               // 00
 	(uint32_t)&read,
 	(uint32_t)&list_dir,
 	(uint32_t)&exec,
-	(uint32_t)&getcwd,
+	(uint32_t)&getcwd,              // 04
 	(uint32_t)&chdir,
+    (uint32_t)&open_file
 };
-#define NUM_SYSCALLS 6
+#define NUM_SYSCALLS 7
 
 static void getcwd(char* path) {
 	strcpy(cwd, path);
