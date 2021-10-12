@@ -45,6 +45,8 @@ bootloader_start:
     mov ss, ax                  ; Set stack segment to 0
     mov sp, LOAD_ADDRESS        ; Set stack pointer to LOAD_ADDRESS so stack is below bootloader
 
+    mov [bootdev], dl           ; Save the boot device
+
     ; Clear the screen
     mov ah, 0x00                ; Set video mode to clear the screen
     mov al, 0x03                ; TEXT 80/25/16
@@ -52,6 +54,15 @@ bootloader_start:
 
     ; Print a message
     mov si, bootloader_hi
+    call print_string
+
+    ; Show the boot device
+    ; Print value 0xaa55 to the display
+    mov ax, [bootdev]
+    push ax                 ; Push on stack as 1st parameter
+                            ;    In this case display value in 0xAA55
+    call print_hex_word     ; Print 16-bit value as hex
+    mov si, new_line
     call print_string
 
     ; Load the rest of the bootloader from sector 1
@@ -85,6 +96,7 @@ print_dot:
 %include "src/boot/print_string.asm"
 %include "src/boot/print_string_pm.asm"
 %include "src/boot/l2hts.asm"
+%include "src/boot/pause.asm"
 
 ; -----------------------------------------------------------------------------
 ; Strings and variables
@@ -93,9 +105,7 @@ print_dot:
     kern_filename       db "KERNEL  BIN"    ; Kernel filename
 
     bootloader_hi       db "Starting GeorgeOS", 0
-    ; loading_kernel      db "Loading Kernel",  0
 
-    ; jumping             db "Jumping to Kernel", 0
     jumping_to_pt2      db "Jumping to bootloader stage 2", 0
     new_line            db 0
 
@@ -143,7 +153,9 @@ stage2:
 
     mov si, loading_kernel
     call print_string
+
     %include "src/boot/load_kernel.asm"
+    call pause
 
     ; mov ax, 2000h
     ; mov ds, ax
