@@ -253,6 +253,7 @@ extern volatile bool console_modified;
 /* String */
 char strcmp(char *string1, char *string2);
 void strcpy(const char *src, char *dest);
+void strupr(char* string);
 
 /* Serial */
 int init_serial(uint32_t speed);
@@ -315,6 +316,7 @@ typedef struct {
 struct FileSystem {
     DiskDevice* device;
     FileSystemDriver* driver;
+    bool case_sensitive;
     void* instance_data; // e.g. FAT; points to struct inside FS driver
 };
 

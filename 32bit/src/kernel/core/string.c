@@ -29,3 +29,18 @@ void strcpy(const char *src, char *dest) {
     }
     *dest = 0;
 }
+
+char upcase(char c) {
+    const char offset = 'A' - 'a';
+    if (c >= 'a' && c <= 'z') {
+        return (char) (c + offset);
+    }
+    return c;
+}
+
+void strupr(char* string) {
+    while(*string != 0) {
+        *string = upcase(*string);
+        string++;
+    }
+}

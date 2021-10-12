@@ -68,6 +68,7 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
     filesystem_out->driver = &fs_fat12;
     filesystem_out->device = device;
     filesystem_out->instance_data = fat;
+    filesystem_out->case_sensitive = false;
     // Read the FAT
     fat12_read_fat(device, fat);
     return SUCCESS;

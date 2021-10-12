@@ -68,6 +68,7 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
+// TODO: Get rid of this and just use open/read/close? Or make read_file_fully wrapper?
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
     DiskDevice device;
     // Get the device
@@ -93,20 +94,30 @@ bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
  * Returns -1 if the file cannot be found
  */
 static bool find_file(DiskDevice* device, char* path, DirEntry* dir_entry_out) {
-    if (*path++ != '/') {
-        fprintf(stderr, "Not a valid path\n");
-        return FAILURE;
-    }
+//    if (*path++ != '/') {
+//        fprintf(stderr, "Not a valid path\n");
+//        return FAILURE;
+//    }
+    // Identify the filesystem
+    FileSystem *fs = &floppy0_fs;
+
     DirEntry dir_entry_list[16];
     uint16_t num_entries;
 
     // Read the root directory
-    bool list_res = fs_fat12.list_dir(device, path, dir_entry_list, &num_entries);
+    char path_copy[256];
+    strcpy(path, path_copy);
+    if (!fs->case_sensitive) {
+        // Up-case the path so that it will match the stored-uppercase one on disk
+        strupr(path_copy);
+    }
+
+    bool list_res = fs->driver->list_dir(fs->device, path_copy, dir_entry_list, &num_entries);
     if (!list_res) return FAILURE;
 
     // Loop through the files
     for(uint16_t i=0; i<num_entries; i++) {
-        if (strcmp(dir_entry_list[i].filename, path) != 0) {
+        if (strcmp(dir_entry_list[i].filename, path_copy) != 0) {
             *dir_entry_out = dir_entry_list[i];
             return SUCCESS;
         }

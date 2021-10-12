@@ -54,7 +54,7 @@ void main () {
 
     // Start shell from disk
     printf("Loading SHELL.EXE... ");
-    if(exec("/SHELL.EXE") < 0) {
+    if(exec("shell.exe") < 0) {
         printf("Failed to execute shell!\n");
     }
 
@@ -66,12 +66,15 @@ bool exec(char* filename) {
     uint8_t *buffer = (uint8_t *) 0x80000;
     uint16_t length;
     // Read the program into memory - this will replace the shell!
-    if (!read_file(filename, buffer, &length)) return FAILURE;
+    if (read_file(filename, buffer, &length) < 0) {
+        printf("Failed to read shell!\n");
+        return FAILURE;
+    }
     printf("Read %d bytes\n", length);
     program();
 
     // Read the shell back in so when we return to it, it's there
-    read_file("/SHELL.EXE", buffer, &length);
+    read_file("shell.exe", buffer, &length);
     return SUCCESS;
 }
 

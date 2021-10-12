@@ -21,7 +21,10 @@ debug: all
 		-ex "break kernel.c:33" \
 		-ex "continue" \
 		-ex "display/10i \$$pc"
-	pkill qemu 
+	pkill qemu
+
+cliondebug: all
+	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy -s -S -serial stdio
 
 georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	echo Initializing disk image...
