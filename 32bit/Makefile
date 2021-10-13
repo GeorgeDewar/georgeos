@@ -10,11 +10,17 @@ HEADERS = $(wildcard $(SRCDIR)/include/*.h)
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(C_SOURCES))
 OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fonts/zap-vga16.o
 # Default build target
-all: georgeos_1440.img
+all: georgeos_1440.img hdd.img
 run: all
-	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy -serial stdio
+	qemu-system-i386.exe \
+		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
+		-drive file=build/hdd.img,format=raw \
+		-serial stdio
 debug: all
-	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy -s -S -serial stdio &
+	qemu-system-i386.exe \
+		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
+		-drive file=build/hdd.img,format=raw \
+		-s -S -serial stdio &
 	gdb.exe -ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
@@ -24,7 +30,10 @@ debug: all
 	pkill qemu
 
 cliondebug: all
-	qemu-system-i386.exe -drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy -s -S -serial stdio
+	qemu-system-i386.exe \
+		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
+		-drive file=build/hdd.img,format=raw \
+		-s -S -serial stdio
 
 georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	echo Initializing disk image...
@@ -37,6 +46,9 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	echo Copying kernel and applications to disk image...
 	mcopy -i build/$@ build/kernel.bin ::/
 	mcopy -i build/$@ src/data/* ::/
+
+hdd.img:
+	echo "I am a hard drive" > build/$@
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
