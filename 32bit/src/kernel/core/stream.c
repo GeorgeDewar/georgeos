@@ -3,7 +3,7 @@
 static void vfprintf(int16_t fp, char* string, va_list argp);
 
 /** Read from a file into the specified buffer, up to *len* bytes */
-int32_t read(int16_t fp, char* buffer, int len) {
+int32_t read(int16_t fp, void* buffer, int len) {
     fprintf(stddebug, "Attempting to read from file %d\n", fp);
     FileHandle handle = open_files[fp];
     if (handle.type == NULL) {

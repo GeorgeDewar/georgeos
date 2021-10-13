@@ -46,7 +46,7 @@ typedef struct {
  */
 bool fat12_init(DiskDevice* device, FileSystem* filesystem_out);
 bool fat12_list_dir(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-bool fat12_read_file(FileSystem * fs, uint32_t cluster, uint8_t* buffer);
+bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer);
 static bool fat12_read_fat(DiskDevice* device, uint8_t *fat);
 static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, const uint8_t *fat);
 
@@ -122,7 +122,7 @@ bool fat12_list_dir(DiskDevice* device, char* path, DirEntry* dir_entry_list_out
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
-bool fat12_read_file(FileSystem * fs, uint32_t cluster, uint8_t* buffer) {
+bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer) {
     int cluster_index = 1; // we print the first cluster outside the loop
 
     fprintf(stddebug, "Reading cluster\n");

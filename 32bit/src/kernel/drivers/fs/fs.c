@@ -44,8 +44,10 @@ bool mount_fs(FileSystem *fs, const char* mount_point_name) {
     fs_mounts[fs_mounts_count].fs = *fs;
     strcpy(mount_point_name, fs_mounts[fs_mounts_count].mount_point);
     int index = get_next_index_for_mount_type(mount_point_name);
+    if (index >= MAX_MOUNTPOINTS) return FAILURE;
     fs_mounts[fs_mounts_count].mount_point[mount_point_name_length] = (char) ('0' + index);
     fs_mounts_count++;
+    return SUCCESS;
 }
 
 static int get_next_index_for_mount_type(const char* mount_point_name) {

@@ -1,7 +1,7 @@
 #include "system.h"
 
 /** compare two strings, stopping after length_to_compare characters */
-char strcmp_wl(char *string1, char *string2, uint32_t length_to_compare) {
+char strcmp_wl(const char *string1, const char *string2, uint32_t length_to_compare) {
     uint32_t i = 0;
 
     while(i < length_to_compare) {
@@ -18,7 +18,7 @@ char strcmp_wl(char *string1, char *string2, uint32_t length_to_compare) {
 }
 
 /** compare two strings */
-char strcmp(char *string1, char *string2) {
+char strcmp(const char *string1, const char *string2) {
     return strcmp_wl(string1, string2, UINT32_T_MAX);
 }
 
@@ -45,7 +45,7 @@ void strupr(char* string) {
     }
 }
 
-int strlen(char *str) {
+int strlen(const char *str) {
     int len = 0;
     while(*str++ != 0) {
         len++;

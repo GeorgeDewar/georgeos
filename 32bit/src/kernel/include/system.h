@@ -119,7 +119,7 @@ struct StreamDevice {
 extern struct StreamDevice sd_screen_console;
 extern struct StreamDevice sd_com1;
 void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
-int32_t read(int16_t fp, char* buffer, int len);
+int32_t read(int16_t fp, void* buffer, int len);
 bool write(int16_t fp, char* buffer, int len); // handles write system call + internal use
 void printf(char* string, ...);
 void fprintf(int16_t fp, char* string, ...);
@@ -251,11 +251,11 @@ void get_string(char *buffer, uint16_t limit, uint8_t echo);
 extern volatile bool console_modified;
 
 /* String */
-char strcmp_wl(char *string1, char *string2, uint32_t length_to_compare);
-char strcmp(char *string1, char *string2);
+char strcmp_wl(const char *string1, const char *string2, uint32_t length_to_compare);
+char strcmp(const char *string1, const char *string2);
 void strcpy(const char *src, char *dest);
 void strupr(char* string);
-int strlen(char *str);
+int strlen(const char *str);
 char *strcat(char *dest, const char *src);
 
 /* Serial */
@@ -314,7 +314,7 @@ typedef struct {
     /** create an instance of a filesystem for a particular device */
     bool (*init)(DiskDevice* device, FileSystem* filesystem_out);
     bool (*list_dir)(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-    bool (*read_file)(FileSystem* fs, uint32_t location_on_disk, uint8_t* buffer);
+    bool (*read_file)(FileSystem* fs, uint32_t location_on_disk, void* buffer);
 } FileSystemDriver;
 struct FileSystem {
     DiskDevice* device;
