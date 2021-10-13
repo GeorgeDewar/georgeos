@@ -52,3 +52,8 @@ int strlen(char *str) {
     }
     return len;
 }
+
+char *strcat(char *dest, const char *src) {
+    strcpy(src, dest + strlen(dest));
+    return dest;
+}

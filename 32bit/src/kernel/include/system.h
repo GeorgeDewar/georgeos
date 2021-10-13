@@ -256,6 +256,7 @@ char strcmp(char *string1, char *string2);
 void strcpy(const char *src, char *dest);
 void strupr(char* string);
 int strlen(char *str);
+char *strcat(char *dest, const char *src);
 
 /* Serial */
 int init_serial(uint32_t speed);
@@ -359,6 +360,8 @@ bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* bu
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);
 int open_file(char* path);
+void close_file(int fd);
+bool normalise_path(const char* path_in, char* path_out);
 
 /* Syscall */
 #define SYSCALL_VECTOR  0x7F

@@ -12,7 +12,7 @@ int fs_mounts_count = 0;
 char cwd[256];
 FileHandle open_files[MAX_FILES];
 
-static bool find_file(DiskDevice* device, char* path, DirEntry* dir_entry_out);
+static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out);
 static int next_file_handle();
 static int get_next_index_for_mount_type(const char* mount_point_name);
 
@@ -59,9 +59,41 @@ static int get_next_index_for_mount_type(const char* mount_point_name) {
     return count;
 }
 
-bool get_device_for_path(char* path, DiskDevice* device_out) {
-    // /fd0 = floppy 0, etc, may need lookup table, but for now...
-    *device_out = floppy0;
+bool get_fs_for_path(char* path, char** rest_of_path, FileSystem ** fs_out) {
+    if (*path++ != '/') {
+        return FAILURE;
+    }
+
+    // Find the mountpoint component
+    char mountpoint[MOUNTPOINT_LENGTH] = {0};
+    int i;
+    for(i=0; path[i] != '/'; i++) {
+        mountpoint[i] = path[i];
+    }
+    path += i + 1; // also skip past the slash after the mountpoint
+
+    // Look for the mount entry
+    for(i=0; i<fs_mounts_count; i++) {
+        if (strcmp(fs_mounts[i].mount_point, mountpoint) > 0) {
+            *fs_out = &fs_mounts[i].fs;
+            *rest_of_path = path;
+            return SUCCESS;
+        }
+    }
+
+    return FAILURE;
+}
+
+bool normalise_path(const char* path_in, char* path_out) {
+    if (path_in[0] == '/') {
+        // path is already absolute
+        strcpy(path_in, path_out);
+        return SUCCESS;
+    }
+
+    strcpy(cwd, path_out);
+    strcat(path_out, "/");
+    strcat(path_out, path_in);
     return SUCCESS;
 }
 
@@ -77,13 +109,19 @@ int open_file(char* path) {
     int fp = next_file_handle();
     if (fp == NULL) return -1;
 
-    // Find device
-    DiskDevice device;
-    get_device_for_path(path, &device);
+    // Normalise path (make absolute)
+    char normalised_path[256];
+    normalise_path(path, normalised_path);
+    fprintf(stddebug, "Normalised path: %s\n", normalised_path);
+
+    // Find filesystem instance
+    FileSystem* fs;
+    char* fs_path;
+    get_fs_for_path(normalised_path, &fs_path, &fs);
 
     // Find file in FS
     DirEntry dir_entry;
-    if (find_file(&device, path, &dir_entry) < 0) {
+    if (find_file(fs, fs_path, &dir_entry) < 0) {
         return -1;
     }
 
@@ -111,33 +149,26 @@ static int next_file_handle() {
 
 /** List the files in a directory into dir_entry_list_out, and set num_entries_out */
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
-    DiskDevice device;
-    // Get the device
-    if(get_device_for_path(path, &device) < 0) {
-        return FAILURE;
-    };
+    // Normalise path (make absolute)
+    char normalised_path[256];
+    normalise_path(path, normalised_path);
+    printf(normalised_path);
+
+    // Find filesystem instance
+    FileSystem* fs;
+    char* fs_path;
+    get_fs_for_path(normalised_path, &fs_path, &fs);
+
     // List the files
-    return fs_fat12.list_dir(&device, path, dir_entry_list_out, num_entries_out);
+    return fs->driver->list_dir(fs->device, fs_path, dir_entry_list_out, num_entries_out);
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
 // TODO: Get rid of this and just use open/read/close? Or make read_file_fully wrapper?
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
-    DiskDevice device;
-    // Get the device
-    if(get_device_for_path(path, &device) < 0) {
-        return FAILURE;
-    };
-    DirEntry dir_entry;
-    if(find_file(&device, path, &dir_entry) < 0) {
-        return FAILURE;
-    }
-    // List the files
-    FileSystem *fs = &floppy0_fs;
-    if(fs->driver->read_file(fs, dir_entry.location_on_disk, buffer) < 0) {
-        return FAILURE;
-    }
-    *length_out = dir_entry.file_size;
+    int fd = open_file(path);
+    *length_out = read(fd, buffer, 10000);
+    close_file(fd);
     return SUCCESS;
 }
 
@@ -146,14 +177,7 @@ bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
  *
  * Returns -1 if the file cannot be found
  */
-static bool find_file(DiskDevice* device, char* path, DirEntry* dir_entry_out) {
-//    if (*path++ != '/') {
-//        fprintf(stderr, "Not a valid path\n");
-//        return FAILURE;
-//    }
-    // Identify the filesystem
-    FileSystem *fs = &floppy0_fs;
-
+static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out) {
     DirEntry dir_entry_list[16];
     uint16_t num_entries;
 

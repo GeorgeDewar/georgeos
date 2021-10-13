@@ -70,7 +70,7 @@ void cat_file(char *filename) {
 void print_directory_listing() {
     DirEntry *dirbuf = malloc(16 * sizeof(DirEntry));
     uint16_t num_entries;
-    sys_list_dir("/", dirbuf, &num_entries);
+    sys_list_dir("", dirbuf, &num_entries);
     for (int i=0; i<num_entries; i++) {
         printf("%s\n", dirbuf[i].filename);
     }
