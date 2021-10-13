@@ -98,12 +98,14 @@ bool fat12_list_dir(DiskDevice* device, char* path, DirEntry* dir_entry_list_out
         while(filename[index1] != ' ' && filename[index1] != 0) {
             dir_entry_list_out[i].filename[bufferIndex++] = filename[index1++];
         }
-        // Append a dot to the filename
-        dir_entry_list_out[i].filename[bufferIndex++] = '.';
-        // Copy the extension
-        index1 = 0;
-        while(extension[index1] != ' ' && extension[index1] != 0) {
-            dir_entry_list_out[i].filename[bufferIndex++] = extension[index1++];
+        if (fat12entry.subdirectory == 0) {
+            // Append a dot to the filename
+            dir_entry_list_out[i].filename[bufferIndex++] = '.';
+            // Copy the extension
+            index1 = 0;
+            while (extension[index1] != ' ' && extension[index1] != 0) {
+                dir_entry_list_out[i].filename[bufferIndex++] = extension[index1++];
+            }
         }
         // Append a NULL byte
         dir_entry_list_out[i].filename[bufferIndex] = 0;

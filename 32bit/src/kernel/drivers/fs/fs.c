@@ -17,26 +17,6 @@ static int next_file_handle();
 static int get_next_index_for_mount_type(const char* mount_point_name);
 
 /**
- * File system master plan:
- *
- * 1. File system drivers implement an identify(Device*) method which returns a boolean indicating if a drive has that
- *    FS type
- * 2. For each detected disk device, find the file system by calling identify on it. When found, initialise an instance
- *    of it. Add that to the disk device table, which maps e.g. /floppy0 to the relevant filesystem (which points to the
- *    device).
- * 3. open() calls normalise_path(char* path) to get an absolute path if not already absolute
- * 4. open() calls get_fs(char* path) which takes an absolute path and identifies the filesystem before stripping that
- *    part of the path
- * 5. open() calls find_file(FileSystem* fs, char* path) to look for the file in the FS
- */
-
-/*
- * Additional notes: For most disks there will be a partition table which we must read. Add LBA offset of partition to
- * the FileSystem struct.
- * For floppy, FAT12 is the only FS.
- */
-
-/**
  * Add a FileSystem to the list of mounts, so that files in it can be found under /{name}/path/filename
  */
 bool mount_fs(FileSystem *fs, const char* mount_point_name) {
@@ -154,7 +134,6 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
     // Normalise path (make absolute)
     char normalised_path[256];
     normalise_path(path, normalised_path);
-    printf(normalised_path);
 
     // Find filesystem instance
     FileSystem* fs;
@@ -183,7 +162,7 @@ static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out) {
     DirEntry dir_entry_list[16];
     uint16_t num_entries;
 
-    // Read the root directory
+    // Process the path
     char path_copy[256];
     strcpy(path, path_copy);
     if (!fs->case_sensitive) {
@@ -191,6 +170,7 @@ static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out) {
         strupr(path_copy);
     }
 
+    // Read the directory
     bool list_res = fs->driver->list_dir(fs->device, path_copy, dir_entry_list, &num_entries);
     if (!list_res) return FAILURE;
 

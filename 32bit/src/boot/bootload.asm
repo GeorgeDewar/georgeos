@@ -155,7 +155,7 @@ stage2:
     call print_string
 
     %include "src/boot/load_kernel.asm"
-    call pause
+    ; call pause
 
     ; mov ax, 2000h
     ; mov ds, ax
