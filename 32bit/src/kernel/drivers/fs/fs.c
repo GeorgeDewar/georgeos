@@ -1,10 +1,63 @@
 #include "system.h"
 
+#define MOUNTPOINT_LENGTH   64
+#define MAX_MOUNTPOINTS     16
+struct FileSystemMount {
+    char mount_point[MOUNTPOINT_LENGTH];
+    FileSystem fs;
+};
+struct FileSystemMount fs_mounts[MAX_MOUNTPOINTS];
+int fs_mounts_count = 0;
+
 char cwd[256];
 FileHandle open_files[MAX_FILES];
 
 static bool find_file(DiskDevice* device, char* path, DirEntry* dir_entry_out);
 static int next_file_handle();
+static int get_next_index_for_mount_type(const char* mount_point_name);
+
+/**
+ * File system master plan:
+ *
+ * 1. File system drivers implement an identify(Device*) method which returns a boolean indicating if a drive has that
+ *    FS type
+ * 2. For each detected disk device, find the file system by calling identify on it. When found, initialise an instance
+ *    of it. Add that to the disk device table, which maps e.g. /floppy0 to the relevant filesystem (which points to the
+ *    device).
+ * 3. open() calls normalise_path(char* path) to get an absolute path if not already absolute
+ * 4. open() calls get_fs(char* path) which takes an absolute path and identifies the filesystem before stripping that
+ *    part of the path
+ * 5. open() calls find_file(FileSystem* fs, char* path) to look for the file in the FS
+ */
+
+/*
+ * Additional notes: For most disks there will be a partition table which we must read. Add LBA offset of partition to
+ * the FileSystem struct.
+ * For floppy, FAT12 is the only FS.
+ */
+
+/**
+ * Add a FileSystem to the list of mounts, so that files in it can be found under /{name}/path/filename
+ */
+bool mount_fs(FileSystem *fs, const char* mount_point_name) {
+    int mount_point_name_length = strlen(mount_point_name);
+    fs_mounts[fs_mounts_count].fs = *fs;
+    strcpy(mount_point_name, fs_mounts[fs_mounts_count].mount_point);
+    int index = get_next_index_for_mount_type(mount_point_name);
+    fs_mounts[fs_mounts_count].mount_point[mount_point_name_length] = (char) ('0' + index);
+    fs_mounts_count++;
+}
+
+static int get_next_index_for_mount_type(const char* mount_point_name) {
+    int count = 0;
+    int mount_point_name_length = strlen(mount_point_name);
+    for (int i=0; i<fs_mounts_count; i++) {
+        if (strcmp_wl(fs_mounts[fs_mounts_count].mount_point, mount_point_name, mount_point_name_length) > 0) {
+            count++;
+        }
+    }
+    return count;
+}
 
 bool get_device_for_path(char* path, DiskDevice* device_out) {
     // /fd0 = floppy 0, etc, may need lookup table, but for now...

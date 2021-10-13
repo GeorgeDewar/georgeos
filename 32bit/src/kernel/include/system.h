@@ -251,9 +251,11 @@ void get_string(char *buffer, uint16_t limit, uint8_t echo);
 extern volatile bool console_modified;
 
 /* String */
+char strcmp_wl(char *string1, char *string2, uint32_t length_to_compare);
 char strcmp(char *string1, char *string2);
 void strcpy(const char *src, char *dest);
 void strupr(char* string);
+int strlen(char *str);
 
 /* Serial */
 int init_serial(uint32_t speed);
@@ -352,6 +354,7 @@ typedef struct {
 extern FileHandle open_files[16];
 extern char cwd[256];
 
+bool mount_fs(FileSystem *fs, const char* mount_point_name);
 bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* buffer);
 bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out);

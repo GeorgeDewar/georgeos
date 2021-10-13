@@ -50,7 +50,9 @@ void main () {
     ResetFloppy();
     // Create a FileSystem instance for FAT12 on floppy0
     fs_fat12.init(&floppy0, &floppy0_fs);
-    strcpy("/fd0", cwd);
+    mount_fs(&floppy0_fs, "floppy");
+    // Set the working directory to /floppy0
+    strcpy("/floppy0", cwd);
 
     // Start shell from disk
     printf("Loading SHELL.EXE... ");
