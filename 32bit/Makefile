@@ -15,13 +15,15 @@ run: all
 	qemu-system-i386.exe \
 		-device ahci,id=ahci \
 		-device ide-drive,drive=hdd,bus=ahci.0 \
-		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
+		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-serial stdio
 debug: all
 	qemu-system-i386.exe \
+		-device ahci,id=ahci \
+		-device ide-drive,drive=hdd,bus=ahci.0 \
+		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
-		-drive file=build/hdd.img,format=raw \
 		-s -S -serial stdio &
 	gdb.exe -ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
@@ -33,8 +35,10 @@ debug: all
 
 cliondebug: all
 	qemu-system-i386.exe \
+		-device ahci,id=ahci \
+		-device ide-drive,drive=hdd,bus=ahci.0 \
+		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
-		-drive file=build/hdd.img,format=raw \
 		-s -S -serial stdio
 
 georgeos_1440.img: bootload.bin kernel.bin src/data/* userland

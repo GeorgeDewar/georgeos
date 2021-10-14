@@ -374,3 +374,14 @@ void die(char* message);
 
 /* PCI */
 bool pci_init();
+struct pci_device {
+    uint8_t bus;
+    uint8_t device;
+    uint8_t function;
+    uint16_t vendor_id;
+    uint16_t device_id;
+    uint8_t class;
+    uint8_t subclass;
+};
+extern struct pci_device pci_devices[32];
+extern int pci_device_count;

@@ -1,24 +1,21 @@
 #include "system.h"
 
-#define PCI_CONFIG_ADDRESS_PORT  0xCF8
-#define PCI_CONFIG_DATA_PORT     0xCFC
+struct pci_device pci_devices[32];
+int pci_device_count;
 
 void pci_check_device(uint8_t bus, uint8_t device, uint8_t function);
 void pci_check_all_buses();
 
 bool pci_init() {
+    pci_device_count = 0;
     pci_check_all_buses();
     return FAILURE;
 }
 
 void pci_check_all_buses() {
-    uint16_t bus;
-    uint8_t device;
-    uint8_t function;
-
-    for(bus = 0; bus < 256; bus++) {
-        for(device = 0; device < 32; device++) {
-            for(function = 0; function < 8; function++) {
+    for(uint8_t bus = 0; bus < 255; bus++) {
+        for(uint8_t device = 0; device < 32; device++) {
+            for(uint8_t function = 0; function < 8; function++) {
                 pci_check_device(bus, device, function);
             }
         }
@@ -68,6 +65,16 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     uint16_t device_id = pci_get_device_id(bus, device, function);
     uint16_t device_class = pci_get_class_id(bus, device, function);
     uint16_t device_subclass = pci_get_subclass_id(bus, device, function);
-    fprintf(stdout, "Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x\n", bus, device, function, vendor_id,
-            device_id, device_class, device_subclass);
+
+    pci_devices[pci_device_count].bus = bus;
+    pci_devices[pci_device_count].device = device;
+    pci_devices[pci_device_count].function = function;
+    pci_devices[pci_device_count].vendor_id = vendor_id;
+    pci_devices[pci_device_count].device_id = device_id;
+    pci_devices[pci_device_count].class = device_class;
+    pci_devices[pci_device_count].subclass = device_subclass;
+    pci_device_count++;
+
+    fprintf(stddebug, "Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x\n",
+            bus, device, function, vendor_id, device_id, device_class, device_subclass);
 }
