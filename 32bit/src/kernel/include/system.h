@@ -50,8 +50,10 @@ void irq_install_handler(int irq, void (*handler)(struct regs *r));
 /* General hardware communication */
 unsigned char port_byte_in (unsigned short port);
 unsigned short port_word_in (unsigned short port);
+unsigned long port_long_in (unsigned short port);
 void port_byte_out (unsigned short port, unsigned char data);
 void port_word_out (unsigned short port, unsigned short data);
+void port_long_out ( unsigned short port , unsigned long data );
 
 /* Memory management & manipulation */
 void *malloc(size_t size);
@@ -369,3 +371,6 @@ void handle_syscall(struct regs *r);
 
 /* Other */
 void die(char* message);
+
+/* PCI */
+bool pci_init();

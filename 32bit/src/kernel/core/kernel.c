@@ -44,7 +44,10 @@ void main () {
     // Initialise hardware that relies on interrupts
     timer_install();
     ps2_keyboard_install();
-    
+
+    // Initialise buses
+    pci_init();
+
     // Initialise disk subsystem
     install_floppy();
     ResetFloppy();

@@ -2,7 +2,7 @@ SRCDIR=./src
 OBJDIR=./build
 
 # Automatically generate lists of sources using wildcards .
-C_SOURCES = $(wildcard $(SRCDIR)/kernel/core/*.c $(SRCDIR)/kernel/drivers/*.c $(SRCDIR)/kernel/drivers/fs/*.c)
+C_SOURCES = $(wildcard $(SRCDIR)/kernel/core/*.c $(SRCDIR)/kernel/drivers/*.c $(SRCDIR)/kernel/drivers/fs/*.c $(SRCDIR)/kernel/drivers/bus/*.c)
 HEADERS = $(wildcard $(SRCDIR)/include/*.h)
 
 # TODO : Make sources dep on all header files .
@@ -13,8 +13,10 @@ OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fon
 all: georgeos_1440.img hdd.img
 run: all
 	qemu-system-i386.exe \
+		-device ahci,id=ahci \
+		-device ide-drive,drive=hdd,bus=ahci.0 \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
-		-drive file=build/hdd.img,format=raw \
+		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
 		-serial stdio
 debug: all
 	qemu-system-i386.exe \
