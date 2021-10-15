@@ -185,5 +185,5 @@ switch_to_prot:
     loading_kernel       db "Loading kernel", 0
     switching_to_prot    db "Switching to protected mode", 0
 
-    times 512-($-stage2) db 0
+    times 1024-($-stage2) db 0
 ; ==================================================================

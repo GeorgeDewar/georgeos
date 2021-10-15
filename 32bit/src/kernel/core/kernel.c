@@ -49,19 +49,20 @@ void main () {
     pci_init();
 
     // Initialise disk subsystem
-    install_floppy();
-    ResetFloppy();
-    // Create a FileSystem instance for FAT12 on floppy0
-    fs_fat12.init(&floppy0, &floppy0_fs);
-    mount_fs(&floppy0_fs, "floppy");
-    // Set the working directory to /floppy0
-    strcpy("/floppy0", cwd);
-
-    // Start shell from disk
-    printf("Loading SHELL.EXE... ");
-    if(exec("shell.exe") < 0) {
-        printf("Failed to execute shell!\n");
-    }
+    ahci_init();
+//    install_floppy();
+//    ResetFloppy();
+//    // Create a FileSystem instance for FAT12 on floppy0
+//    fs_fat12.init(&floppy0, &floppy0_fs);
+//    mount_fs(&floppy0_fs, "floppy");
+//    // Set the working directory to /floppy0
+//    strcpy("/floppy0", cwd);
+//
+//    // Start shell from disk
+//    printf("Loading SHELL.EXE... ");
+//    if(exec("shell.exe") < 0) {
+//        printf("Failed to execute shell!\n");
+//    }
 
     for(;;);
 }

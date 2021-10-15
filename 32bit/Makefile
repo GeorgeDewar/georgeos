@@ -13,6 +13,7 @@ OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fon
 all: georgeos_1440.img hdd.img
 run: all
 	qemu-system-i386.exe \
+		-device VGA,edid=on,xres=800,yres=600 \
 		-device ahci,id=ahci \
 		-device ide-drive,drive=hdd,bus=ahci.0 \
 		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
@@ -20,6 +21,8 @@ run: all
 		-serial stdio
 debug: all
 	qemu-system-i386.exe \
+		-vga std \
+		-device "VGA,id=vga,bus=pci.0,edid=on,xres=1280,yres=720" \
 		-device ahci,id=ahci \
 		-device ide-drive,drive=hdd,bus=ahci.0 \
 		-drive file=build/hdd.img,format=raw,id=hdd,if=none \

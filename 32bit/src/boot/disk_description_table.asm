@@ -7,7 +7,7 @@
 ; -----------------------------------------------------------------------------
 
 %define BYTES_PER_SECTOR        512
-%define NUM_RESERVED_SECTORS    2
+%define NUM_RESERVED_SECTORS    3
 %define NUMBER_OF_FATS          2
 %define SECTORS_PER_FAT         9
 %define ROOT_DIR_ENTRIES        224
