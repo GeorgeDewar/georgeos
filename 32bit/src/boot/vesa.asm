@@ -54,6 +54,9 @@ struc vbe_mode_info
     .reserved1 resb 206;
 endstruc
 
+    mov si, identifying_modes
+    call print_string
+
     ; Retrieve a list of available modes
     mov ax, 0
     mov es, ax
@@ -69,27 +72,76 @@ endstruc
     ; Dereference address of mode list
     mov bx, [infoblock + vbe_info_block.video_mode_ptr_offset]
     mov [vesa_mode_list], bx ; store for safekeeping
+    
     ; Dereference first mode
+modeloop:
     mov cx, [bx]
+    cmp cx, -1      ; the value that indicates the end of the list
+    jz modeloop_end ; if we see it, stop looping
+
+    push bx ; in case it gets overwritten by the int 0x10 call
 
     ; Get mode information for that mode
     mov ax, 0x4f01 ; get vesa mode information
     mov di, modeblock
     int 0x10
 
+    pop bx
+    inc bx
+
+    ; Check if this is a packed pixel or direct color mode
+    ; mov ax, [modeblock + vbe_mode_info.memory_model]
+    ; cmp ax, 4
+    ; jz modeloop
+    ; cmp ax, 6
+    ; jz modeloop
+
+    ; Print mode number
+    ; push bx
+    ; call print_hex_word
+    ; call print_dot
+
+    ; Check that it's a graphics mode with linear framebuffer support
+    mov ax, [modeblock + vbe_mode_info.attributes]
+    ; push ax
+    ; call print_hex_word
+    ; call print_dot
+    and ax, 0x90
+    cmp ax, 0x90
+    jnz modeloop
+
+    ; Check for 16 bpp
+    mov ax, 0
+    mov al, byte [modeblock + vbe_mode_info.bpp]
+    cmp ax, 16
+    jnz modeloop
+
     ; Get width
     mov ax, [modeblock + vbe_mode_info.width]
-    push ax
-    call print_hex_word
-    mov ax, [modeblock + vbe_mode_info.height]
-    push ax
-    call print_hex_word
+    call print_int
+    mov si, str_x
+    call print_string
 
-    jmp $
+    ; Get height
+    mov ax, [modeblock + vbe_mode_info.height]
+    call print_int
+    
+    mov si, new_line
+    call print_string
+
+    ; Loop again to check the next mode
+    jmp modeloop
+
+modeloop_end:
+    call pause
+    jmp vesa_end
 
 no_VESA:
+    mov si, no_vesa
+    call print_string
     jmp $
 
+vesa_end:
     ; 0x0111 = 640x480x16bpp
     ; 0x0114 = 800x600x16bpp
     ; 0x0117 = 1027x768x16bpp
@@ -104,11 +156,3 @@ no_VESA:
     mov ax, 0x4f02 ; set vesa mode
     mov bx, 0x0114 ; mode, as per before
     int 0x10
-
-; -----------------------------------------------------------------------------
-; Strings and variables
-; -----------------------------------------------------------------------------
-
-    no_vesa             db "VESA is not supported", 0
-
-    vesa_mode_list      db 0     ; Address of mode list

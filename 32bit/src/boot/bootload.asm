@@ -60,14 +60,15 @@ bootloader_start:
     ; Print value 0xaa55 to the display
     mov ax, [bootdev]
     push ax                 ; Push on stack as 1st parameter
-                            ;    In this case display value in 0xAA55
-    call print_hex_word     ; Print 16-bit value as hex
+    ; push 2
+    ; push 16
+    call print_hex_word               ; Print 16-bit value as hex
     mov si, new_line
     call print_string
 
     ; Load the rest of the bootloader from sector 1
     mov bx, 1           ; start at sector 1
-    mov al, 1           ; read one sector
+    mov al, 2           ; read two sectors
     mov si, stage2      ; put it at stage2
     call read_sectors   ; call
 
@@ -94,7 +95,6 @@ print_dot:
     ret
 
 %include "src/boot/print_string.asm"
-%include "src/boot/print_string_pm.asm"
 %include "src/boot/l2hts.asm"
 %include "src/boot/pause.asm"
 
@@ -104,13 +104,13 @@ print_dot:
 
     kern_filename       db "KERNEL  BIN"    ; Kernel filename
 
-    bootloader_hi       db "Starting GeorgeOS", 0
+    bootloader_hi       db "Starting GeorgeOS", 0x0D, 0x0A, 0
 
-    jumping_to_pt2      db "Jumping to bootloader stage 2", 0
-    new_line            db 0
+    jumping_to_pt2      db "Jumping to bootloader stage 2", 0x0D, 0x0A, 0
+    new_line            db 0x0D, 0x0A, 0
 
-    disk_error          db "Disk read error", 0
-    wrong_file          db "File 0 is not KERNEL.BIN", 0
+    disk_error          db "Disk read error", 0x0D, 0x0A, 0
+    wrong_file          db "File 0 is not KERNEL.BIN", 0x0D, 0x0A, 0
 
     bootdev             db 0     ; Boot device number
     cluster             dw 0     ; Cluster of the file we want to load
@@ -155,8 +155,6 @@ stage2:
     call print_string
 
     %include "src/boot/load_kernel.asm"
-    ; call pause
-
     %include "src/boot/vesa.asm"
 
 switch_to_prot:
@@ -174,16 +172,24 @@ switch_to_prot:
     jmp $
     db 0xBA, 0xBA, 0xBA
 
+    %include "src/boot/print_string_pm.asm"
+
+
 ; -----------------------------------------------------------------------------
 ; Strings and variables (stage 2)
 ; -----------------------------------------------------------------------------
 
-    loading_root_dir     db "Loading root directory", 0
-    looking_for_kernel   db "Locating KERNEL.BIN", 0
-    file_not_found       db 0x0D, 0x0A, "Could not find KERNEL.BIN in root directory", 0
-    loading_fat          db 0x0D, 0x0A, "Loading FAT", 0
-    loading_kernel       db "Loading kernel", 0
-    switching_to_prot    db "Switching to protected mode", 0
+    loading_root_dir     db "Loading root directory", 0x0D, 0x0A, 0
+    looking_for_kernel   db "Locating KERNEL.BIN", 0x0D, 0x0A, 0
+    file_not_found       db 0x0D, 0x0A, "Could not find KERNEL.BIN in root directory", 0x0D, 0x0A, 0
+    loading_fat          db 0x0D, 0x0A, "Loading FAT", 0x0D, 0x0A, 0
+    loading_kernel       db "Loading kernel", 0x0D, 0x0A, 0
+    switching_to_prot    db "Switching to protected mode", 0x0D, 0x0A, 0
+    identifying_modes    db "Identifying supported video modes", 0x0D, 0x0A, 0
+    no_vesa              db "VESA is not supported", 0x0D, 0x0A, 0
+    str_x                db "x", 0
+
+    vesa_mode_list       db 0     ; Address of mode list
 
     times 1024-($-stage2) db 0
 ; ==================================================================

@@ -17,11 +17,6 @@ print_string:
     jmp .repeat                 ; Repeat for the next character
 
 .done:
-    mov al, 0x0D                ; Print CR and NL
-    int 10h
-    mov al, 0x0A
-    int 10h
-
     pop ax
     ret
 
@@ -56,3 +51,82 @@ print_hex_word:
     jnz .loop       ; Go back if more nibbles to process
     popa            ; Restore all the registers
     ret
+
+; Input:
+; EAX = integer value to convert
+; ESI = pointer to buffer to store the string in (must have room for at least 10 bytes)
+; Output:
+; EAX = pointer to the first character of the generated string
+str_buf db '0000000000', 0
+print_int:
+  pusha
+  mov si, str_buf
+  add si,9
+  mov byte [si], 0
+
+  mov bx,10         
+.next_digit:
+  xor dx, dx         ; Clear edx prior to dividing edx:eax by ebx
+  div bx             ; eax /= 10
+  add dl,'0'          ; Convert the remainder to ASCII 
+  dec esi             ; store characters in reverse order
+  mov [si], dl
+  test ax,ax            
+  jnz .next_digit     ; Repeat until eax==0
+  call print_string
+  popa
+  ret
+
+
+; digits db '0123456789ABCDEF'
+
+; ; Maximum length, 32 bits formatted as binary and a null-terminator.
+; output db '00000000000000000000000000000000', 0
+
+
+; ; itoa(dword number, byte width, byte radix)
+; ; Format number as string of width in radix. Returns pointer to string.
+; itoa:
+;   push bp
+;   mov bp, sp
+;   push bx
+;   push si
+;   push di
+
+;   ; Start at end of output string and work backwards.
+;   lea di, [output + 32]
+;   std
+
+;   ; Load number and radix for division and iteration.
+;   mov ax, [bp + 8] ; number
+;   movzx bx, byte [bp + 13] ; radix
+
+;   ; Loop width times.
+;   movzx cx, byte [bp + 12] ; width
+
+;   .loop:
+;     ; Clear remainder / upper bits of dividend.
+;     xor dx, dx
+
+;     ; Divide number by radix.
+;     div bx
+
+;     ; Use remainder to set digit in output string.
+;     push bx
+;     mov bx, dx
+;     lea si, [digits + bx]
+;     movsb
+;     pop bx
+
+;     loop .loop
+
+;   ; The last movsb brought us too far back.
+;   lea ax, [di + 1]
+
+;   cld
+;   pop di
+;   pop si
+;   pop bx
+;   mov sp, bp
+;   pop bp
+;   ret

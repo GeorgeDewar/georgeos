@@ -9,4 +9,4 @@ pause:
     pop ax
     ret
 
-press_any_key     db "Press any key to continue...", 0
+press_any_key     db "Press any key to continue...", 0x0D, 0x0A, 0

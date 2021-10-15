@@ -18,7 +18,7 @@
 
 load_file_sector:
     mov ax, word [cluster]      ; Convert cluster number to logical sector
-    add ax, 32
+    add ax, 33
 
     call l2hts                  ; Make appropriate params for int 13h
 
