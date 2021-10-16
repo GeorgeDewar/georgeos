@@ -37,6 +37,8 @@ void main () {
     fprintf(stddebug, "Serial connected\n");
 
     // Set up interrupts
+    char* init = "\rInitialising hardware: %s                                    ";
+    printf(init, "Interrupts");
     idt_install();
     irq_install();
 
@@ -44,16 +46,24 @@ void main () {
     __asm__ __volatile__ ("sti");
 
     // Initialise hardware that relies on interrupts
+    printf(init, "Timer");
     timer_install();
+    printf(init, "Keyboard");
     ps2_keyboard_install();
 
     // Initialise buses
+    printf(init, "Enumerating PCI devices");
     pci_init();
 
     // Initialise disk subsystem
 //    ahci_init();
+    printf(init, "Floppy Controller");
     install_floppy();
     ResetFloppy();
+
+    printf(init, "Done");
+    printf("\n");
+
     // Create a FileSystem instance for FAT12 on floppy0
     fs_fat12.init(&floppy0, &floppy0_fs);
     mount_fs(&floppy0_fs, "floppy");

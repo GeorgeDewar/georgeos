@@ -161,11 +161,11 @@ vesa_end:
     mov ax, 0
     mov es, ax
     mov ax, 0x4f01 ; get vesa mode information
-    mov cx, 0x0111 ; 1024*768*64K linear frame buffer
+    mov cx, 0x0114 ; 1024*768*64K linear frame buffer
     mov di, modeblock
     int 0x10
 
     mov esi, [modeblock+0x28] ; save frame buffer base
     mov ax, 0x4f02 ; set vesa mode
-    mov bx, 0x0111 ; mode, as per before
+    mov bx, 0x0114 ; mode, as per before
     int 0x10

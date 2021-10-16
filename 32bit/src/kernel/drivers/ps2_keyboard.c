@@ -80,6 +80,9 @@ void keyboard_handler()
         if (scancode == KEYCODE_LeftAlt) {
             key_status.alt_down = 0;
         }
+        if (scancode == KEYCODE_F12) {
+            port_byte_out(0xCF9, 6); // reset CPU
+        }
         key_event.event = EVENT_KEYRELEASE;
     } 
     else {
