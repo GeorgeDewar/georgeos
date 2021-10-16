@@ -52,6 +52,7 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	echo Copying kernel and applications to disk image...
 	mcopy -i build/$@ build/kernel.bin ::/
 	mcopy -i build/$@ src/data/* ::/
+	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
 hdd.img:
 	echo "I am a hard drive" > build/$@

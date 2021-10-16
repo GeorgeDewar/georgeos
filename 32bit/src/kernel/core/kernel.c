@@ -32,6 +32,7 @@ void main () {
     open_files[stddebug].stream_device = sd_com1;
 
     printf("Kernel loaded successfully. Welcome to GeorgeOS!\n");
+    printf("Resolution: %dx%d\n", vesa_graphics_device.screen_width, vesa_graphics_device.screen_height);
     fprintf(stddebug, "Serial connected\n");
 
     // Set up interrupts

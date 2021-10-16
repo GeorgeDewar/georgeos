@@ -133,7 +133,6 @@ modeloop:
     jmp modeloop
 
 modeloop_end:
-    call pause
     jmp vesa_end
 
 no_VESA:
@@ -142,17 +141,23 @@ no_VESA:
     jmp $
 
 vesa_end:
+    mov ax, 0x0111
+    mov [selected_mode], ax ; 640x480x16
+    push ax
+    call print_hex_word
+    call pause
+
     ; 0x0111 = 640x480x16bpp
     ; 0x0114 = 800x600x16bpp
     ; 0x0117 = 1027x768x16bpp
     mov ax, 0
     mov es, ax
     mov ax, 0x4f01 ; get vesa mode information
-    mov cx, 0x0114 ; 1024*768*64K linear frame buffer
+    mov cx, 0x0111 ; 1024*768*64K linear frame buffer
     mov di, modeblock
     int 0x10
 
     mov esi, [modeblock+0x28] ; save frame buffer base
     mov ax, 0x4f02 ; set vesa mode
-    mov bx, 0x0114 ; mode, as per before
+    mov bx, 0x0111 ; mode, as per before
     int 0x10

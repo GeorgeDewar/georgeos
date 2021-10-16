@@ -190,6 +190,7 @@ switch_to_prot:
     str_x                db "x", 0
 
     vesa_mode_list       db 0     ; Address of mode list
+    selected_mode        db 0
 
     times 1024-($-stage2) db 0
 ; ==================================================================
