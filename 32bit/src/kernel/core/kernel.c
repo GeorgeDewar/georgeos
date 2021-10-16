@@ -57,9 +57,16 @@ void main () {
 
     // Initialise disk subsystem
 //    ahci_init();
+
+    if (read_from_cmos(0x10) == 0) {
+        printf("No floppy drives installed\n");
+        for(;;);
+    }
     printf(init, "Floppy Controller");
     install_floppy();
-    ResetFloppy();
+    if (!ResetFloppy()) {
+        for(;;);
+    }
 
     printf(init, "Done");
     printf("\n");

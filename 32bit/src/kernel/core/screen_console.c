@@ -44,6 +44,8 @@ static void console_print_char(char character) {
     // Advance the cursor
     cursor++;
     console_modified = true;
+
+    if (cursor > BUFFER_SIZE) cursor = 0;
 }
 
 /** Draw the specified character at a certain character position */

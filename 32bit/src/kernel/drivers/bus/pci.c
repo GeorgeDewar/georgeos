@@ -13,7 +13,9 @@ bool pci_init() {
 }
 
 void pci_check_all_buses() {
+    printf("\n");
     for(uint8_t bus = 0; bus < 255; bus++) {
+        printf("\rChecking device: Bus %d", bus);
         for(uint8_t device = 0; device < 32; device++) {
             for(uint8_t function = 0; function < 8; function++) {
                 pci_check_device(bus, device, function);
@@ -75,6 +77,6 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     pci_devices[pci_device_count].subclass = device_subclass;
     pci_device_count++;
 
-    fprintf(stddebug, "Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x\n",
+    fprintf(stdout, "Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x\n",
             bus, device, function, vendor_id, device_id, device_class, device_subclass);
 }
