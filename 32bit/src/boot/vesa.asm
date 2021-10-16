@@ -5,6 +5,7 @@
 infoblock equ 0xC000
 modeblock equ 0x9000
 
+; Actually 512 bytes total
 struc vbe_info_block
      .vbe_signature          resb 4
      .vbe_version            resb 2
@@ -54,6 +55,10 @@ struc vbe_mode_info
     .reserved1 resb 206;
 endstruc
 
+    ; Write 'VBE2' into the infoblock location
+    mov eax, "VBE2"
+    mov [infoblock + vbe_info_block.vbe_signature], eax
+
     mov si, identifying_modes
     call print_string
 
@@ -76,6 +81,9 @@ endstruc
     ; Dereference first mode
 modeloop:
     mov cx, [bx]
+    push cx
+    ; call print_hex_word
+    ; call print_dot
     cmp cx, -1      ; the value that indicates the end of the list
     jz modeloop_end ; if we see it, stop looping
 
@@ -143,8 +151,8 @@ no_VESA:
 vesa_end:
     mov ax, 0x0111
     mov [selected_mode], ax ; 640x480x16
-    push ax
-    call print_hex_word
+    ; push ax
+    ; call print_hex_word
     call pause
 
     ; 0x0111 = 640x480x16bpp

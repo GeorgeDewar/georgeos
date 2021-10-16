@@ -12,8 +12,10 @@
 ; 0000 - 7BFF = Stack       (grows downwards)
 ; 7C00 - 83FF = Bootloader  (up to 2KB reserved)
 ; 8400 - A3FF = Disk Buffer (8KB)
+; 9000 (overlapping)        VESA mode information
 ; A400 - B5FF = FAT         (4,608 bytes)
 ; B600 - 
+; C000 - C200 = VESA controller info
 ; ==================================================================
 
     BITS 16
@@ -191,6 +193,15 @@ switch_to_prot:
 
     vesa_mode_list       db 0     ; Address of mode list
     selected_mode        db 0
+    ; vbe_info_block:
+    ;  .vbe_signature          db "VBE2"
+    ;  .vbe_version            resb 2
+    ;  .oem_string_ptr_offset  resb 2
+    ;  .oem_string_ptr_segment resb 2
+    ;  .capabilities           resb 4
+    ;  .video_mode_ptr_offset  resw 1
+    ;  .video_mode_ptr_segment resw 1
+    ;  .total_memory           resb 2
 
     times 1024-($-stage2) db 0
 ; ==================================================================

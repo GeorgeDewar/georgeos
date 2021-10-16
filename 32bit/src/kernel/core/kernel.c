@@ -5,6 +5,7 @@
     ---------------------------------------------
     0x    1000   Floppy DMA buffer
     0x    9000   VESA mode information block
+    0x    C000   VESA controller info
     0x   20000   Kernel
     0x   40000   Kernel stack ^
     0x   80000   Userspace program
