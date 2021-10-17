@@ -6,13 +6,14 @@
     0x    1000   Floppy DMA buffer
     0x    9000   VESA mode information block
     0x    C000   VESA controller info
-    0x   20000   Kernel
-    0x   40000   Kernel stack ^
+    0x   20000   Kernel + statically allocated stuff (goes to 0x2bcxxx at time of writing [objdump])
+    0x   40000   Kernel stack ^ (not used anymore, shared stack currently)
     0x   80000   Userspace program
+    0x  500000   Back buffer (size EA600 for 800x600x16)
     0x  A00000   Kernel Heap
     0x  B00000   Userspace Heap
     0x 7A12000   Top of physical memory (128MB)
-    0xFD000000   Video memory (maybe)
+    0xFD000000   Video memory (on QEMU)
 */
 
 // TODO: Move / make dynamic
@@ -33,7 +34,11 @@ void main () {
     open_files[stddebug].stream_device = sd_com1;
 
     printf("Kernel loaded successfully. Welcome to GeorgeOS!\n");
-    printf("Resolution: %dx%d\n", vesa_graphics_device.screen_width, vesa_graphics_device.screen_height);
+    extern uint8_t* video_memory;
+    printf("Resolution: %dx%d, Frame Buffer: %x \n",
+           vesa_graphics_device.screen_width,
+           vesa_graphics_device.screen_height,
+           video_memory);
     fprintf(stddebug, "Serial connected\n");
 
     // Set up interrupts

@@ -1,8 +1,8 @@
 #include "system.h"
 
-#define BUFFER_SIZE 160 * 80 // 160 cols * 80 rows
+#define BUFFER_SIZE 10 * 1024 // 10KB
 char console_buffer[BUFFER_SIZE];
-static uint32_t cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)
+uint32_t cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)
 
 static void console_write(char* data, int length);
 static void console_print_char(char character);
@@ -62,7 +62,7 @@ void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
     uint16_t row = 0;
     uint16_t col = 0;
     Color color = COLOR_WHITE;
-    for(uint16_t i=0; i<cursor; i++) {
+    for(uint32_t i=0; i<cursor; i++) {
         if (console_buffer[i] == '\1') { // start of an ANSI color escape
             i += 2; // advance past bracket
             if (console_buffer[i++] == '0') { // check for reset and skip the first digit

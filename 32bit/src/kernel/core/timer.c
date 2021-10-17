@@ -26,30 +26,28 @@ static void timer_handler()
 
     // Render the console to the screen
     if (console_modified || timer_ticks % 10 == 0) {
+        console_modified = false;
         default_graphics_device->clear_screen();
         console_render(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
-        console_modified = false;
-    }
-    // Indicate the status of the modifier keys, just for fun
-    fill_rect(0, default_graphics_device->screen_height - 20, default_graphics_device->screen_width, 20,
-              (Color) {45, 79, 135});
-    if (key_status.shift_down) draw_char(0, default_graphics_device->screen_height - 20, 'S', COLOR_WHITE);
-    if (key_status.ctrl_down) draw_char(10, default_graphics_device->screen_height - 20, 'C', COLOR_WHITE);
-    if (key_status.alt_down) draw_char(20, default_graphics_device->screen_height - 20, 'A', COLOR_WHITE);
 
-    if (timer_ticks % 18 == 0) {
-        // Just to show the timer is working
-        int second = timer_ticks / 18;
-        Color color = second % 2 == 0 ? COLOR_BLACK : COLOR_BRIGHTWHITE;
-        default_graphics_device->put_pixel(
-                default_graphics_device->screen_width-1,
-                default_graphics_device->screen_height - 1,
-                color
-        );
+        // Indicate the status of the modifier keys, just for fun
+        fill_rect(0, default_graphics_device->screen_height - 20, default_graphics_device->screen_width, 20,
+                  (Color) {45, 79, 135});
+        if (key_status.shift_down) draw_char(0, default_graphics_device->screen_height - 20, 'S', COLOR_WHITE);
+        if (key_status.ctrl_down) draw_char(10, default_graphics_device->screen_height - 20, 'C', COLOR_WHITE);
+        if (key_status.alt_down) draw_char(20, default_graphics_device->screen_height - 20, 'A', COLOR_WHITE);
+
+        // Copy the video buffer to the real video memory
+        default_graphics_device->copy_buffer();
     }
 
-    // Copy the video buffer to the real video memory
-    default_graphics_device->copy_buffer();
+//    if (timer_ticks % 18 == 0) {
+//        void* p = NULL;
+//        printf("%p", (void*)&p);
+//        extern uint32_t cursor;
+//        extern void *free_memory_start;
+//        fprintf(stdout, "Stack: %x, Buf: %d, KHeap: %x\n", (void*)&p, cursor, free_memory_start);
+//    }
 
     for(uint8_t i=0; i<callbacks_count; i++) {
         callbacks[i].callback();

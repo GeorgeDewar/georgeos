@@ -14,7 +14,7 @@ bool pci_init() {
 
 void pci_check_all_buses() {
     printf("\n");
-    for(uint8_t bus = 0; bus < 255; bus++) {
+    for(uint8_t bus = 0; bus < 16; bus++) { // there are 255 but not often so many in practice
         printf("\rChecking device: Bus %d", bus);
         for(uint8_t device = 0; device < 32; device++) {
             for(uint8_t function = 0; function < 8; function++) {
