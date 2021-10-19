@@ -76,10 +76,12 @@ void console_write_char(char character) {
     if (character == '\n') {
         // Move the cursor to the beginning of the next row
         int row = cursor / console_cols;
+        console_put_char_fixed(' ', cursor); // erase the cursor
         cursor = console_get_offset(row + 1, 0);
     } else if (character == '\r') {
         // Return the cursor to the beginning of the current row
         int row = cursor / console_cols;
+        console_put_char_fixed(' ', cursor); // erase the cursor
         cursor = console_get_offset(row, 0);
     } else if (character == '\b') {
         if (cursor > 0) {
@@ -127,6 +129,15 @@ static void console_write(char* data, int length) {
     end = timer_ticks;
     int dur2 = end - start;
     //fprintf(stddebug, "Writing %d chars; Drew in %d, refreshed in %d ticks\n", length, dur1, dur2);
+}
+
+void console_update_cursor(bool on) {
+    if (on) {
+        console_put_char_fixed('_', cursor);
+    } else {
+        console_put_char_fixed(' ', cursor);
+    }
+    default_graphics_device->copy_buffer();
 }
 
 /** Draw the specified character at a certain character position */

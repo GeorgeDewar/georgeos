@@ -27,6 +27,10 @@ static void timer_handler()
     // Render the console to the screen
     if (console_modified || timer_ticks % 10 == 0) {
         console_modified = false;
+
+        void console_update_cursor(bool on);
+        console_update_cursor(timer_ticks % 20 == 0);
+
 //        default_graphics_device->clear_screen();
 //        console_render(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
 
