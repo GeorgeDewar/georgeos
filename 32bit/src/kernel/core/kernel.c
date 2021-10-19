@@ -74,19 +74,18 @@ void main () {
 
     char str[] = "This is a longer sentence, let's see how long it takes to print\n";
     sd_screen_console.write(str, sizeof str - 1);
-    loopback();
 
     // Initialise buses
     printf(init, "Enumerating PCI devices");
+    printf("\n");
     pci_init();
 
     // Initialise disk subsystem
 //    ahci_init();
 
     if (read_from_cmos(0x10) == 0) {
-        printf("No floppy drives installed\n");
-        char buffer[256];
-        sd_screen_console.read(buffer, 256, true);
+        printf("\nNo floppy drives installed\n");
+        loopback();
     }
     printf(init, "Floppy Controller");
     install_floppy();
