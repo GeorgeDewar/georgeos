@@ -1,6 +1,7 @@
 #include "system.h"
 
 static void vfprintf(int16_t fp, char* string, va_list argp);
+static void vsprintf(char* buffer, char* string, va_list argp);
 
 /** Read from a file into the specified buffer, up to *len* bytes */
 int32_t read(int16_t fp, void* buffer, int len) {
@@ -83,31 +84,38 @@ void fprintf(int16_t fp, char* string, ...) {
 }
 
 static void vfprintf(int16_t fp, char* string, va_list argp) {
+    char buffer[128];
+    vsprintf(buffer, string, argp);
+    write(fp, buffer, strlen(buffer));
+}
+
+static void vsprintf(char* buffer, char* string, va_list argp) {
     while(*string != 0) {
         if (*string == '%') {
             string++;
             if(*string == '%'){ // %% escapes %
-                write(fp, string, 1);
+                *buffer++ = *string;
             } else if (*string == 's') {
-                char* str = (char*) va_arg(argp, int);
-                fprintf(fp, str);
-            } else if (*string == 'c') {
-                char c = va_arg(argp, int);
-                write(fp, &c, 1);
+                char* str = va_arg(argp, int);
+                strcpy(str, buffer);
+                buffer += strlen(str); // erase null byte
             } else if (*string == 'd') {
                 int number = va_arg(argp, int);
-                char num_string[16] = {0};
+                char num_string[16] = {0};;
                 int_to_string(number, 10, num_string);
-                fprintf(fp, num_string);
+                strcpy(num_string, buffer);
+                buffer += strlen(num_string); // erase null byte
             } else if (*string == 'x') {
                 int number = va_arg(argp, int);
                 char num_string[16] = {0};
                 int_to_string(number, 16, num_string);
-                fprintf(fp, num_string);
+                strcpy(num_string, buffer);
+                buffer += strlen(num_string); // erase null byte
             }
         } else {
-            write(fp, string, 1);
+            *buffer++ = *string;
         }
         string++;
     }
+    *buffer = 0;
 }
