@@ -58,7 +58,7 @@ void port_long_out ( unsigned short port , unsigned long data );
 /* Memory management & manipulation */
 void *malloc(size_t size);
 void free(void *ptr);
-void memset(uint8_t* source, uint8_t value, uint32_t length);
+void memset(void* source, uint8_t value, uint32_t length);
 void memcpy(void* source, void* dest, uint32_t length);
 
 /* Timer */

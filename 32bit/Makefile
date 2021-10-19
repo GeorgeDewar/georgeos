@@ -26,6 +26,7 @@ debug: all
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio &
 	gdb.exe \
+	  	-ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
 		-ex "break kernel.c:33" \

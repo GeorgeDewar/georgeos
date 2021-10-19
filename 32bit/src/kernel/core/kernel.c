@@ -16,6 +16,8 @@
     0xFD000000   Video memory (on QEMU)
 */
 
+void loopback();
+
 // TODO: Move / make dynamic
 FileSystem floppy0_fs;
 
@@ -23,6 +25,9 @@ void main () {
     init_serial(115200);
     default_graphics_device = &vesa_graphics_device;
     default_graphics_device->clear_screen();
+
+    void console_init(int x, int y, int width, int height);
+    console_init(0, 0, 640, 480);
 
     open_files[stdin].type = STREAM;
     open_files[stdin].stream_device = sd_screen_console;
@@ -55,6 +60,11 @@ void main () {
     timer_install();
     printf(init, "Keyboard");
     ps2_keyboard_install();
+    printf("\n");
+
+    char str[] = "This is a longer sentence, let's see how long it takes to print\n";
+    sd_screen_console.write(str, sizeof str - 1);
+    loopback();
 
     // Initialise buses
     printf(init, "Enumerating PCI devices");
@@ -65,7 +75,8 @@ void main () {
 
     if (read_from_cmos(0x10) == 0) {
         printf("No floppy drives installed\n");
-        for(;;);
+        char buffer[256];
+        sd_screen_console.read(buffer, 256, true);
     }
     printf(init, "Floppy Controller");
     install_floppy();
@@ -89,6 +100,14 @@ void main () {
     }
 
     for(;;);
+}
+
+_Noreturn void loopback() {
+    printf("Running in simple echo mode\n");
+    char buffer[256];
+    while(true) {
+        sd_screen_console.read(buffer, 256, true);
+    }
 }
 
 bool exec(char* filename) {

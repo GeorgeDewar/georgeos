@@ -27,8 +27,8 @@ static void timer_handler()
     // Render the console to the screen
     if (console_modified || timer_ticks % 10 == 0) {
         console_modified = false;
-        default_graphics_device->clear_screen();
-        console_render(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
+//        default_graphics_device->clear_screen();
+//        console_render(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
 
         // Indicate the status of the modifier keys, just for fun
         fill_rect(0, default_graphics_device->screen_height - 20, default_graphics_device->screen_width, 20,

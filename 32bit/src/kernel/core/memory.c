@@ -15,9 +15,9 @@ void free(void *ptr) {
     // Do nothing
 }
 
-void memset(uint8_t* source, uint8_t value, uint32_t length) {
+void memset(void* dest, uint8_t value, uint32_t length) {
     for(uint32_t i=0; i<length; i++) {
-        source[i] = value;
+        ((uint8_t *) dest)[i] = value;
     }
 }
 
