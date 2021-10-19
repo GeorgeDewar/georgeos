@@ -70,10 +70,6 @@ void main () {
     timer_install();
     printf(init, "Keyboard");
     ps2_keyboard_install();
-    printf("\n");
-
-    char str[] = "This is a longer sentence, let's see how long it takes to print\n";
-    sd_screen_console.write(str, sizeof str - 1);
 
     // Initialise buses
     printf(init, "Enumerating PCI devices");
