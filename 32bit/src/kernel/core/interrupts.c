@@ -158,6 +158,11 @@ void force_render() {
     default_graphics_device->copy_buffer();
 }
 
+struct stackframe {
+    struct stackframe* ebp;
+    uint32_t eip;
+};
+
 void fault_handler(struct regs *r) {
     if (r->int_no < 16) {
         fprintf(stddebug, "%s\n", exception_messages[r->int_no]);
@@ -167,6 +172,17 @@ void fault_handler(struct regs *r) {
         printf("cs = %x, ds = %x, es = %x, fs = %x, gs = %x, ss = %x\n", r->cs, r->ds, r->es, r->fs, r->gs, r->ss);
         printf("eax = %x, ebx = %x, ecx = %x, edx = %x, edi = %x, esi = %x, ebp = %x\n",
                r->eax, r->ebx, r->ecx, r->edx, r->edi, r->esi, r->ebp);
+
+        struct stackframe *stk = r->ebp;
+        printf("Stack trace:\n");
+        for(unsigned int frame = 0; stk && frame < 8; ++frame)
+        {
+            // Unwind to previous stack frame
+            printf("  0x%x\n", stk->eip);
+            stk = stk->ebp;
+            if (stk == 0x80000) break;
+        }
+
         for(;;);
     } else if (r->int_no < 32) {
         printf("Reserved exception\n");
