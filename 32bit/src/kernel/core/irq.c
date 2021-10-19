@@ -26,11 +26,7 @@ extern void irq15();
 
 /* This array is actually an array of function pointers. We use
 *  this to handle custom IRQ handlers for a given IRQ */
-void *irq_routines[16] =
-{
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0
-};
+void *irq_routines[16];
 
 /* This installs a custom IRQ handler for the given IRQ */
 void irq_install_handler(int irq, void (*handler)(struct regs *r))
@@ -82,6 +78,10 @@ void irq_install()
     idt_set_gate(45, &irq13);
     idt_set_gate(46, &irq14);
     idt_set_gate(47, &irq15);
+
+    for(int i=0; i<16; i++) {
+        irq_routines[i] = 0;
+    }
 }
 unsigned char timerToggle;
 /* Each of the IRQ ISRs point to this function, rather than

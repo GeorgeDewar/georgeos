@@ -27,6 +27,10 @@ void loopback();
 // TODO: Move / make dynamic
 FileSystem floppy0_fs;
 
+void __attribute__((optimize("O0"))) div0(int num) {
+    printf("Impossible: %d\n", num/0);
+}
+
 void main () {
     init_serial(115200);
     default_graphics_device = &vesa_graphics_device;
