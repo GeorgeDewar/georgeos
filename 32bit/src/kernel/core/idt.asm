@@ -61,6 +61,7 @@ extern fault_handler
 ; and finally restores the stack frame.
 isr_common_stub:
     pusha
+    push ss
     push ds
     push es
     push fs
@@ -79,6 +80,7 @@ isr_common_stub:
     pop fs
     pop es
     pop ds
+    pop ss
     popa
     add esp, 8     ; Cleans up the pushed error code and pushed ISR number
     iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!

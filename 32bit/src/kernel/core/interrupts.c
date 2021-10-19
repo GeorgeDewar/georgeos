@@ -162,7 +162,11 @@ void fault_handler(struct regs *r) {
     if (r->int_no < 16) {
         fprintf(stddebug, "%s\n", exception_messages[r->int_no]);
         printf("\n%s\n", exception_messages[r->int_no]);
-        printf("IP: %x\n", r->eip);
+        printf("Error Code: %d\n", r->err_code);
+        printf("eip = %x, esp = %x\n", r->eip, r->esp);
+        printf("cs = %x, ds = %x, es = %x, fs = %x, gs = %x, ss = %x\n", r->cs, r->ds, r->es, r->fs, r->gs, r->ss);
+        printf("eax = %x, ebx = %x, ecx = %x, edx = %x, edi = %x, esi = %x, ebp = %x\n",
+               r->eax, r->ebx, r->ecx, r->edx, r->edi, r->esi, r->ebp);
         for(;;);
     } else if (r->int_no < 32) {
         printf("Reserved exception\n");
