@@ -160,14 +160,14 @@ stage2:
     %include "src/boot/vesa.asm"
 
 switch_to_prot:
-    mov si, switching_to_prot
-    call print_string
+    ;mov si, switching_to_prot
+    ;call print_string
 
     ; Switch to protected mode - after the include we are in [bits 32]
     %include "src/boot/protected_mode.asm"
 
-    mov ebx, MSG_PROT_MODE
-    call print_string_pm
+    ;mov ebx, MSG_PROT_MODE
+    ;call print_string_pm
 
     ; jmp KERNEL_OFFSET
     call 0x20000

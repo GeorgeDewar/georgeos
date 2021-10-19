@@ -153,7 +153,7 @@ vesa_end:
     mov [selected_mode], ax ; 640x480x16
     ; push ax
     ; call print_hex_word
-    call pause
+    ; call pause
 
     ; 0x0111 = 640x480x16bpp
     ; 0x0114 = 800x600x16bpp

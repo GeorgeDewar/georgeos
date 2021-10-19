@@ -33,7 +33,7 @@ void main () {
     default_graphics_device->clear_screen();
 
     void console_init(int x, int y, int width, int height);
-    console_init(0, 0, 640, 480);
+    console_init(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
 
     open_files[stdin].type = STREAM;
     open_files[stdin].stream_device = sd_screen_console;
