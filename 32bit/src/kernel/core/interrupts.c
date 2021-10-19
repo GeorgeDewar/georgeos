@@ -161,8 +161,8 @@ void force_render() {
 void fault_handler(struct regs *r) {
     if (r->int_no < 16) {
         fprintf(stddebug, "%s\n", exception_messages[r->int_no]);
-        printf("%s\n", exception_messages[r->int_no]);
-        // force_render();
+        printf("\n%s\n", exception_messages[r->int_no]);
+        printf("IP: %x\n", r->eip);
         for(;;);
     } else if (r->int_no < 32) {
         printf("Reserved exception\n");

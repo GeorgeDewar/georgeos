@@ -7,12 +7,18 @@
     0x    9000   VESA mode information block
     0x    C000   VESA controller info
     0x   20000   Kernel + statically allocated stuff (goes to 0x2bcxxx at time of writing [objdump])
-    0x   40000   Kernel stack ^ (not used anymore, shared stack currently)
-    0x   80000   Userspace program
+    0x   7FFFF   Kernel stack ^
+    0x   80000   to 0x9FFFF = RESERVED - EBDA (Extended BIOS Data Area)
+    0x   A0000   to 0xFFFFF = RESERVED - Video memory, BIOS, etc
+    0x  100000   Userspace program
     0x  500000   Back buffer (size EA600 for 800x600x16)
     0x  A00000   Kernel Heap
     0x  B00000   Userspace Heap
+    0x  F00000   to 0xFFFFFF = RESERVED - ISA memory mapped hardware
     0x 7A12000   Top of physical memory (128MB)
+    0x40000000   Frame buffer on Acer Aspire One 533
+    0xE0000000   Frame buffer on Dell Latitude 6430u
+    0xC0000000   Start of likely reserved memory for devices
     0xFD000000   Video memory (on QEMU)
 */
 
@@ -111,8 +117,8 @@ _Noreturn void loopback() {
 }
 
 bool exec(char* filename) {
-    int (*program)(void) = (int (*)(void)) 0x80000;
-    uint8_t *buffer = (uint8_t *) 0x80000;
+    int (*program)(void) = (int (*)(void)) 0x100000;
+    uint8_t *buffer = (uint8_t *) 0x100000;
     uint16_t length;
     // Read the program into memory - this will replace the shell!
     if (read_file(filename, buffer, &length) < 0) {

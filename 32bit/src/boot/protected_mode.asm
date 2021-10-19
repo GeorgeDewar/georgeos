@@ -28,5 +28,5 @@ start_protected_mode:
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov ebp, 0x80000   ; Update our stack position
+    mov ebp, 0x7FFFF   ; Update our stack position to the top of conventional memory
     mov esp, ebp
