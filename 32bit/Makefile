@@ -71,8 +71,9 @@ userland:
 
 # Generic rule for compiling C code to an object file
 # For simplicity , we C files depend on all header files .
+# -fno-zero-initialized-in-bss is because we have no header, so don't know when bss starts, so can't zero it ourselves
 $(OBJDIR)/%.o: $(SRCDIR)/%.c ${HEADERS}
-	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/kernel/include -g
+	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/kernel/include -g -fno-zero-initialized-in-bss
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
 	nasm -f elf -o $@ $<
