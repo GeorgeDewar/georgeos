@@ -32,6 +32,7 @@ extern irq_handler
 ; '_irq_handler' in our C code. We need to create this in an 'irq.c'
 irq_common_stub:
     pusha
+    push ss
     push ds
     push es
     push fs
@@ -50,6 +51,7 @@ irq_common_stub:
     pop fs
     pop es
     pop ds
+    pop ss
     popa
     add esp, 8
     iret
