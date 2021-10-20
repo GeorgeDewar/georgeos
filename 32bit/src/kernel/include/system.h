@@ -125,6 +125,7 @@ int32_t read(int16_t fp, void* buffer, int len);
 bool write(int16_t fp, char* buffer, int len); // handles write system call + internal use
 void printf(char* string, ...);
 void fprintf(int16_t fp, char* string, ...);
+void vfprintf(int16_t fp, char* string, va_list argp);
 
 /* Keyboard */
 enum keyboard_scancodes {

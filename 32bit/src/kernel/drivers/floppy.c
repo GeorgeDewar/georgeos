@@ -81,6 +81,17 @@ enum FLOPPY_ISA_DMA_REGISTERS {
     DMA_MODE_REGISTER =                 0x0B
 };
 
+#define DEBUG 0
+#define debug_print(fmt, ...) \
+            do { if (DEBUG) floppy_debug_printf(fmt, ##__VA_ARGS__); } while (0)
+
+void floppy_debug_printf(char* fmt, ...) {
+    va_list argp;
+    va_start(argp, fmt);
+    vfprintf(stddebug, fmt, argp);
+    va_end(argp);
+}
+
 // Set up the DMA controller (after which only a setup_read or setup_write is required each time)
 void initial_dma_setup() {
     port_byte_out(DMA_SINGLE_CHANNEL_MASK_REGISTER, 0x06);  // mask DMA channel 2 and 0 (assuming 0 is already masked)
@@ -114,7 +125,7 @@ void dma_setup_write() {
 void FloppyHandler()
 {
     ReceivedIRQ = true;
-    fprintf(stddebug, "Received IRQ 0x06\n");
+    debug_print("Received IRQ 0x06\n");
 }
 
 // Wait until the Main Status Register signals that data is ready - this is also required before sending a command.
@@ -155,7 +166,7 @@ uint8_t read_data_byte()
 
 bool wait_for_irq() {
     for(int i = 0; i < 10; i++) {
-        fprintf(stddebug, ".");
+        debug_print(".");
         if (ReceivedIRQ) return SUCCESS;
         delay(200);
     }
@@ -240,7 +251,7 @@ int8_t seek_track(uint8_t head, uint8_t cyl)
 			return SUCCESS;
         } else {
             // The seek failed
-            fprintf(stddebug, "Seek failed; retrying\n");
+            debug_print("Seek failed; retrying\n");
         }
 	}
     fprintf(stderr, "Seek failed\n");
@@ -265,19 +276,19 @@ enum FLPYDSK_GAP3_LENGTH {
 // Read a single sector from the drive
 bool read_sector(unsigned char sector,unsigned char head,unsigned char cylinder,unsigned char drive)
 {
-    fprintf(stddebug, "Reading sector\n");
+    debug_print("Reading sector\n");
     uint8_t st0, cy1;
 
-    fprintf(stddebug, "Seeking\n");
+    debug_print("Seeking\n");
     seek_track(head,cylinder);
 
-    fprintf(stddebug, "Preparing DMA\n");
+    debug_print("Preparing DMA\n");
     dma_setup_read();
 
-    fprintf(stddebug, "Waiting for head to settle\n");
+    debug_print("Waiting for head to settle\n");
     delay(100);
 
-    fprintf(stddebug, "Sending read commands\n");
+    debug_print("Sending read commands\n");
     ReceivedIRQ = false;
     write_floppy_command(READ_DATA | FDC_CMD_EXT_MULTITRACK | FDC_CMD_EXT_SKIP | FDC_CMD_EXT_DENSITY);
     write_floppy_command(head<<2|drive);
@@ -289,7 +300,7 @@ bool read_sector(unsigned char sector,unsigned char head,unsigned char cylinder,
     write_floppy_command(FLPYDSK_GAP3_LENGTH_3_5);        /*27 default gap3 value*/
     write_floppy_command(0xff);       /*default value for data length*/
 
-    fprintf(stddebug, "Waiting for interrupt\n");
+    debug_print("Waiting for interrupt\n");
     if(wait_for_irq() < 0)
     {
         fprintf(stderr, "Timed out while waiting for IRQ\n");
@@ -302,16 +313,16 @@ bool read_sector(unsigned char sector,unsigned char head,unsigned char cylinder,
     }
 
     ReceivedIRQ = false;
-    fprintf(stddebug, "Waiting for sense\n");
+    debug_print("Waiting for sense\n");
     check_interrupt_status(&st0,&cy1);
-    fprintf(stddebug, "Successful read\n");
+    debug_print("Successful read\n");
     return SUCCESS;
 }
 
 void ensure_motor_on() {
     if (motor_on_since == 0) {
         // Motor is off
-        fprintf(stddebug, "Turning on motor\n");
+        debug_print("Turning on motor\n");
         set_motor(1);   // turn on the motor
         delay(300);     // give the motor time to get up to speed
     }
@@ -320,7 +331,7 @@ void ensure_motor_on() {
 
 void turn_motor_off_if_idle() {
     if (motor_on_since > 0 && timer_ticks - motor_on_since > (18 * FLOPPY_MOTOR_ON_TIME / 1000)) {
-        fprintf(stddebug, "Turning off motor\n");
+        debug_print("Turning off motor\n");
         set_motor(0);
         motor_on_since = 0;
     }

@@ -1,6 +1,5 @@
 #include "system.h"
 
-static void vfprintf(int16_t fp, char* string, va_list argp);
 static void vsprintf(char* buffer, char* string, va_list argp);
 
 /** Read from a file into the specified buffer, up to *len* bytes */
@@ -83,7 +82,7 @@ void fprintf(int16_t fp, char* string, ...) {
     va_end(argp);
 }
 
-static void vfprintf(int16_t fp, char* string, va_list argp) {
+void vfprintf(int16_t fp, char* string, va_list argp) {
     char buffer[128];
     vsprintf(buffer, string, argp);
     write(fp, buffer, strlen(buffer));
