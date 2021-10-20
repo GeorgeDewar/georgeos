@@ -17,7 +17,7 @@ uint32_t cursor = 0; // defines current position and size (i.e. can't move curso
 static void console_write(char* data, int length);
 static void console_print_char(char character);
 static int console_get_offset(char row, char col);
-void console_put_char_fixed(char character, int offset);
+void console_put_char_fixed(int offset, char character, Color color);
 
 struct StreamDevice sd_screen_console = {
     .read = &get_string, // TODO: Move in here?
@@ -76,23 +76,24 @@ void console_write_char(char character) {
     if (character == '\n') {
         // Move the cursor to the beginning of the next row
         int row = cursor / console_cols;
-        console_put_char_fixed(' ', cursor); // erase the cursor
+        console_put_char_fixed(cursor, ' ', current_color); // erase the cursor
         cursor = console_get_offset(row + 1, 0);
     } else if (character == '\r') {
         // Return the cursor to the beginning of the current row
         int row = cursor / console_cols;
-        console_put_char_fixed(' ', cursor); // erase the cursor
+        console_put_char_fixed(cursor, ' ', current_color); // erase the cursor
         cursor = console_get_offset(row, 0);
     } else if (character == '\b') {
         if (cursor > 0) {
-            console_put_char_fixed(' ', cursor);
+            console_put_char_fixed(cursor, ' ', current_color);
             cursor -= 1;
-            console_put_char_fixed(' ', cursor);
+            console_put_char_fixed(cursor, ' ', current_color);
         }
-    } else {
+    }
+    else {
         // Otherwise, write the character and its attribute byte to
         // video memory at our calculated offset.
-        console_put_char_fixed(character, cursor);
+        console_put_char_fixed(cursor, character, current_color);
         cursor++;
     }
     //fprintf(stddebug, "Cursor: %d\n", cursor);
@@ -107,9 +108,9 @@ void console_redraw_cell(int offset) {
     draw_char(x, y, console_buffer[offset].character, console_buffer[offset].color);
 }
 
-void console_put_char_fixed(char character, int offset) {
+void console_put_char_fixed(int offset, char character, Color color) {
     console_buffer[offset].character = character;
-    console_buffer[offset].color = current_color;
+    console_buffer[offset].color = color;
     console_redraw_cell(offset);
 }
 
@@ -120,6 +121,16 @@ static int console_get_offset(char row, char col) {
 static void console_write(char* data, int length) {
     int start = timer_ticks;
     for(int i=0; i<length; i++) {
+        if (data[i] == '\1') { // start of an ANSI color escape
+            i += 2; // advance past bracket
+            if (data[i++] == '0') { // check for reset and skip the first digit
+                current_color = COLOR_WHITE;
+            } else {
+                char color_chr = data[i++]; // read the second digit
+                current_color = ansi_colors[color_chr - '0']; // set the color
+            }
+            i++; // skip the 'm'
+        }
         console_write_char(data[i]);
     }
     int end = timer_ticks;
@@ -133,9 +144,9 @@ static void console_write(char* data, int length) {
 
 void console_update_cursor(bool on) {
     if (on) {
-        console_put_char_fixed('_', cursor);
+        console_put_char_fixed(cursor, '_', current_color);
     } else {
-        console_put_char_fixed(' ', cursor);
+        console_put_char_fixed(cursor, ' ', current_color);
     }
     default_graphics_device->copy_buffer();
 }
