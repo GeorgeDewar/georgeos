@@ -41,11 +41,6 @@ struct console_char {
     Color color;
 };
 
-static struct console_char empty_cell = {
-    .character = ' ',
-    .color = COLOR_WHITE
-};
-
 void console_init(int x, int y, int width, int height) {
     console_x = x;
     console_y = y;
@@ -63,15 +58,20 @@ void console_init(int x, int y, int width, int height) {
     current_color = COLOR_WHITE;
 }
 
-static void console_scroll(int how_much) {
-    if (how_much < 1) die("Scroll amount must be greater than 0");
-    int cell_line_size = console_cols * sizeof(struct console_char); // do not understand how it doesn't need to be this * sizeof(struct console_char)
-    fprintf(stddebug, "Moving console buffer %d bytes up (%d cols, %d bytes per cell)\n", cell_line_size, console_cols, sizeof(struct console_char));
+static void console_scroll() {
+    int cell_line_size = console_cols * sizeof(struct console_char);
     memcpy(console_buffer + console_cols, console_buffer, console_buffer_size - cell_line_size);
     memset(console_buffer + (console_cells - console_cols), 0, cell_line_size);
 
     for(int i=0; i<console_cells; i++) {
         console_redraw_cell(i);
+    }
+}
+
+void console_check_scroll() {
+    if (cursor == console_cells) {
+        console_scroll();
+        cursor -= console_cols; // i.e. one row up
     }
 }
 
@@ -81,6 +81,7 @@ void console_write_char(char character) {
         int row = cursor / console_cols;
         console_put_char_fixed(cursor, ' ', current_color); // erase the cursor
         cursor = console_get_offset(row + 1, 0);
+        console_check_scroll();
     } else if (character == '\r') {
         // Return the cursor to the beginning of the current row
         int row = cursor / console_cols;
@@ -98,13 +99,8 @@ void console_write_char(char character) {
         // video memory at our calculated offset.
         console_put_char_fixed(cursor, character, current_color);
         cursor++;
+        console_check_scroll();
     }
-
-    if (cursor >= console_cells) {
-        console_scroll(1);
-        cursor -= console_cols; // i.e. one row up
-    }
-    //fprintf(stddebug, "Cursor: %d\n", cursor);
 }
 
 void console_redraw_cell(int offset) {
@@ -117,6 +113,10 @@ void console_redraw_cell(int offset) {
 }
 
 void console_put_char_fixed(int offset, char character, Color color) {
+    if (offset >= console_cells) {
+        cursor = 0; // so we can print the message below
+        die("Invalid cursor position\n");
+    }
     console_buffer[offset].character = character;
     console_buffer[offset].color = color;
     console_redraw_cell(offset);
@@ -151,6 +151,7 @@ static void console_write(char* data, int length) {
 }
 
 void console_update_cursor(bool on) {
+    console_check_scroll();
     if (on) {
         console_put_char_fixed(cursor, '_', current_color);
     } else {
