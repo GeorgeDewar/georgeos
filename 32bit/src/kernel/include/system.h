@@ -120,7 +120,6 @@ struct StreamDevice {
 };
 extern struct StreamDevice sd_screen_console;
 extern struct StreamDevice sd_com1;
-void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 int32_t read(int16_t fp, void* buffer, int len);
 bool write(int16_t fp, char* buffer, int len); // handles write system call + internal use
 void printf(char* string, ...);
@@ -371,7 +370,7 @@ bool normalise_path(const char* path_in, char* path_out);
 void handle_syscall(struct regs *r);
 
 /* Other */
-void die(char* message);
+_Noreturn void die(char* message);
 
 /* PCI */
 bool pci_init();

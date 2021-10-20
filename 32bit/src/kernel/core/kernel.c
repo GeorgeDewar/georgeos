@@ -37,7 +37,7 @@ void main () {
     default_graphics_device->clear_screen();
 
     void console_init(int x, int y, int width, int height);
-    console_init(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
+    console_init(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height - 20);
 
     open_files[stdin].type = STREAM;
     open_files[stdin].stream_device = sd_screen_console;
@@ -133,7 +133,7 @@ bool exec(char* filename) {
 }
 
 /** Handle an unrecoverable error by stopping the system */
-void die(char* message) {
+_Noreturn void die(char* message) {
     // Print the message - may not be seen if rendering system isn't working
     printf(message);
     printf("\nSystem halted");

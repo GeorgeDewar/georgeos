@@ -15,9 +15,9 @@ static Color current_color;
 uint32_t cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)
 
 static void console_write(char* data, int length);
-static void console_print_char(char character);
 static int console_get_offset(char row, char col);
 void console_put_char_fixed(int offset, char character, Color color);
+void console_redraw_cell(int offset);
 
 struct StreamDevice sd_screen_console = {
     .read = &get_string, // TODO: Move in here?
@@ -63,14 +63,17 @@ void console_init(int x, int y, int width, int height) {
     current_color = COLOR_WHITE;
 }
 
-///**
-// * Set every cell in the console to a space character
-// */
-//static void clear_screen() {
-//    for(int i=0; i<console_rows * console_cols; i++) {
-//        console_buffer[i] = empty_cell;
-//    }
-//}
+static void console_scroll(int how_much) {
+    if (how_much < 1) die("Scroll amount must be greater than 0");
+    int cell_line_size = console_cols; // do not understand how it doesn't need to be this * sizeof(struct console_char)
+    fprintf(stddebug, "Moving console buffer %d bytes up (%d cols, %d bytes per cell)\n", cell_line_size, console_cols, sizeof(struct console_char));
+    memcpy(console_buffer + cell_line_size, console_buffer, console_buffer_size - cell_line_size);
+    memset(console_buffer_size - cell_line_size, 0, cell_line_size);
+
+    for(int i=0; i<console_cells; i++) {
+        console_redraw_cell(i);
+    }
+}
 
 void console_write_char(char character) {
     if (character == '\n') {
@@ -95,6 +98,11 @@ void console_write_char(char character) {
         // video memory at our calculated offset.
         console_put_char_fixed(cursor, character, current_color);
         cursor++;
+    }
+
+    if (cursor >= console_cells) {
+        console_scroll(1);
+        cursor -= console_cols; // i.e. one row up
     }
     //fprintf(stddebug, "Cursor: %d\n", cursor);
 }
@@ -149,57 +157,4 @@ void console_update_cursor(bool on) {
         console_put_char_fixed(cursor, ' ', current_color);
     }
     default_graphics_device->copy_buffer();
-}
-
-/** Draw the specified character at a certain character position */
-//static void console_putchar(int x_offset, int y_offset, int row, int col, char char_num, Color color) {
-//    uint16_t start_x = x_offset + col * (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
-//    uint16_t start_y = y_offset + row * (CONSOLE_CHAR_HEIGHT + CONSOLE_CHAR_SPACE);
-//    draw_char(start_x, start_y, char_num, color);
-//}
-
-/** Draw the contents of the buffer onto the screen at the specified location */
-void console_render(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
-//    uint16_t num_cols = width / (CONSOLE_CHAR_WIDTH + CONSOLE_CHAR_SPACE);
-//
-//    uint16_t row = 0;
-//    uint16_t col = 0;
-//    Color color = COLOR_WHITE;
-//    for(uint32_t i=0; i<cursor; i++) {
-//        if (console_buffer[i] == '\1') { // start of an ANSI color escape
-//            i += 2; // advance past bracket
-//            if (console_buffer[i++] == '0') { // check for reset and skip the first digit
-//                color = COLOR_WHITE;
-//            } else {
-//                char color_chr = console_buffer[i++]; // read the second digit
-//                color = ansi_colors[color_chr - '0']; // set the color
-//            }
-//            i++; // skip the 'm'
-//        }
-//
-//        char character = console_buffer[i];
-//
-//        // Note: We should not have backspace characters in the buffer
-//        if (character == '\n') {
-//            row++;
-//            col = 0;
-//            continue;
-//        }
-//        if (character == '\r') {
-//            col = 0;
-//            continue;
-//        }
-//
-//        console_putchar(x, y, row, col, character, color);
-//        col++;
-//
-//        if (col == num_cols) {
-////            fprintf(stddebug, "row=%d col=%d", row, col);
-//            row++;
-//            col = 0;
-//        }
-//    }
-//
-//    uint8_t cursor_visible = timer_ticks % 20 == 0;
-//    if (cursor_visible) console_putchar(x, y, row, col, '_', color);
 }
