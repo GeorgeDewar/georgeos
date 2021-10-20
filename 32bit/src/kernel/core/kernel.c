@@ -74,7 +74,7 @@ void main () {
     // Initialise buses
     printf(init, "Enumerating PCI devices");
     printf("\n");
-//    pci_init();
+    pci_init();
     ata_init();
 
     // Initialise disk subsystem
