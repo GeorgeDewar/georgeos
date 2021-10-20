@@ -65,10 +65,10 @@ void console_init(int x, int y, int width, int height) {
 
 static void console_scroll(int how_much) {
     if (how_much < 1) die("Scroll amount must be greater than 0");
-    int cell_line_size = console_cols; // do not understand how it doesn't need to be this * sizeof(struct console_char)
+    int cell_line_size = console_cols * sizeof(struct console_char); // do not understand how it doesn't need to be this * sizeof(struct console_char)
     fprintf(stddebug, "Moving console buffer %d bytes up (%d cols, %d bytes per cell)\n", cell_line_size, console_cols, sizeof(struct console_char));
-    memcpy(console_buffer + cell_line_size, console_buffer, console_buffer_size - cell_line_size);
-    memset(console_buffer_size - cell_line_size, 0, cell_line_size);
+    memcpy(console_buffer + console_cols, console_buffer, console_buffer_size - cell_line_size);
+    memset(console_buffer + (console_cells - console_cols), 0, cell_line_size);
 
     for(int i=0; i<console_cells; i++) {
         console_redraw_cell(i);
