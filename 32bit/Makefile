@@ -13,16 +13,12 @@ OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fon
 all: georgeos_1440.img hdd.img
 run: all
 	qemu-system-i386.exe \
-		-device ahci,id=ahci \
-		-device ide-drive,drive=hdd,bus=ahci.0 \
-		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
+		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-serial stdio
 debug: all
 	qemu-system-i386.exe \
-		-device ahci,id=ahci \
-		-device ide-drive,drive=hdd,bus=ahci.0 \
-		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
+		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio &
 	gdb.exe \
@@ -36,9 +32,7 @@ debug: all
 
 cliondebug: all
 	qemu-system-i386.exe \
-		-device ahci,id=ahci \
-		-device ide-drive,drive=hdd,bus=ahci.0 \
-		-drive file=build/hdd.img,format=raw,id=hdd,if=none \
+		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio
 

@@ -386,5 +386,8 @@ struct pci_device {
 extern struct pci_device pci_devices[32];
 extern int pci_device_count;
 
+/* ATA */
+void ata_init();
+
 /* AHCI */
 bool ahci_init();
