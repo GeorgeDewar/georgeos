@@ -1,5 +1,8 @@
 #include "system.h"
 
+#define PCI_CLASS_MASS_STORAGE      1
+#define PCI_SUBCLASS_IDE_CONTROLLER 1
+
 #define ATA_PRIMARY        0
 #define ATA_SECONDARY      1
 #define ATA_DRIVE0         0
@@ -96,10 +99,61 @@ static void ide_write_ctrl(unsigned char channel, unsigned char reg, unsigned ch
 void ide_read_buffer(unsigned char channel, unsigned char reg, unsigned int * buffer, unsigned int quads);
 
 void ata_init() {
+    // Check for PCI ATA controller
+    struct pci_device *device;
+    bool found = false;
+    for(int i=0; i<pci_device_count; i++) {
+        device = &pci_devices[i];
+        if (device->class == PCI_CLASS_MASS_STORAGE && device->subclass == PCI_SUBCLASS_IDE_CONTROLLER) {
+            found = true;
+            break;
+        }
+    }
+
+    // Set these to the default values now so it's sorted if we either don't find a PCI controller, or either channel
+    // is in compatibility mode
     channels[0].base = 0x1F0;
     channels[0].ctrl = 0x3F6;
     channels[1].base = 0x170;
     channels[1].ctrl = 0x376;
+
+    if (found) {
+        fprintf(stderr, "Found IDE controller (%x:%x) on PCI bus at %x:%x:%x\n",
+                device->vendor_id, device->device_id, device->bus, device->device, device->function);
+        uint16_t prog_if = pci_get_prog_if(device->bus, device->device, device->function);
+        fprintf(stderr, "Programming IF: %x\n", prog_if);
+        if (prog_if & 0x01) {
+            fprintf(stderr, "Primary channel is in PCI native mode\n");
+            uint32_t bar0 = pci_get_bar(device->bus, device->device, device->function, 0);
+            uint32_t bar1 = pci_get_bar(device->bus, device->device, device->function, 1);
+            fprintf(stderr, "Setting ports to %x, %x\n", bar0, bar1);
+            if (bar0 == 0 || bar1 == 0) {
+                fprintf(stderr, "Invalid port number\n");
+                return;
+            }
+            channels[0].base = bar0;
+            channels[0].ctrl = bar1;
+        } else {
+            fprintf(stderr, "Primary channel is in compatibility mode\n");
+        }
+
+        if (prog_if & 0x04) {
+            fprintf(stderr, "Secondary channel is in PCI native mode\n");
+            uint32_t bar2 = pci_get_bar(device->bus, device->device, device->function, 2);
+            uint32_t bar3 = pci_get_bar(device->bus, device->device, device->function, 3);
+            fprintf(stderr, "Setting ports to %x, %x\n", bar2, bar3);
+            if (bar2 == 0 || bar3 == 0) {
+                fprintf(stderr, "Invalid port number\n");
+                return;
+            }
+            channels[0].base = bar2;
+            channels[0].ctrl = bar3;
+        } else {
+            fprintf(stderr, "Secondary channel is in compatibility mode\n");
+        }
+    }
+
+
     ata_identify_drives();
 }
 
@@ -116,17 +170,21 @@ static void ata_identify_drives() {
 
             // (I) Select Drive:
             ide_write_base(channel, ATA_REG_HDDEVSEL, 0xA0 | (drive << 4)); // Select Drive.
-            delay(1);
+            delay(100);
 
             // (II) Send ATA Identify Command:
             ide_write_base(channel, ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
-            delay(1);
+            delay(100);
 
             // (III) Polling:
-            if (ide_read_base(channel, ATA_REG_STATUS) == 0) continue; // If Status = 0, No Device.
+            if (ide_read_base(channel, ATA_REG_STATUS) == 0) {
+                fprintf(stderr, "No device %d on channel %d\n", drive, channel);
+                continue; // If Status = 0, No Device.
+            }
 
             while (1) {
                 status = ide_read_base(channel, ATA_REG_STATUS);
+                fprintf(stderr, "Status = %x\n", status);
                 if ((status & ATA_SR_ERR)) {
                     err = 1;
                     break;
@@ -139,12 +197,14 @@ static void ata_identify_drives() {
                 unsigned char cl = ide_read_base(channel, ATA_REG_LBA1);
                 unsigned char ch = ide_read_base(channel, ATA_REG_LBA2);
 
-                if (cl == 0x14 && ch ==0xEB)
+                if (cl == 0x14 && ch ==0xEB) {
                     type = IDE_ATAPI;
-                else if (cl == 0x69 && ch == 0x96)
+                } else if (cl == 0x69 && ch == 0x96) {
                     type = IDE_ATAPI;
-                else
+                } else {
+                    fprintf(stderr, "Unknown type %x:%x for device %d on channel %d\n", cl, ch, drive, channel);
                     continue; // Unknown Type (may not be a device).
+                }
 
                 ide_write_base(channel, ATA_REG_COMMAND, ATA_CMD_IDENTIFY_PACKET);
                 delay(1);

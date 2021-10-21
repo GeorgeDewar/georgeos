@@ -385,6 +385,9 @@ struct pci_device {
 };
 extern struct pci_device pci_devices[32];
 extern int pci_device_count;
+// Extra fields not part of the basic pci_device structure
+uint8_t pci_get_prog_if(uint16_t bus, uint16_t device, uint16_t function);
+uint32_t pci_get_bar(uint16_t bus, uint16_t device, uint16_t function, uint8_t bar);
 
 /* ATA */
 void ata_init();
