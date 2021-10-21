@@ -21,9 +21,8 @@
 #define ATA_REG_STATUS     0x07
 
 // Control registers
-#define ATA_REG_CONTROL    0x00
-#define ATA_REG_ALTSTATUS  0x00
-#define ATA_REG_DEVADDRESS 0x0D
+#define ATA_REG_CONTROL    0x02
+#define ATA_REG_ALTSTATUS  0x02
 
 // Commands
 #define ATA_CMD_READ_PIO          0x20
@@ -146,8 +145,8 @@ void ata_init() {
                 fprintf(stderr, "Invalid port number\n");
                 return;
             }
-            channels[0].base = bar2;
-            channels[0].ctrl = bar3;
+            channels[1].base = bar2;
+            channels[1].ctrl = bar3;
         } else {
             fprintf(stderr, "Secondary channel is in compatibility mode\n");
         }
@@ -158,13 +157,18 @@ void ata_init() {
 }
 
 static void ata_identify_drives() {
+    fprintf(stderr, "Identifying IDE devices\n");
+
     // 2- Disable IRQs:
     ide_write_ctrl(ATA_PRIMARY, ATA_REG_CONTROL, 2);
     ide_write_ctrl(ATA_SECONDARY, ATA_REG_CONTROL, 2);
 
 // 3- Detect ATA-ATAPI Devices:
+//    fprintf(stderr, "Probing devices\n");
     for (int channel = 0; channel < 2; channel++) {
         for (int drive = 0; drive < 2; drive++) {
+//            fprintf(stderr, "Probing channel %d, drive %d\n", channel, drive);
+
             unsigned char err = 0, type = IDE_ATA, status;
             ide_devices[ide_device_count].Reserved = 0; // Assuming that no drive here.
 
@@ -178,13 +182,14 @@ static void ata_identify_drives() {
 
             // (III) Polling:
             if (ide_read_base(channel, ATA_REG_STATUS) == 0) {
-                fprintf(stderr, "No device %d on channel %d\n", drive, channel);
+//                fprintf(stderr, "No device %d on channel %d\n", drive, channel);
                 continue; // If Status = 0, No Device.
             }
 
+//            fprintf(stderr, "Polling\n");
             while (1) {
                 status = ide_read_base(channel, ATA_REG_STATUS);
-                fprintf(stderr, "Status = %x\n", status);
+//                fprintf(stderr, "Status = %x\n", status);
                 if ((status & ATA_SR_ERR)) {
                     err = 1;
                     break;
@@ -202,7 +207,7 @@ static void ata_identify_drives() {
                 } else if (cl == 0x69 && ch == 0x96) {
                     type = IDE_ATAPI;
                 } else {
-                    fprintf(stderr, "Unknown type %x:%x for device %d on channel %d\n", cl, ch, drive, channel);
+//                    fprintf(stderr, "Unknown type %x:%x for device %d on channel %d\n", cl, ch, drive, channel);
                     continue; // Unknown Type (may not be a device).
                 }
 

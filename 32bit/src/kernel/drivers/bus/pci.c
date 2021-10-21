@@ -125,9 +125,4 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
 
     fprintf(stdout, "PCI Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x\n",
             bus, device, function, vendor_id, device_id, device_class, device_subclass);
-
-    // Sanity check
-    uint16_t a0 = pci_config_read_word(bus,device,function,0x10);
-    uint16_t a1 = pci_config_read_word(bus,device,function,0x12);
-    fprintf(stdout, "0x10 -> %x, 0x12 -> %x\n", a0, a1);
 }
