@@ -310,6 +310,14 @@ struct DiskDevice {
     DiskDeviceDriver* driver;
 };
 bool register_block_device(DiskDevice *dev, char* type);
+#define MAX_BLOCK_DEVICES          16
+#define BLOCK_DEVICE_NAME_LENGTH   64
+struct BlockDeviceFile {
+    char device_name[BLOCK_DEVICE_NAME_LENGTH];
+    DiskDevice dev;
+};
+extern struct BlockDeviceFile block_devices[];
+extern int block_devices_count;
 
 /** Statically defined disk device (implemented in floppy.c) */
 extern DiskDevice floppy0;

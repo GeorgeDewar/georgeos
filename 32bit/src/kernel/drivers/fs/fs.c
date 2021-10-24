@@ -16,6 +16,7 @@ static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out);
 static int next_file_handle();
 static int get_next_index_for_mount_type(const char* mount_point_name);
 static bool list_root(DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+static bool list_dev(DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 static void write_virtual_dirent(DirEntry* dir_entry, char* name);
 
 /**
@@ -79,7 +80,8 @@ bool normalise_path(const char* path_in, char* path_out) {
         strcpy(path_in, path_out);
         return SUCCESS;
     }
-    if (strlen(path_in) == 0) {
+    if (strlen(path_in) == 0 && strcmp(cwd, "/") != 0) {
+        // Special case for root
         strcpy(cwd, path_out);
         return SUCCESS;
     }
@@ -150,6 +152,9 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
     if (strcmp(normalised_path, "/") != 0) {
         fprintf(stddebug, "Listing VFS root\n");
         return list_root(dir_entry_list_out, num_entries_out);
+    } else if (strcmp(normalised_path, "/dev/") != 0) {
+        fprintf(stddebug, "Listing devices\n");
+        return list_dev(dir_entry_list_out, num_entries_out);
     }
 
     // Find filesystem instance
@@ -207,9 +212,19 @@ static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out) {
 }
 
 static bool list_root(DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
-    fprintf(stddebug, "List root\n");
     write_virtual_dirent(&dir_entry_list_out[0], "dev");
-    *num_entries_out = 1;
+    for (int i=0; i<fs_mounts_count; i++) {
+        write_virtual_dirent(&dir_entry_list_out[i+1], fs_mounts[i].mount_point);
+    }
+    *num_entries_out = 1 + fs_mounts_count;
+    return SUCCESS;
+}
+
+static bool list_dev(DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+    for (int i=0; i<block_devices_count; i++) {
+        write_virtual_dirent(&dir_entry_list_out[i], block_devices[i].device_name);
+    }
+    *num_entries_out = block_devices_count;
     return SUCCESS;
 }
 
@@ -217,5 +232,5 @@ static void write_virtual_dirent(DirEntry* dir_entry, char* name) {
     dir_entry->directory = true;
     dir_entry->file_size = 0;
     dir_entry->location_on_disk = 0;
-    strcpy("dev", dir_entry->filename);
+    strcpy(name, dir_entry->filename);
 }
