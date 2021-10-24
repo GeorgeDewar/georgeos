@@ -1,11 +1,5 @@
 #include "system.h"
 
-#define MOUNTPOINT_LENGTH   64
-#define MAX_MOUNTPOINTS     16
-struct FileSystemMount {
-    char mount_point[MOUNTPOINT_LENGTH];
-    FileSystem fs;
-};
 struct FileSystemMount fs_mounts[MAX_MOUNTPOINTS];
 int fs_mounts_count = 0;
 
@@ -123,7 +117,7 @@ int open_file(char* path) {
     // Create the file handle
     FileHandle* handle = &open_files[fp];
     handle->type = FILE;
-    handle->file_descriptor.filesystem = &floppy0_fs;
+    handle->file_descriptor.filesystem = fs;
     handle->file_descriptor.location_on_disk = dir_entry.location_on_disk;
     handle->file_descriptor.size = dir_entry.file_size;
     strcpy(path, handle->file_descriptor.path);

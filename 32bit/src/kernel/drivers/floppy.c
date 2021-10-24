@@ -355,11 +355,24 @@ bool floppy_read_sector_lba(DiskDevice *device, uint32_t lba, uint8_t* buffer) {
     return SUCCESS;
 }
 
-// Set up DMA and IRQ handling
+// Set up DMA and IRQ handling, reset floppy and register device(s)
 void install_floppy() {
+    if (read_from_cmos(0x10) == 0) {
+        printf("\nNo floppy drives installed\n");
+        return;
+    }
+
     initial_dma_setup();
     irq_install_handler(6, FloppyHandler);
     timer_register_callback(turn_motor_off_if_idle);
+
+    if (ResetFloppy() == FAILURE) {
+        printf("Failed to initialise floppy controller\n");
+        return;
+    }
+
+    // Just one floppy supported currently
+    register_block_device(&floppy0, "floppy");
 }
 
 /**
@@ -371,6 +384,8 @@ DiskDeviceDriver floppy_driver = {
 };
 
 DiskDevice floppy0 = {
+    .type = FLOPPY,
     .device_num = 0,
+    .partition = UNPARTITIONED,
     .driver = &floppy_driver
 };

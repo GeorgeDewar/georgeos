@@ -24,9 +24,6 @@
 
 void loopback();
 
-// TODO: Move / make dynamic
-FileSystem floppy0_fs;
-
 void __attribute__((optimize("O0"))) div0(int num) {
     printf("Impossible: %d\n", num/0);
 }
@@ -75,31 +72,43 @@ void main () {
     printf(init, "Enumerating PCI devices");
     printf("\n");
     pci_init();
+
+    // Initialise storage devices
+    install_floppy();
     ata_init();
 
-    // Initialise disk subsystem
-//    ahci_init();
-
-    if (read_from_cmos(0x10) == 0) {
-        printf("\nNo floppy drives installed\n");
+    // If there are none, we can't do much more
+    if (block_devices_count == 0) {
+        printf("\nNo drives detected\n");
         loopback();
-    } else {
-        printf(init, "Floppy Controller");
-        install_floppy();
-        if (!ResetFloppy()) {
-            for (;;);
+    }
+
+    // Detect the FS for each block device
+    printf(init, "Looking for file systems");
+    for (int i=0; i<block_devices_count; i++) {
+        fprintf(stddebug, block_devices[i].device_name);
+        if (block_devices[i].dev.type == FLOPPY) {
+            // Create a FAT12 FileSystem instance - floppies always use FAT12
+            FileSystem *fs = malloc(sizeof(FileSystem));
+            fs_fat12.init(&block_devices[i].dev, fs);
+            mount_fs(fs, "floppy");
         }
-        register_block_device(&floppy0, "floppy");
+    }
+
+    // If there are none, we can't do much more
+    if (fs_mounts_count == 0) {
+        printf("\nNo filesystems detected\n");
+        loopback();
     }
 
     printf(init, "Done");
     printf("\n");
 
-    // Create a FileSystem instance for FAT12 on floppy0
-    fs_fat12.init(&floppy0, &floppy0_fs);
-    mount_fs(&floppy0_fs, "floppy");
-    // Set the working directory to /floppy0
-    strcpy("/floppy0", cwd);
+    // Set the working directory to first mountpoint
+    char* mountpoint = fs_mounts[0].mount_point;
+
+    strcpy("/", cwd);
+    strcat(cwd, mountpoint);
 
     // Start shell from disk
     printf("Loading SHELL.EXE... ");

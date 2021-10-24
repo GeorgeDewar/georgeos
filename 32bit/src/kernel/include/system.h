@@ -301,7 +301,16 @@ typedef struct {
     // TODO: need to know sector size
     bool (*read_sector)(DiskDevice* device, uint32_t lba, uint8_t* buffer);
 } DiskDeviceDriver;
+enum DiskDeviceType {
+    FLOPPY,
+    HARD_DISK,
+};
+enum PartitionType {
+    UNPARTITIONED = -1,
+    RAW_DEVICE = 0
+};
 struct DiskDevice {
+    uint8_t type;
     /** index of the device on the bus as understood by the driver */
     uint8_t device_num;
     /** 1-indexed partition number, or 0 if whole disk */
@@ -338,10 +347,17 @@ struct FileSystem {
     void* instance_data; // e.g. FAT; points to struct inside FS driver
 };
 
+#define MOUNTPOINT_LENGTH   64
+#define MAX_MOUNTPOINTS     16
+struct FileSystemMount {
+    char mount_point[MOUNTPOINT_LENGTH];
+    FileSystem fs;
+};
+extern int fs_mounts_count;
+extern struct FileSystemMount fs_mounts[];
+
 /** Statically defined file system driver (implemented in fat12.c) */
 extern FileSystemDriver fs_fat12;
-/** Statically defined file system for floppy0 (set in kernel.c) */
-extern FileSystem floppy0_fs;
 
 /** Working directory and open files */
 #define MAX_FILES   16
