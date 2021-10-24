@@ -83,11 +83,13 @@ void main () {
     if (read_from_cmos(0x10) == 0) {
         printf("\nNo floppy drives installed\n");
         loopback();
-    }
-    printf(init, "Floppy Controller");
-    install_floppy();
-    if (!ResetFloppy()) {
-        for(;;);
+    } else {
+        printf(init, "Floppy Controller");
+        install_floppy();
+        if (!ResetFloppy()) {
+            for (;;);
+        }
+        register_block_device(&floppy0, "floppy");
     }
 
     printf(init, "Done");

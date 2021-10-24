@@ -294,7 +294,7 @@ typedef struct {
     unsigned char archive        : 1;
 } DirEntry;
 
-/** Disk device declarations */
+/** Disk (block) device declarations */
 struct DiskDevice;
 typedef struct DiskDevice DiskDevice;
 typedef struct {
@@ -302,9 +302,14 @@ typedef struct {
     bool (*read_sector)(DiskDevice* device, uint32_t lba, uint8_t* buffer);
 } DiskDeviceDriver;
 struct DiskDevice {
+    /** index of the device on the bus as understood by the driver */
     uint8_t device_num;
+    /** 1-indexed partition number, or 0 if whole disk */
+    uint8_t partition;
+    /** the driver that can operate this device */
     DiskDeviceDriver* driver;
 };
+bool register_block_device(DiskDevice *dev, char* type);
 
 /** Statically defined disk device (implemented in floppy.c) */
 extern DiskDevice floppy0;

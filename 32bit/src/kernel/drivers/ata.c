@@ -255,6 +255,7 @@ static void ata_identify_drives() {
                    (const char *[]) {"ATA", "ATAPI"}[ide_devices[i].Type],         /* Type */
                     ide_devices[i].Size / 1024 / 1024 / 2,               /* Size */
                     ide_devices[i].Model);
+
         }
     }
 }

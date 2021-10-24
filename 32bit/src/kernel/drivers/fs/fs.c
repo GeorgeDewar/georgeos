@@ -15,6 +15,8 @@ FileHandle open_files[MAX_FILES];
 static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out);
 static int next_file_handle();
 static int get_next_index_for_mount_type(const char* mount_point_name);
+static bool list_root(DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+static void write_virtual_dirent(DirEntry* dir_entry, char* name);
 
 /**
  * Add a FileSystem to the list of mounts, so that files in it can be found under /{name}/path/filename
@@ -50,6 +52,10 @@ bool get_fs_for_path(char* path, char** rest_of_path, FileSystem ** fs_out) {
     char mountpoint[MOUNTPOINT_LENGTH] = {0};
     int i;
     for(i=0; path[i] != '/'; i++) {
+        if (path[i] == 0) {
+            fprintf(stddebug, "Found end-of-string before next /\n");
+            return FAILURE;
+        }
         mountpoint[i] = path[i];
     }
     path += i + 1; // also skip past the slash after the mountpoint
@@ -63,6 +69,7 @@ bool get_fs_for_path(char* path, char** rest_of_path, FileSystem ** fs_out) {
         }
     }
 
+    fprintf(stddebug, "No mountpoint found\n");
     return FAILURE;
 }
 
@@ -70,6 +77,10 @@ bool normalise_path(const char* path_in, char* path_out) {
     if (path_in[0] == '/') {
         // path is already absolute
         strcpy(path_in, path_out);
+        return SUCCESS;
+    }
+    if (strlen(path_in) == 0) {
+        strcpy(cwd, path_out);
         return SUCCESS;
     }
 
@@ -134,11 +145,21 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
     // Normalise path (make absolute)
     char normalised_path[256];
     normalise_path(path, normalised_path);
+    fprintf(stddebug, "Resolved path: %s\n", normalised_path);
+
+    if (strcmp(normalised_path, "/") != 0) {
+        fprintf(stddebug, "Listing VFS root\n");
+        return list_root(dir_entry_list_out, num_entries_out);
+    }
 
     // Find filesystem instance
     FileSystem* fs;
     char* fs_path;
-    get_fs_for_path(normalised_path, &fs_path, &fs);
+    bool res = get_fs_for_path(normalised_path, &fs_path, &fs);
+    if (res == FAILURE) {
+        fprintf(stderr, "Could not find a filesystem for the path\n");
+        return FAILURE;
+    }
 
     // List the files
     return fs->driver->list_dir(fs->device, fs_path, dir_entry_list_out, num_entries_out);
@@ -183,4 +204,18 @@ static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out) {
     }
 
     return FAILURE;
+}
+
+static bool list_root(DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+    fprintf(stddebug, "List root\n");
+    write_virtual_dirent(&dir_entry_list_out[0], "dev");
+    *num_entries_out = 1;
+    return SUCCESS;
+}
+
+static void write_virtual_dirent(DirEntry* dir_entry, char* name) {
+    dir_entry->directory = true;
+    dir_entry->file_size = 0;
+    dir_entry->location_on_disk = 0;
+    strcpy("dev", dir_entry->filename);
 }
