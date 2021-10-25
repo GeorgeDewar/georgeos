@@ -328,6 +328,16 @@ struct BlockDeviceFile {
 extern struct BlockDeviceFile block_devices[];
 extern int block_devices_count;
 
+struct PartitionTable {
+    uint8_t drive_attributes; // (bit 7 set = active or bootable)
+    uint8_t chs_partition_start[3]; // CHS Address of partition start
+    uint8_t partition_type; // Partition type
+    uint8_t chs_partition_end[3]; // CHS address of last partition sector
+    uint32_t lba_partition_start; // LBA of partition start
+    uint32_t lba_num_sectors; // Number of sectors in partition
+};
+bool find_partitions(DiskDevice *dev);
+
 /** Statically defined disk device (implemented in floppy.c) */
 extern DiskDevice floppy0;
 

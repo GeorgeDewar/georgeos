@@ -24,6 +24,24 @@ bool register_block_device(DiskDevice *dev, char* type) {
     return SUCCESS;
 }
 
+bool find_partitions(DiskDevice *dev) {
+    if (dev->partition != RAW_DEVICE) {
+        printf("Device is not suitable for finding partitions\n");
+        return FAILURE;
+    }
+
+    // Read the first sector into the buffer
+    uint8_t buffer[512];
+    read_sectors_lba(dev, 0, 1, buffer);
+
+    struct PartitionTable* partition_table = buffer + 0x1BE;
+    for(int i=0; i<4; i++) {
+        struct PartitionTable* entry = partition_table + i;
+        if (entry->partition_type == 0) break;
+        printf("Partition %d: Attr: %x, Type: %x, Start: %d, Size: %d\n", i, entry->drive_attributes, entry->partition_type, entry->lba_partition_start, entry->lba_num_sectors);
+    }
+}
+
 /**
  * Return the next index number required to make a unique device name for the specified type. For example, if the type
  * was "floppy" and there existed devices "floppy0" and "floppy1", this function will return 2 as the next index.

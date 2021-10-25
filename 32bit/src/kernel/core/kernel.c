@@ -83,6 +83,13 @@ void main () {
         loopback();
     }
 
+    // Find partitions
+    for (int i=0; i<block_devices_count; i++) {
+        if (block_devices[i].dev.type == HARD_DISK) {
+            find_partitions(&block_devices[i].dev);
+        }
+    }
+
     // Detect the FS for each block device
     printf(init, "Looking for file systems");
     for (int i=0; i<block_devices_count; i++) {
