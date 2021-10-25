@@ -86,7 +86,7 @@ void main () {
     // Detect the FS for each block device
     printf(init, "Looking for file systems");
     for (int i=0; i<block_devices_count; i++) {
-        fprintf(stddebug, block_devices[i].device_name);
+        fprintf(stdout, "Device: %s\n", block_devices[i].device_name);
         if (block_devices[i].dev.type == FLOPPY) {
             // Create a FAT12 FileSystem instance - floppies always use FAT12
             FileSystem *fs = malloc(sizeof(FileSystem));
@@ -96,6 +96,12 @@ void main () {
     }
 
     char buffer[512];
+    int hdd0 = open_file("/dev/hdd0");
+    read(hdd0, buffer, 512);
+    for (int i=0; i<512; i++) {
+        printf("%x ", buffer[i]);
+    }
+    printf("\n");
     //read_sectors_lba(&block_devices[1].dev, 0, 1, buffer);
     //printf("\nRead string from hard drive:\n%s\n", buffer);
 

@@ -19,6 +19,7 @@ bool register_block_device(DiskDevice *dev, char* type) {
     int index = get_next_index_for_block_dev_type(type);
     if (index >= MAX_BLOCK_DEVICES) return FAILURE;
     block_devices[block_devices_count].device_name[length] = (char) ('0' + index);
+    block_devices[block_devices_count].device_name[length + 1] = 0; // make sure string is terminated
     block_devices_count++;
     return SUCCESS;
 }
@@ -31,7 +32,7 @@ static int get_next_index_for_block_dev_type(const char* type) {
     int count = 0;
     int length = strlen(type);
     for (int i=0; i<block_devices_count; i++) {
-        if (strcmp_wl(block_devices[block_devices_count].device_name, type, length) > 0) {
+        if (strcmp_wl(block_devices[i].device_name, type, length) > 0) {
             count++;
         }
     }
