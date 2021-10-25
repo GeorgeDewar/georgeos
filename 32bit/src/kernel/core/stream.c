@@ -24,7 +24,7 @@ int32_t read(int16_t fp, void* buffer, int len) {
         BlockDeviceDescriptor bd = handle.block_descriptor;
         DiskDevice *device = bd.block_device;
         device->driver->read_sectors(device, bd.cursor, 1, buffer); // TODO: Len
-        return 1;
+        return 512;
     } else {
         // Unsupported handle type
         fprintf(stddebug, "Unsupported handle type\n");

@@ -103,6 +103,30 @@ int open_file(char* path) {
     normalise_path(path, normalised_path);
     fprintf(stddebug, "Normalised path: %s\n", normalised_path);
 
+    if (strcmp_wl(normalised_path, "/dev/", 5)) {
+        // Path refers to a block device
+        char *block_name = normalised_path + 5;
+        DiskDevice *device = NULL;
+        for (int i=0; i<block_devices_count; i++) {
+            if (strcmp(block_devices[i].device_name, block_name) != 0) {
+                device = &block_devices[i].dev;
+                break;
+            }
+        }
+        if (device == NULL) {
+            printf("Could not find block device %s\n", block_name);
+            return FAILURE;
+        }
+        // Create the file handle
+        FileHandle* handle = &open_files[fp];
+        handle->type = BLOCK;
+        handle->block_descriptor.block_device = device;
+        handle->block_descriptor.cursor = 0;
+        strcpy(path, handle->block_descriptor.path);
+
+        return fp;
+    }
+
     // Find filesystem instance
     FileSystem* fs;
     char* fs_path;

@@ -96,8 +96,8 @@ void main () {
     }
 
     char buffer[512];
-    read_sectors_lba(&block_devices[1].dev, 0, 1, buffer);
-    printf("\nRead string from hard drive:\n%s\n", buffer);
+    //read_sectors_lba(&block_devices[1].dev, 0, 1, buffer);
+    //printf("\nRead string from hard drive:\n%s\n", buffer);
 
     // If there are none, we can't do much more
     if (fs_mounts_count == 0) {
