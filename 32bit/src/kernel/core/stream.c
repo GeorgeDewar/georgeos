@@ -19,6 +19,12 @@ int32_t read(int16_t fp, void* buffer, int len) {
         FileSystem *filesystem = handle.file_descriptor.filesystem;
         filesystem->driver->read_file(filesystem, fd.location_on_disk, buffer); // TODO: Len
         return fd.size;
+    } else if(handle.type == BLOCK) {
+        fprintf(stddebug, "Reading from block device\n");
+        BlockDeviceDescriptor bd = handle.block_descriptor;
+        DiskDevice *device = bd.block_device;
+        device->driver->read_sectors(device, bd.cursor, 1, buffer); // TODO: Len
+        return 1;
     } else {
         // Unsupported handle type
         fprintf(stddebug, "Unsupported handle type\n");

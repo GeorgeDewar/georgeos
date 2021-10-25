@@ -299,7 +299,7 @@ struct DiskDevice;
 typedef struct DiskDevice DiskDevice;
 typedef struct {
     // TODO: need to know sector size
-    bool (*read_sector)(DiskDevice* device, uint32_t lba, uint8_t* buffer);
+    bool (*read_sectors)(DiskDevice* device, uint32_t lba, uint32_t count, void* buffer);
 } DiskDeviceDriver;
 enum DiskDeviceType {
     FLOPPY,
@@ -365,7 +365,8 @@ extern FileSystemDriver fs_fat12;
 enum FileHandleType {
     NULL = 0,
     FILE = 1,
-    STREAM = 2
+    STREAM = 2,
+    BLOCK = 3,
 };
 
 typedef struct {
@@ -376,9 +377,16 @@ typedef struct {
 } FileDescriptor;
 
 typedef struct {
+    char path[256];
+    DiskDevice *block_device;
+    uint32_t cursor;
+} BlockDeviceDescriptor;
+
+typedef struct {
     char type;
     union { // it's *one* of these
         FileDescriptor file_descriptor;
+        BlockDeviceDescriptor block_descriptor;
         struct StreamDevice stream_device;
     };
 } FileHandle;

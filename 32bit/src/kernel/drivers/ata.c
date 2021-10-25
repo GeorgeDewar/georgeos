@@ -67,6 +67,10 @@
 #define IDE_ATA        0x00
 #define IDE_ATAPI      0x01
 
+// Control bits
+#define IDE_CONTROL_NOIRQ   0x02
+
+
 struct IDEChannelRegisters {
     unsigned short base;  // I/O Base.
     unsigned short ctrl;  // Control Base
@@ -96,6 +100,13 @@ static void ide_write_base(unsigned char channel, unsigned char reg, unsigned ch
 static unsigned char ide_read_ctrl(unsigned char channel, unsigned char reg);
 static void ide_write_ctrl(unsigned char channel, unsigned char reg, unsigned char data);
 void ide_read_buffer(unsigned char channel, unsigned char reg, unsigned int * buffer, unsigned int quads);
+unsigned char ide_polling(unsigned char channel, unsigned int advanced_check);
+static void ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer);
+
+/** Public driver interface */
+DiskDeviceDriver ata_driver = {
+        .read_sectors = ata_read
+};
 
 void ata_init() {
     // Check for PCI ATA controller
@@ -151,7 +162,6 @@ void ata_init() {
             fprintf(stderr, "Secondary channel is in compatibility mode\n");
         }
     }
-
 
     ata_identify_drives();
 }
@@ -255,8 +265,109 @@ static void ata_identify_drives() {
                    (const char *[]) {"ATA", "ATAPI"}[ide_devices[i].Type],         /* Type */
                     ide_devices[i].Size / 1024 / 1024 / 2,               /* Size */
                     ide_devices[i].Model);
-
+            DiskDevice *disk_device = malloc(sizeof(DiskDevice));
+            disk_device->driver = &ata_driver;
+            disk_device->type = HARD_DISK;
+            disk_device->device_num = i;
+            disk_device->partition = RAW_DEVICE;
+            register_block_device(disk_device, "hdd");
         }
+    }
+}
+
+static void ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {
+    struct ide_device *ide_device = &ide_devices[device->device_num];
+
+    unsigned char lba_mode; /* 0: CHS, 1:LBA28, 2: LBA48 */
+    unsigned char cmd;
+    unsigned char lba_io[6];
+    unsigned int  channel = ide_devices[device->device_num].Channel; // Read the Channel.
+    unsigned int  slavebit = ide_devices[device->device_num].Drive; // Read the Drive [Master/Slave]
+    unsigned int  bus = channels[channel].base; // Bus Base, like 0x1F0 which is also data port.
+    unsigned int  words = 256; // Almost every ATA drive has a sector-size of 512-byte.
+    unsigned short cyl;
+    unsigned char head, sect, err;
+
+    if (ide_devices[device->device_num].CommandSets & (1 << 26)) {
+        // LBA48 is supported
+        lba_mode  = 2;
+        lba_io[0] = (lba & 0x000000FF) >> 0;
+        lba_io[1] = (lba & 0x0000FF00) >> 8;
+        lba_io[2] = (lba & 0x00FF0000) >> 16;
+        lba_io[3] = (lba & 0xFF000000) >> 24;
+        lba_io[4] = 0; // We are passing the LBA address as an unsigned int, so we're only using 32 of the bits
+        lba_io[5] = 0; // We are passing the LBA address as an unsigned int, so we're only using 32 of the bits
+        head      = 0; // Lower 4-bits of HDDEVSEL are not used here.
+    } else if (ide_devices[device->device_num].Capabilities & 0x200) {
+        // LBA28
+        lba_mode  = 1;
+        lba_io[0] = (lba & 0x00000FF) >> 0;
+        lba_io[1] = (lba & 0x000FF00) >> 8;
+        lba_io[2] = (lba & 0x0FF0000) >> 16;
+        lba_io[3] = 0; // These Registers are not used here.
+        lba_io[4] = 0; // These Registers are not used here.
+        lba_io[5] = 0; // These Registers are not used here.
+        head      = (lba & 0xF000000) >> 24;
+    } else {
+        // CHS:
+        lba_mode  = 0;
+        sect      = (lba % 63) + 1;
+        cyl       = (lba + 1  - sect) / (16 * 63);
+        lba_io[0] = sect;
+        lba_io[1] = (cyl >> 0) & 0xFF;
+        lba_io[2] = (cyl >> 8) & 0xFF;
+        lba_io[3] = 0;
+        lba_io[4] = 0;
+        lba_io[5] = 0;
+        head      = (lba + 1  - sect) % (16 * 63) / (63); // Head number is written to HDDEVSEL lower 4-bits.
+    }
+
+    // (III) Wait if the drive is busy;
+    while (ide_read_base(channel, ATA_REG_STATUS) & ATA_SR_BSY); // Wait if busy.
+
+    // (IV) Select Drive from the controller;
+    if (lba_mode == 0) {
+        ide_write_base(channel, ATA_REG_HDDEVSEL, 0xA0 | (slavebit << 4) | head); // Drive & CHS.
+    } else {
+        ide_write_base(channel, ATA_REG_HDDEVSEL, 0xE0 | (slavebit << 4) | head); // Drive & LBA
+    }
+
+    // (V) Write Parameters;
+    // These four registers are each written to twice, and internally this maps to a 16-bit wide register
+    if (lba_mode == 2) {
+        ide_write_base(channel, ATA_REG_SECCOUNT0,   0);
+        ide_write_base(channel, ATA_REG_LBA0,   lba_io[3]);
+        ide_write_base(channel, ATA_REG_LBA1,   lba_io[4]);
+        ide_write_base(channel, ATA_REG_LBA2,   lba_io[5]);
+    }
+    ide_write_base(channel, ATA_REG_SECCOUNT0,   num_sectors);
+    ide_write_base(channel, ATA_REG_LBA0,   lba_io[0]);
+    ide_write_base(channel, ATA_REG_LBA1,   lba_io[1]);
+    ide_write_base(channel, ATA_REG_LBA2,   lba_io[2]);
+
+    if (lba_mode == 2) {
+        // LBA48
+        cmd = ATA_CMD_READ_PIO_EXT;
+    } else {
+        // This covers both the CHS and the LBA28 case
+        cmd = ATA_CMD_READ_PIO;
+    }
+
+    // Send the Command.
+    ide_write_base(channel, ATA_REG_COMMAND, cmd);
+
+    // Read the data
+    for (unsigned int i = 0; i < num_sectors; i++) {
+        if ((err = ide_polling(channel, 1))) {
+            printf("IDE Error: %d\n", err);
+            return; // Polling, set error and exit if there is.
+        }
+//        asm("pushw %es");
+//        asm("mov %%ax, %%es" : : "a"(selector));
+//        asm("rep insw" : : "c"(words), "d"(bus), "D"(edi)); // Receive Data.
+//        asm("popw %es");
+//        edi += (words*2);
+        ide_read_buffer(channel, ATA_REG_DATA, buffer, num_sectors * 128);
     }
 }
 
@@ -280,4 +391,38 @@ void ide_read_buffer(unsigned char channel, unsigned char reg, unsigned int * bu
     for(int i=0; i<quads; i++) {
         buffer[i] = port_long_in(channels[channel].base + reg);
     }
+}
+
+unsigned char ide_polling(unsigned char channel, unsigned int advanced_check) {
+
+    // (I) Delay 400 nanosecond for BSY to be set:
+    // -------------------------------------------------
+    for(int i = 0; i < 4; i++)
+        ide_read_ctrl(channel, ATA_REG_ALTSTATUS); // Reading the Alternate Status port wastes 100ns; loop four times.
+
+    // (II) Wait for BSY to be cleared:
+    // -------------------------------------------------
+    while (ide_read_base(channel, ATA_REG_STATUS) & ATA_SR_BSY); // Wait for BSY to be zero.
+
+    if (advanced_check) {
+        unsigned char state = ide_read_base(channel, ATA_REG_STATUS); // Read Status Register.
+
+        // (III) Check For Errors:
+        // -------------------------------------------------
+        if (state & ATA_SR_ERR)
+            return 2; // Error.
+
+        // (IV) Check If Device fault:
+        // -------------------------------------------------
+        if (state & ATA_SR_DF)
+            return 1; // Device Fault.
+
+        // (V) Check DRQ:
+        // -------------------------------------------------
+        // BSY = 0; DF = 0; ERR = 0 so we should check for DRQ now.
+        if ((state & ATA_SR_DRQ) == 0)
+            return 3; // DRQ should be set
+    }
+
+    return 0; // No Error.
 }
