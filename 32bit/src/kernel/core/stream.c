@@ -106,7 +106,7 @@ static void vsprintf(char* buffer, char* string, va_list argp) {
                 buffer += strlen(str); // erase null byte
             } else if (*string == 'd') {
                 int number = va_arg(argp, int);
-                char num_string[16] = {0};;
+                char num_string[16] = {0};
                 int_to_string(number, 10, num_string);
                 strcpy(num_string, buffer);
                 buffer += strlen(num_string); // erase null byte
