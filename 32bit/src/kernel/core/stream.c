@@ -23,7 +23,9 @@ int32_t read(int16_t fp, void* buffer, int len) {
         fprintf(stddebug, "Reading from block device\n");
         BlockDeviceDescriptor bd = handle.block_descriptor;
         DiskDevice *device = bd.block_device;
-        device->driver->read_sectors(device, bd.cursor, 1, buffer); // TODO: Len
+        int sector_offset = device->offset + (bd.cursor / 512);
+        fprintf(stddebug, "Device offset is %d and cursor is %d, so reading from sector %d\n", device->offset, bd.cursor, sector_offset);
+        device->driver->read_sectors(device, sector_offset, 1, buffer); // TODO: Len
         return 512;
     } else {
         // Unsupported handle type

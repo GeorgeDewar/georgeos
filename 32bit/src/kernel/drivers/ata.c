@@ -101,7 +101,7 @@ static unsigned char ide_read_ctrl(unsigned char channel, unsigned char reg);
 static void ide_write_ctrl(unsigned char channel, unsigned char reg, unsigned char data);
 void ide_read_buffer(unsigned char channel, unsigned char reg, unsigned int * buffer, unsigned int quads);
 unsigned char ide_polling(unsigned char channel, unsigned int advanced_check);
-static void ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer);
+static bool ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer);
 
 /** Public driver interface */
 DiskDeviceDriver ata_driver = {
@@ -275,7 +275,7 @@ static void ata_identify_drives() {
     }
 }
 
-static void ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {
+static bool ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {
     struct ide_device *ide_device = &ide_devices[device->device_num];
 
     unsigned char lba_mode; /* 0: CHS, 1:LBA28, 2: LBA48 */
@@ -360,15 +360,12 @@ static void ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sect
     for (unsigned int i = 0; i < num_sectors; i++) {
         if ((err = ide_polling(channel, 1))) {
             printf("IDE Error: %d\n", err);
-            return; // Polling, set error and exit if there is.
+            return FAILURE; // Polling, set error and exit if there is.
         }
-//        asm("pushw %es");
-//        asm("mov %%ax, %%es" : : "a"(selector));
-//        asm("rep insw" : : "c"(words), "d"(bus), "D"(edi)); // Receive Data.
-//        asm("popw %es");
-//        edi += (words*2);
         ide_read_buffer(channel, ATA_REG_DATA, buffer, num_sectors * 128);
     }
+
+    return SUCCESS;
 }
 
 unsigned char ide_read_base(unsigned char channel, unsigned char reg) {

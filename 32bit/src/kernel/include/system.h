@@ -307,14 +307,16 @@ enum DiskDeviceType {
 };
 enum PartitionType {
     UNPARTITIONED = -1,
-    RAW_DEVICE = 0
+    RAW_DEVICE = -2
 };
 struct DiskDevice {
     uint8_t type;
     /** index of the device on the bus as understood by the driver */
     uint8_t device_num;
     /** 1-indexed partition number, or 0 if whole disk */
-    uint8_t partition;
+    int8_t partition;
+    /** offset within the disk (applies if this is a partition, otherwise must be 0) */
+    uint32_t offset;
     /** the driver that can operate this device */
     DiskDeviceDriver* driver;
 };
@@ -336,7 +338,7 @@ struct PartitionTable {
     uint32_t lba_partition_start; // LBA of partition start
     uint32_t lba_num_sectors; // Number of sectors in partition
 };
-bool find_partitions(DiskDevice *dev);
+bool find_partitions(struct BlockDeviceFile *dev);
 
 /** Statically defined disk device (implemented in floppy.c) */
 extern DiskDevice floppy0;

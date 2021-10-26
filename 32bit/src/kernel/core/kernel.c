@@ -86,7 +86,7 @@ void main () {
     // Find partitions
     for (int i=0; i<block_devices_count; i++) {
         if (block_devices[i].dev.type == HARD_DISK) {
-            find_partitions(&block_devices[i].dev);
+            find_partitions(&block_devices[i]);
         }
     }
 
@@ -103,14 +103,14 @@ void main () {
     }
 
     // Print out the first sector of the HDD
-    uint8_t buffer[512];
-    int hdd0 = open_file("/dev/hdd0");
-    read(hdd0, buffer, 512);
-    printf("\n");
-    for (int i=0; i<512; i++) {
-        printf("%x ", buffer[i]);
-    }
-    printf("\n");
+//    uint8_t buffer[512];
+//    int hdd0 = open_file("/dev/hdd0");
+//    read(hdd0, buffer, 512);
+//    printf("\n");
+//    for (int i=0; i<512; i++) {
+//        printf("%x ", buffer[i]);
+//    }
+//    printf("\n");
 
     // If there are none, we can't do much more
     if (fs_mounts_count == 0) {

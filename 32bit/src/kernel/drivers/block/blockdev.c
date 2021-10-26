@@ -24,21 +24,33 @@ bool register_block_device(DiskDevice *dev, char* type) {
     return SUCCESS;
 }
 
-bool find_partitions(DiskDevice *dev) {
-    if (dev->partition != RAW_DEVICE) {
+bool find_partitions(struct BlockDeviceFile *dev) {
+    if (dev->dev.partition != RAW_DEVICE) {
         printf("Device is not suitable for finding partitions\n");
         return FAILURE;
     }
 
     // Read the first sector into the buffer
     uint8_t buffer[512];
-    read_sectors_lba(dev, 0, 1, buffer);
+    if (read_sectors_lba(&dev->dev, 0, 1, buffer) == FAILURE) {
+        return FAILURE;
+    }
 
     struct PartitionTable* partition_table = buffer + 0x1BE;
     for(int i=0; i<4; i++) {
         struct PartitionTable* entry = partition_table + i;
-        if (entry->partition_type == 0) break;
+        if (entry->partition_type == 0) continue; // no partition
         printf("Partition %d: Attr: %x, Type: %x, Start: %d, Size: %d\n", i, entry->drive_attributes, entry->partition_type, entry->lba_partition_start, entry->lba_num_sectors);
+        DiskDevice *disk_device = malloc(sizeof(DiskDevice));
+        memcpy(&dev->dev, disk_device, sizeof(DiskDevice));
+        disk_device->partition = i;
+        disk_device->offset = entry->lba_partition_start;
+
+        // The name of the partition will be as per the raw device, plus a dot and a system-generated index
+        char device_name[128];
+        strcpy(dev->device_name, device_name);
+        strcat(device_name, ".");
+        register_block_device(disk_device, device_name);
     }
 }
 

@@ -14,6 +14,7 @@ OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fon
 all: georgeos_1440.img hdd.img
 run: all
 	qemu-system-i386.exe \
+		-boot a \
 		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-serial stdio
@@ -50,8 +51,8 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	mcopy -i build/$@ src/data/* ::/
 	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
-hdd.img:
-	echo "I am a hard drive" > build/$@
+hdd.img: make_fs_image.sh src/data/example.txt
+	./make_fs_image.sh build/hdd.img 200
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
