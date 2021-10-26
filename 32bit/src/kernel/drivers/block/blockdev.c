@@ -43,7 +43,7 @@ bool find_partitions(struct BlockDeviceFile *dev) {
         printf("Partition %d: Attr: %x, Type: %x, Start: %d, Size: %d\n", i, entry->drive_attributes, entry->partition_type, entry->lba_partition_start, entry->lba_num_sectors);
         DiskDevice *disk_device = malloc(sizeof(DiskDevice));
         memcpy(&dev->dev, disk_device, sizeof(DiskDevice));
-        disk_device->partition = i;
+        disk_device->partition = i + 1;
         disk_device->offset = entry->lba_partition_start;
 
         // The name of the partition will be as per the raw device, plus a dot and a system-generated index

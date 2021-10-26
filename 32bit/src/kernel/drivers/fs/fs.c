@@ -86,8 +86,9 @@ bool normalise_path(const char* path_in, char* path_out) {
     return SUCCESS;
 }
 
-// array of disks
+// TODO: Make use of read_sectors, no need to loop
 bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* buffer) {
+    fprintf(stddebug, "Reading from sector %d for %d\n", lba, count);
     for (uint32_t i=0; i<count; i++) {
         if (device->driver->read_sectors(device, lba + i, 1, buffer + (512 * i)) == FAILURE) {
             return FAILURE;

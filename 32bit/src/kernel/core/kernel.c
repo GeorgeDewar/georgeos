@@ -99,6 +99,11 @@ void main () {
             FileSystem *fs = malloc(sizeof(FileSystem));
             fs_fat12.init(&block_devices[i].dev, fs);
             mount_fs(fs, "floppy");
+        } else if (block_devices[i].dev.type == HARD_DISK && block_devices[i].dev.partition > 0) {
+            // Create a FAT12 FileSystem instance - just for now
+            FileSystem *fs = malloc(sizeof(FileSystem));
+            fs_fat12.init(&block_devices[i].dev, fs);
+            mount_fs(fs, "hdd");
         }
     }
 

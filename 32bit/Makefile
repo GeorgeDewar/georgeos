@@ -52,7 +52,7 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
 hdd.img: make_fs_image.sh src/data/example.txt
-	./make_fs_image.sh build/hdd.img 200
+	./make_fs_image.sh build/hdd.img 20
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
