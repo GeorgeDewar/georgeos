@@ -131,12 +131,12 @@ void ata_init() {
         fprintf(stderr, "Found IDE controller (%x:%x) on PCI bus at %x:%x:%x\n",
                 device->vendor_id, device->device_id, device->bus, device->device, device->function);
         uint16_t prog_if = pci_get_prog_if(device->bus, device->device, device->function);
-        fprintf(stderr, "Programming IF: %x\n", prog_if);
+        fprintf(stddebug, "Programming IF: %x\n", prog_if);
         if (prog_if & 0x01) {
-            fprintf(stderr, "Primary channel is in PCI native mode\n");
+            fprintf(stddebug, "Primary channel is in PCI native mode\n");
             uint32_t bar0 = pci_get_bar(device->bus, device->device, device->function, 0);
             uint32_t bar1 = pci_get_bar(device->bus, device->device, device->function, 1);
-            fprintf(stderr, "Setting ports to %x, %x\n", bar0, bar1);
+            fprintf(stddebug, "Setting ports to %x, %x\n", bar0, bar1);
             if (bar0 == 0 || bar1 == 0) {
                 fprintf(stderr, "Invalid port number\n");
                 return;
@@ -144,14 +144,14 @@ void ata_init() {
             channels[0].base = bar0;
             channels[0].ctrl = bar1;
         } else {
-            fprintf(stderr, "Primary channel is in compatibility mode\n");
+            fprintf(stddebug, "Primary channel is in compatibility mode\n");
         }
 
         if (prog_if & 0x04) {
-            fprintf(stderr, "Secondary channel is in PCI native mode\n");
+            fprintf(stddebug, "Secondary channel is in PCI native mode\n");
             uint32_t bar2 = pci_get_bar(device->bus, device->device, device->function, 2);
             uint32_t bar3 = pci_get_bar(device->bus, device->device, device->function, 3);
-            fprintf(stderr, "Setting ports to %x, %x\n", bar2, bar3);
+            fprintf(stddebug, "Setting ports to %x, %x\n", bar2, bar3);
             if (bar2 == 0 || bar3 == 0) {
                 fprintf(stderr, "Invalid port number\n");
                 return;
@@ -159,7 +159,7 @@ void ata_init() {
             channels[1].base = bar2;
             channels[1].ctrl = bar3;
         } else {
-            fprintf(stderr, "Secondary channel is in compatibility mode\n");
+            fprintf(stddebug, "Secondary channel is in compatibility mode\n");
         }
     }
 
@@ -167,7 +167,7 @@ void ata_init() {
 }
 
 static void ata_identify_drives() {
-    fprintf(stderr, "Identifying IDE devices\n");
+    fprintf(stddebug, "Identifying IDE devices\n");
 
     // 2- Disable IRQs:
     ide_write_ctrl(ATA_PRIMARY, ATA_REG_CONTROL, 2);
@@ -261,7 +261,7 @@ static void ata_identify_drives() {
     // 4- Print Summary:
     for (int i = 0; i < ide_device_count; i++) {
         if (ide_devices[i].Reserved == 1) {
-            printf(" Found %s Drive %dGB - %s\n",
+            printf("  Found %s Drive %dGB - %s\n",
                    (const char *[]) {"ATA", "ATAPI"}[ide_devices[i].Type],         /* Type */
                     ide_devices[i].Size / 1024 / 1024 / 2,               /* Size */
                     ide_devices[i].Model);
@@ -270,6 +270,7 @@ static void ata_identify_drives() {
             disk_device->type = HARD_DISK;
             disk_device->device_num = i;
             disk_device->partition = RAW_DEVICE;
+            disk_device->offset = 0;
             register_block_device(disk_device, "hdd");
         }
     }
@@ -360,7 +361,7 @@ static bool ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sect
     // Read the data
     for (unsigned int i = 0; i < num_sectors; i++) {
         if ((err = ide_polling(channel, 1))) {
-            printf("IDE Error: %d\n", err);
+            printf("IDE Error %d reading from device %d\n", err, device->device_num);
             return FAILURE; // Polling, set error and exit if there is.
         }
         ide_read_buffer(channel, ATA_REG_DATA, buffer, num_sectors * 128);

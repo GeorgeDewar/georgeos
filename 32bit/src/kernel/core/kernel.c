@@ -83,15 +83,19 @@ void main () {
         loopback();
     }
 
+    printf(init, "Done");
+    printf("\n");
+
     // Find partitions
+    printf("Looking for partitions\n");
     for (int i=0; i<block_devices_count; i++) {
-        if (block_devices[i].dev.type == HARD_DISK) {
+        if (block_devices[i].dev.type == HARD_DISK && block_devices[i].dev.partition == RAW_DEVICE) {
             find_partitions(&block_devices[i]);
         }
     }
 
     // Detect the FS for each block device
-    printf(init, "Looking for file systems");
+    printf("Looking for file systems\n");
     for (int i=0; i<block_devices_count; i++) {
         fprintf(stddebug, "Processing device: %s\n", block_devices[i].device_name);
         if (block_devices[i].dev.type == FLOPPY) {
@@ -102,29 +106,17 @@ void main () {
         } else if (block_devices[i].dev.type == HARD_DISK && block_devices[i].dev.partition > 0) {
             // Create a FAT12 FileSystem instance - just for now
             FileSystem *fs = malloc(sizeof(FileSystem));
-            fs_fat12.init(&block_devices[i].dev, fs);
-            mount_fs(fs, "hdd");
+            if (fs_fat12.init(&block_devices[i].dev, fs) == SUCCESS) {
+                mount_fs(fs, "hdd");
+            }
         }
     }
 
-    // Print out the first sector of the HDD
-//    uint8_t buffer[512];
-//    int hdd0 = open_file("/dev/hdd0");
-//    read(hdd0, buffer, 512);
-//    printf("\n");
-//    for (int i=0; i<512; i++) {
-//        printf("%x ", buffer[i]);
-//    }
-//    printf("\n");
-
     // If there are none, we can't do much more
     if (fs_mounts_count == 0) {
-        printf("\nNo filesystems detected\n");
+        printf("No filesystems detected\n");
         loopback();
     }
-
-    printf(init, "Done");
-    printf("\n");
 
     // Set the working directory to first mountpoint
     char* mountpoint = fs_mounts[0].mount_point;

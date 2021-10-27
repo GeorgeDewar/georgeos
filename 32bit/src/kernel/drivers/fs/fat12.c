@@ -82,6 +82,10 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
     device->driver->read_sectors(device, 0, 1, buffer);
     BiosParameterBlock *bpb = malloc(sizeof(BiosParameterBlock));
     memcpy(buffer + 11, bpb, sizeof(BiosParameterBlock));
+    if (strcmp_wl(bpb->file_system_type, "FAT12", 5) == 0) {
+        fprintf(stddebug, "Not a FAT12 volume\n");
+        return FAILURE;
+    }
 
     // Allocate buffer to store File Allocation Table
     uint8_t *fat = malloc(bpb->sectors_per_fat * BYTES_PER_SECTOR);
@@ -103,6 +107,12 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
     fprintf(stddebug, "  Sectors per FAT: %d\n", bpb->sectors_per_fat);
     fprintf(stddebug, "  Number of FATs: %d\n", bpb->num_fats);
     fprintf(stddebug, "  Root dir entries: %d\n", bpb->max_root_directory_entries);
+
+    // Print user-readable message
+    char label[12];
+    memcpy(bpb->partition_volume_label, label, 11);
+    label[11] = 0;
+    printf("Mounting FAT12 filesystem with label %s\n", label);
 
     // Read the FAT
     if (fat12_read_fat(device, bpb, fat) == FAILURE) return FAILURE;
