@@ -349,7 +349,7 @@ typedef struct FileSystem FileSystem;
 typedef struct {
     /** create an instance of a filesystem for a particular device */
     bool (*init)(DiskDevice* device, FileSystem* filesystem_out);
-    bool (*list_dir)(DiskDevice* device, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+    bool (*list_dir)(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
     bool (*read_file)(FileSystem* fs, uint32_t location_on_disk, void* buffer);
 } FileSystemDriver;
 struct FileSystem {

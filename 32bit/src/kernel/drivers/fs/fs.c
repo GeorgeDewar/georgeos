@@ -140,6 +140,7 @@ int open_file(char* path) {
     if (find_file(fs, fs_path, &dir_entry) < 0) {
         return -1;
     }
+    fprintf(stddebug, "Found file\n");
 
     // Create the file handle
     FileHandle* handle = &open_files[fp];
@@ -188,7 +189,7 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
     }
 
     // List the files
-    return fs->driver->list_dir(fs->device, fs_path, dir_entry_list_out, num_entries_out);
+    return fs->driver->list_dir(fs, fs_path, dir_entry_list_out, num_entries_out);
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
@@ -218,7 +219,7 @@ static bool find_file(FileSystem* fs, char* path, DirEntry* dir_entry_out) {
     }
 
     // Read the directory
-    bool list_res = fs->driver->list_dir(fs->device, path_copy, dir_entry_list, &num_entries);
+    bool list_res = fs->driver->list_dir(fs, path_copy, dir_entry_list, &num_entries);
     if (!list_res) return FAILURE;
 
     // Loop through the files

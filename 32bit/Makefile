@@ -20,6 +20,7 @@ run: all
 		-serial stdio
 debug: all
 	qemu-system-i386.exe \
+		-boot a \
 		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio &
@@ -34,6 +35,7 @@ debug: all
 
 cliondebug: all
 	qemu-system-i386.exe \
+		-boot a \
 		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio
