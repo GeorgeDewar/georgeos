@@ -1,18 +1,7 @@
 #include "system.h"
 
-// TODO: In time, we will read these from the disk
 #define BYTES_PER_SECTOR        512
-//#define NUM_RESERVED_SECTORS    3
-//#define NUMBER_OF_FATS          2
-//#define SECTORS_PER_FAT         9
-//#define ROOT_DIR_ENTRIES        224
 #define DIR_ENTRY_SIZE          32
-
-//#define FAT_0_START             NUM_RESERVED_SECTORS
-//#define ROOT_DIR_START          NUM_RESERVED_SECTORS + (NUMBER_OF_FATS * SECTORS_PER_FAT)
-//#define SECTORS_PER_DIR         (ROOT_DIR_ENTRIES * DIR_ENTRY_SIZE) / BYTES_PER_SECTOR
-//#define DIR_ENTRIES_PER_SECTOR  BYTES_PER_SECTOR / DIR_ENTRY_SIZE
-//#define DATA_START              33 // FAT0, FAT1, ROOTDIR, 2 special clusters
 
 typedef struct {
     uint16_t bytes_per_sector;
