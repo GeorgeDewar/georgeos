@@ -276,7 +276,8 @@ static void ata_identify_drives() {
 }
 
 static bool ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {
-    struct ide_device *ide_device = &ide_devices[device->device_num];
+    // Add partition offset to LBA address
+    lba += device->offset;
 
     unsigned char lba_mode; /* 0: CHS, 1:LBA28, 2: LBA48 */
     unsigned char cmd;

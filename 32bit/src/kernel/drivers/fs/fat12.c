@@ -73,6 +73,7 @@ bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, ui
 bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer);
 static bool fat12_read_fat(DiskDevice* device, BiosParameterBlock *bpb, uint8_t *fat);
 static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, const uint8_t *fat);
+static Fat12InstanceData * instance_data(FileSystem *fs);
 static int root_dir_start(FileSystem *fs);
 static int first_data_sector(FileSystem *fs);
 
@@ -109,10 +110,10 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
 
     // Print debug info
     fprintf(stddebug, "Initialising FAT12 volume\n");
-    fprintf(stddebug, "Reserved sectors: %d\n", bpb->num_reserved_sectors);
-    fprintf(stddebug, "Sectors per FAT: %d\n", bpb->sectors_per_fat);
-    fprintf(stddebug, "Number of FATs: %d\n", bpb->num_fats);
-    fprintf(stddebug, "Root dir entries: %d\n", bpb->max_root_directory_entries);
+    fprintf(stddebug, "  Reserved sectors: %d\n", bpb->num_reserved_sectors);
+    fprintf(stddebug, "  Sectors per FAT: %d\n", bpb->sectors_per_fat);
+    fprintf(stddebug, "  Number of FATs: %d\n", bpb->num_fats);
+    fprintf(stddebug, "  Root dir entries: %d\n", bpb->max_root_directory_entries);
 
     // Read the FAT
     if (fat12_read_fat(device, bpb, fat) == FAILURE) return FAILURE;
@@ -173,21 +174,23 @@ bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, ui
 /** Read an entire file into the supplied buffer, and set length_out */
 bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer) {
     int data_start = first_data_sector(fs);
+    int sectors_per_cluster = instance_data(fs)->bpb->sectors_per_cluster;
+
     fprintf(stddebug, "Data start: %d\n", data_start);
     int cluster_index = 1; // we print the first cluster outside the loop
 
-    fprintf(stddebug, "Reading cluster\n");
-    if (!read_sectors_lba(fs->device,  cluster + data_start, 1, buffer)) {
+    fprintf(stddebug, "Reading cluster %d\n", cluster);
+    if (!read_sectors_lba(fs->device,  ((cluster - 2) * sectors_per_cluster) + data_start, sectors_per_cluster, buffer)) {
         fprintf(stderr, "Read failure\n");
         return FAILURE;
     }
 
     for(;;) {
-        fprintf(stddebug, "Reading cluster\n");
+        fprintf(stddebug, "Reading cluster %d\n", cluster);
         cluster = fat12_decode_fat_entry(cluster, ((Fat12InstanceData*) fs->instance_data)->fat);
         if(cluster == 0xFFF) break; // we've read the last cluster already
 
-        if (!read_sectors_lba(fs->device,  cluster + data_start, 1, buffer + (BYTES_PER_SECTOR * cluster_index))) {
+        if (!read_sectors_lba(fs->device,  ((cluster - 2) * sectors_per_cluster) + data_start, sectors_per_cluster, buffer + (BYTES_PER_SECTOR * cluster_index))) {
             fprintf(stderr, "Read failure\n");
             return FAILURE;
         }
@@ -229,6 +232,10 @@ static uint16_t fat12_decode_fat_entry(uint16_t cluster_num, const uint8_t *fat)
     }
 }
 
+static Fat12InstanceData * instance_data(FileSystem *fs) {
+    return ((Fat12InstanceData *) fs->instance_data);
+}
+
 static int root_dir_start(FileSystem *fs) {
     BiosParameterBlock *bpb = ((Fat12InstanceData *) fs->instance_data)->bpb;
     return bpb->num_reserved_sectors + (bpb->sectors_per_fat * bpb->num_fats);
@@ -236,5 +243,5 @@ static int root_dir_start(FileSystem *fs) {
 
 static int first_data_sector(FileSystem *fs) {
     BiosParameterBlock *bpb = ((Fat12InstanceData *) fs->instance_data)->bpb;
-    return bpb->num_reserved_sectors + (bpb->sectors_per_fat * bpb->num_fats) + (bpb->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR) - 2;
+    return bpb->num_reserved_sectors + (bpb->sectors_per_fat * bpb->num_fats) + (bpb->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR);
 }
