@@ -36,7 +36,7 @@ bool find_partitions(struct BlockDeviceFile *dev) {
         return FAILURE;
     }
 
-    struct PartitionTable* partition_table = buffer + 0x1BE;
+    struct PartitionTable* partition_table = (struct PartitionTable*) (buffer + 0x1BE);
     for(int i=0; i<4; i++) {
         struct PartitionTable* entry = partition_table + i;
         if (entry->partition_type == 0) continue; // no partition

@@ -167,14 +167,14 @@ void fault_handler(struct regs *r) {
         printf("eax = %x, ebx = %x, ecx = %x, edx = %x, edi = %x, esi = %x, ebp = %x\n",
                r->eax, r->ebx, r->ecx, r->edx, r->edi, r->esi, r->ebp);
 
-        struct stackframe *stk = r->ebp;
+        struct stackframe *stk = (struct stackframe *) r->ebp;
         printf("Stack trace:\n");
         for(unsigned int frame = 0; stk && frame < 8; ++frame)
         {
             // Unwind to previous stack frame
             printf("  0x%x\n", stk->eip);
             stk = stk->ebp;
-            if (stk == 0x80000) break;
+            if ((uint32_t) stk == 0x80000) break;
         }
 
         for(;;);
