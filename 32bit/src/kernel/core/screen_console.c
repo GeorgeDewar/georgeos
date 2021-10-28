@@ -12,7 +12,7 @@ static int console_rows;
 static int console_cols;
 static Color current_color;
 
-uint32_t cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)
+int cursor = 0; // defines current position and size (i.e. can't move cursor without deleting content)
 
 static void console_write(char* data, int length);
 static int console_get_offset(char row, char col);
@@ -127,7 +127,6 @@ static int console_get_offset(char row, char col) {
 }
 
 static void console_write(char* data, int length) {
-    int start = timer_ticks;
     for(int i=0; i<length; i++) {
         if (data[i] == '\1') { // start of an ANSI color escape
             i += 2; // advance past bracket
@@ -141,13 +140,8 @@ static void console_write(char* data, int length) {
         }
         console_write_char(data[i]);
     }
-    int end = timer_ticks;
-    int dur1 = end - start;
-    start = timer_ticks;
+    // TODO: Implement partial copy
     default_graphics_device->copy_buffer();
-    end = timer_ticks;
-    int dur2 = end - start;
-    //fprintf(stddebug, "Writing %d chars; Drew in %d, refreshed in %d ticks\n", length, dur1, dur2);
 }
 
 void console_update_cursor(bool on) {

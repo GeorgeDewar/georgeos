@@ -37,7 +37,7 @@ bool find_partitions(struct BlockDeviceFile *dev) {
     }
 
     struct PartitionTable* partition_table = (struct PartitionTable*) (buffer + 0x1BE);
-    for(int i=0; i<4; i++) {
+    for(char i=0; i<4; i++) {
         struct PartitionTable* entry = partition_table + i;
         if (entry->partition_type == 0) continue; // no partition
         printf("Partition %d: Attr: %x, Type: %x, Start: %d, Size: %d\n", i, entry->drive_attributes, entry->partition_type, entry->lba_partition_start, entry->lba_num_sectors);
@@ -52,6 +52,8 @@ bool find_partitions(struct BlockDeviceFile *dev) {
         strcat(device_name, ".");
         register_block_device(disk_device, device_name);
     }
+
+    return SUCCESS;
 }
 
 /**
