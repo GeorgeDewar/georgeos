@@ -92,7 +92,6 @@ struct ide_device {
 int ide_device_count = 0;
 
 unsigned char ide_buf[2048] = {0};
-unsigned static char ide_irq_invoked = 0;
 
 static void ata_identify_drives();
 static unsigned char ide_read_base(unsigned char channel, unsigned char reg);
@@ -226,7 +225,7 @@ static void ata_identify_drives() {
             }
 
             // (V) Read Identification Space of the Device:
-            ide_read_buffer(channel, ATA_REG_DATA, (unsigned int) ide_buf, 128);
+            ide_read_buffer(channel, ATA_REG_DATA, (unsigned int*) ide_buf, 128);
 
             // (VI) Read Device Parameters:
             ide_devices[ide_device_count].Reserved = 1;
@@ -285,8 +284,6 @@ static bool ata_read(DiskDevice *device, unsigned int lba, unsigned int num_sect
     unsigned char lba_io[6];
     unsigned int  channel = ide_devices[device->device_num].Channel; // Read the Channel.
     unsigned int  slavebit = ide_devices[device->device_num].Drive; // Read the Drive [Master/Slave]
-    unsigned int  bus = channels[channel].base; // Bus Base, like 0x1F0 which is also data port.
-    unsigned int  words = 256; // Almost every ATA drive has a sector-size of 512-byte.
     unsigned short cyl;
     unsigned char head, sect, err;
 
@@ -387,7 +384,7 @@ void ide_write_ctrl(unsigned char channel, unsigned char reg, unsigned char data
 }
 
 void ide_read_buffer(unsigned char channel, unsigned char reg, unsigned int * buffer, unsigned int quads) {
-    for(int i=0; i<quads; i++) {
+    for(unsigned int i=0; i<quads; i++) {
         buffer[i] = port_long_in(channels[channel].base + reg);
     }
 }
