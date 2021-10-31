@@ -12,7 +12,7 @@
     0x   A0000   to 0xFFFFF = RESERVED - Video memory, BIOS, etc
     0x  100000   Userspace program
     0x  500000   Back buffer (size EA600 for 800x600x16)
-    0x  A00000   Kernel Heap
+    0x  A00000   Kernel Heap (10MB)
     0x  B00000   Userspace Heap
     0x  F00000   to 0xFFFFFF = RESERVED - ISA memory mapped hardware
     0x 7A12000   Top of physical memory (128MB)
@@ -43,7 +43,7 @@ void main () {
     open_files[stderr].type = STREAM;
     open_files[stderr].stream_device = sd_screen_console;
     open_files[stddebug].type = STREAM;
-    open_files[stddebug].stream_device = sd_com1;
+    open_files[stddebug].stream_device = sd_screen_console;
 
     printf("Kernel loaded successfully. Welcome to GeorgeOS!\n");
     extern uint8_t* video_memory;

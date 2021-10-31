@@ -23,6 +23,7 @@ bool mount_fs(FileSystem *fs, const char* mount_point_name) {
     int index = get_next_index_for_mount_type(mount_point_name);
     if (index >= MAX_MOUNTPOINTS) return FAILURE;
     fs_mounts[fs_mounts_count].mount_point[mount_point_name_length] = (char) ('0' + index);
+    fs_mounts[fs_mounts_count].mount_point[mount_point_name_length + 1] = 0; // terminate string
     fs_mounts_count++;
     return SUCCESS;
 }
@@ -133,7 +134,7 @@ int open_file(char* path) {
     // Find filesystem instance
     FileSystem* fs;
     char* fs_path;
-    get_fs_for_path(normalised_path, &fs_path, &fs);
+    if (get_fs_for_path(normalised_path, &fs_path, &fs) == FAILURE) return FAILURE;
 
     // Find file in FS
     DirEntry dir_entry;
