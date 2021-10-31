@@ -231,23 +231,18 @@ bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer) {
     int sectors_per_cluster = get_instance_data(fs)->sectors_per_cluster;
 
     fprintf(stddebug, "Data start: %d\n", data_start);
-    int cluster_index = 1; // we print the first cluster outside the loop
-
-    fprintf(stddebug, "Reading cluster %d\n", cluster);
-    if (!read_sectors_lba(fs->device,  ((cluster - 2) * sectors_per_cluster) + data_start, sectors_per_cluster, buffer)) {
-        fprintf(stderr, "Read failure\n");
-        return FAILURE;
-    }
+    int cluster_index = 0;
 
     for(;;) {
         fprintf(stddebug, "Reading cluster %d\n", cluster);
-        cluster = fat12_decode_fat_entry(cluster, fs);
-        if(cluster_is_end_of_chain(cluster, fs)) break; // we've read the last cluster already
 
         if (!read_sectors_lba(fs->device,  ((cluster - 2) * sectors_per_cluster) + data_start, sectors_per_cluster, buffer + (BYTES_PER_SECTOR * cluster_index))) {
             fprintf(stderr, "Read failure\n");
             return FAILURE;
         }
+
+        cluster = fat12_decode_fat_entry(cluster, fs);
+        if(cluster_is_end_of_chain(cluster, fs)) break; // we've read the last cluster already
 
         cluster_index++;
     }
