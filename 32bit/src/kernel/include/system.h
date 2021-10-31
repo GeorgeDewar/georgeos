@@ -19,7 +19,7 @@ typedef int8_t bool;
 #define false           0
 #define true            1
 #define SUCCESS         1
-#define FAILURE         -1
+#define FAILURE         (-1)
 #define UINT8_T_MAX     0xFF
 #define UINT16_T_MAX    0xFFFF
 #define UINT32_T_MAX    0xFFFFFFFF
@@ -350,7 +350,7 @@ typedef struct {
     /** create an instance of a filesystem for a particular device */
     bool (*init)(DiskDevice* device, FileSystem* filesystem_out);
     bool (*list_dir)(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-    bool (*read_file)(FileSystem* fs, uint32_t location_on_disk, void* buffer);
+    bool (*read_file)(FileSystem* fs, uint32_t location_on_disk, void* buffer, uint32_t* num_clusters_read);
 } FileSystemDriver;
 struct FileSystem {
     DiskDevice* device;

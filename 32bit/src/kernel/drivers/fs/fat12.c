@@ -61,13 +61,13 @@ char *FatTypeName[] = {
  */
 bool fat12_init(DiskDevice* device, FileSystem* filesystem_out);
 bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
-bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer);
+bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer, uint32_t* clusters_read);
 static bool fat12_read_fat(DiskDevice* device, FatInstanceData *instance_data, uint8_t *fat);
 static uint32_t fat12_decode_fat_entry(uint32_t cluster_num, FileSystem *fs);
 static FatInstanceData * get_instance_data(FileSystem *fs);
 static unsigned int first_data_sector(FileSystem *fs);
 static bool cluster_is_end_of_chain(uint32_t cluster, FileSystem *fs);
-static bool fat_read_dir_sector(FileSystem* fs, uint32_t sector, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+static bool fat_parse_dir_entries(FileSystem* fs, void *buffer_in, uint16_t max_entries, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 
 FileSystemDriver fs_fat12 = {
     .init = &fat12_init,
@@ -166,7 +166,11 @@ bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, ui
     int total_entries = 0;
     for(int i=0; i<sectors_per_dir; i++) {
         uint16_t entries_this_sector = 0;
-        fat_read_dir_sector(fs, get_instance_data(fs)->root_dir_start, dir_entry_list_out, &entries_this_sector);
+        uint8_t buffer[BYTES_PER_SECTOR];
+        if (read_sectors_lba(fs->device, get_instance_data(fs)->root_dir_start + i, 1, buffer) == FAILURE) {
+            return FAILURE;
+        }
+        fat_parse_dir_entries(fs, buffer, DIR_ENTRIES_PER_SECTOR, dir_entry_list_out, &entries_this_sector);
         total_entries += entries_this_sector;
         if (entries_this_sector < DIR_ENTRIES_PER_SECTOR) break;
     }
@@ -174,11 +178,24 @@ bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, ui
     return SUCCESS;
 }
 
-bool fat_read_dir_sector(FileSystem* fs, uint32_t sector, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+bool fat12_list_dir2(FileSystem* fs, uint32_t cluster, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+    // Read the directory like a file
+    uint32_t clusters_read;
+    uint8_t buffer[DIR_ENTRY_SIZE * 128]; // Will overflow if more than 128 files in dir
+    if (fat12_read_file(fs, cluster, buffer, &clusters_read) == FAILURE) return FAILURE;
+
+    return fat_parse_dir_entries(fs, buffer, clusters_read * get_instance_data(fs)->sectors_per_cluster / DIR_ENTRIES_PER_SECTOR, dir_entry_list_out, num_entries_out);
+}
+
+/**
+ * Parse up to max_entries directory entries from the supplied buffer, into standard directory entries in the output
+ * buffer, dir_entry_list_out. num_entries_out is set the the number of entries actually found.
+ */
+static bool fat_parse_dir_entries(FileSystem* fs, void *buffer_in, uint16_t max_entries, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
     // Create a buffer large enough for one sector worth of directory entries
-    FatDirectoryEntry dir_entry_buffer[DIR_ENTRIES_PER_SECTOR];
-    read_sectors_lba(fs->device, sector, 1, dir_entry_buffer);
-    for (int i=0; i < DIR_ENTRIES_PER_SECTOR; i++) {
+    FatDirectoryEntry* dir_entry_buffer = (FatDirectoryEntry*) buffer_in;
+
+    for (int i=0; i < max_entries; i++) {
         // printf("Checking entry %d\n", i);
         FatDirectoryEntry fat12entry = dir_entry_buffer[i];
 
@@ -221,12 +238,13 @@ bool fat_read_dir_sector(FileSystem* fs, uint32_t sector, DirEntry* dir_entry_li
         uint16_t start_of_file_high = get_instance_data(fs)->fat_type == FAT32 ? fat12entry.fat32_start_of_file_high : 0;
         dir_entry_list_out[i].location_on_disk = fat12entry.start_of_file_low + (start_of_file_high << 16);
     }
-    *num_entries_out = get_instance_data(fs)->max_root_directory_entries;
+
+    *num_entries_out = max_entries;
     return SUCCESS;
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
-bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer) {
+bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer, uint32_t* clusters_read) {
     unsigned int data_start = first_data_sector(fs);
     int sectors_per_cluster = get_instance_data(fs)->sectors_per_cluster;
 
@@ -247,6 +265,7 @@ bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer) {
         cluster_index++;
     }
 
+    *clusters_read = cluster_index;
     return SUCCESS;
 }
 
