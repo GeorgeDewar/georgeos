@@ -60,7 +60,8 @@ char *FatTypeName[] = {
  * Header section
  */
 bool fat12_init(DiskDevice* device, FileSystem* filesystem_out);
-bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+bool fat12_list_root(FileSystem* fs, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
+bool fat12_list_dir(FileSystem* fs, uint32_t cluster, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer, uint32_t* clusters_read);
 static bool fat12_read_fat(DiskDevice* device, FatInstanceData *instance_data, uint8_t *fat);
 static uint32_t fat12_decode_fat_entry(uint32_t cluster_num, FileSystem *fs);
@@ -71,6 +72,7 @@ static bool fat_parse_dir_entries(FileSystem* fs, void *buffer_in, uint16_t max_
 
 FileSystemDriver fs_fat12 = {
     .init = &fat12_init,
+    .list_root = &fat12_list_root,
     .list_dir = &fat12_list_dir,
     .read_file = &fat12_read_file
 };
@@ -161,7 +163,12 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
 }
 
 /** List the files in a directory into dir_entry_list_out, and set num_entries_out */
-bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+bool fat12_list_root(FileSystem* fs, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+    if (get_instance_data(fs)->fat_type == FAT32) {
+        // The root directory is a cluster chain, just like a normal file
+        return fat12_list_dir(fs, get_instance_data(fs)->root_dir_start, dir_entry_list_out, num_entries_out);
+    }
+
     int sectors_per_dir = get_instance_data(fs)->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR;
     int total_entries = 0;
     for(int i=0; i<sectors_per_dir; i++) {
@@ -178,13 +185,14 @@ bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, ui
     return SUCCESS;
 }
 
-bool fat12_list_dir2(FileSystem* fs, uint32_t cluster, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+/** List the files in a directory into dir_entry_list_out, and set num_entries_out */
+bool fat12_list_dir(FileSystem* fs, uint32_t cluster, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
     // Read the directory like a file
     uint32_t clusters_read;
     uint8_t buffer[DIR_ENTRY_SIZE * 128]; // Will overflow if more than 128 files in dir
     if (fat12_read_file(fs, cluster, buffer, &clusters_read) == FAILURE) return FAILURE;
 
-    return fat_parse_dir_entries(fs, buffer, clusters_read * get_instance_data(fs)->sectors_per_cluster / DIR_ENTRIES_PER_SECTOR, dir_entry_list_out, num_entries_out);
+    return fat_parse_dir_entries(fs, buffer, clusters_read * get_instance_data(fs)->sectors_per_cluster * DIR_ENTRIES_PER_SECTOR, dir_entry_list_out, num_entries_out);
 }
 
 /**
@@ -192,6 +200,8 @@ bool fat12_list_dir2(FileSystem* fs, uint32_t cluster, DirEntry* dir_entry_list_
  * buffer, dir_entry_list_out. num_entries_out is set the the number of entries actually found.
  */
 static bool fat_parse_dir_entries(FileSystem* fs, void *buffer_in, uint16_t max_entries, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+    fprintf(stddebug, "Parsing up to %d dirents\n", max_entries);
+
     // Create a buffer large enough for one sector worth of directory entries
     FatDirectoryEntry* dir_entry_buffer = (FatDirectoryEntry*) buffer_in;
 
@@ -265,7 +275,7 @@ bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer, uint32_t* 
         cluster_index++;
     }
 
-    *clusters_read = cluster_index;
+    *clusters_read = cluster_index + 1;
     return SUCCESS;
 }
 
@@ -283,9 +293,11 @@ static bool fat12_read_fat(DiskDevice* device, FatInstanceData *instance_data, u
 static uint32_t fat12_decode_fat_entry(uint32_t cluster_num, FileSystem *fs) {
     uint8_t* fat = get_instance_data(fs)->fat;
     char fat_type = get_instance_data(fs)->fat_type;
-    if (fat_type != FAT12) {
+    if (fat_type == FAT32) {
         // This is the easy case, for FAT16 and FAT32, as they are multiples of 1 byte
-        return *(fat + cluster_num);
+        return *(((uint32_t*) fat) + cluster_num);
+    } else if (fat_type == FAT16) {
+        return *(((uint16_t*) fat) + cluster_num);
     }
 
     // For FAT12 we have to do a bit of a horrible calculation

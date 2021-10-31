@@ -14,7 +14,7 @@ partition_size=$(expr ${size_bytes} \- ${partition_1_start})
 echo > /tmp/partition
 truncate -s $partition_size /tmp/partition
 #mkfs.vfat /tmp/partition
-mkfs.vfat -F 32 -R 4 /tmp/partition
+mkfs.vfat -F 32 -R 16 /tmp/partition
 echo Copying files to disk image...
 mcopy -i /tmp/partition src/data/example.txt ::/
 
