@@ -196,6 +196,10 @@ bool list_dir(char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_ou
 // TODO: Get rid of this and just use open/read/close? Or make read_file_fully wrapper?
 bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
     int fd = open_file(path);
+    if (fd < 0) {
+        printf("Failed to open file\n");
+        return FAILURE;
+    }
     *length_out = read(fd, buffer, 10000);
     close_file(fd);
     return SUCCESS;

@@ -1,5 +1,7 @@
 #include "system.h"
 
+uint32_t fault_count = 0;
+
 extern void isr0();
 extern void isr1();
 extern void isr2();
@@ -159,6 +161,11 @@ struct stackframe {
 
 void fault_handler(struct regs *r) {
     if (r->int_no < 16) {
+        fault_count++;
+        if (fault_count > 3) {
+            for(;;);
+        }
+
         fprintf(stddebug, "%s\n", exception_messages[r->int_no]);
         printf("\n%s\n", exception_messages[r->int_no]);
         printf("Error Code: %d\n", r->err_code);
@@ -179,6 +186,10 @@ void fault_handler(struct regs *r) {
 
         for(;;);
     } else if (r->int_no < 32) {
+        fault_count++;
+        if (fault_count > 3) {
+            for(;;);
+        }
         printf("Reserved exception\n");
         for(;;);
     } else if (r->int_no == SYSCALL_VECTOR) {
