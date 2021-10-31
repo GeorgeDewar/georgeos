@@ -3,6 +3,7 @@
 
 #define BYTES_PER_SECTOR        512
 #define DIR_ENTRY_SIZE          32
+#define DIR_ENTRIES_PER_SECTOR  (BYTES_PER_SECTOR / DIR_ENTRY_SIZE)
 
 typedef struct {
     char name[8];                                                                           // 00
@@ -66,6 +67,7 @@ static uint32_t fat12_decode_fat_entry(uint32_t cluster_num, FileSystem *fs);
 static FatInstanceData * get_instance_data(FileSystem *fs);
 static unsigned int first_data_sector(FileSystem *fs);
 static bool cluster_is_end_of_chain(uint32_t cluster, FileSystem *fs);
+static bool fat_read_dir_sector(FileSystem* fs, uint32_t sector, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 
 FileSystemDriver fs_fat12 = {
     .init = &fat12_init,
@@ -161,10 +163,22 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
 /** List the files in a directory into dir_entry_list_out, and set num_entries_out */
 bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
     int sectors_per_dir = get_instance_data(fs)->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR;
-    FatDirectoryEntry dir_entry_buffer[get_instance_data(fs)->max_root_directory_entries];
-    // Assume root dir for now, and just read one sector
-    read_sectors_lba(fs->device, get_instance_data(fs)->root_dir_start, sectors_per_dir, dir_entry_buffer);
-    for (int i=0; i < get_instance_data(fs)->max_root_directory_entries; i++) {
+    int total_entries = 0;
+    for(int i=0; i<sectors_per_dir; i++) {
+        uint16_t entries_this_sector = 0;
+        fat_read_dir_sector(fs, get_instance_data(fs)->root_dir_start, dir_entry_list_out, &entries_this_sector);
+        total_entries += entries_this_sector;
+        if (entries_this_sector < DIR_ENTRIES_PER_SECTOR) break;
+    }
+    *num_entries_out = total_entries;
+    return SUCCESS;
+}
+
+bool fat_read_dir_sector(FileSystem* fs, uint32_t sector, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
+    // Create a buffer large enough for one sector worth of directory entries
+    FatDirectoryEntry dir_entry_buffer[DIR_ENTRIES_PER_SECTOR];
+    read_sectors_lba(fs->device, sector, 1, dir_entry_buffer);
+    for (int i=0; i < DIR_ENTRIES_PER_SECTOR; i++) {
         // printf("Checking entry %d\n", i);
         FatDirectoryEntry fat12entry = dir_entry_buffer[i];
 
