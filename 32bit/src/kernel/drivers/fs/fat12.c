@@ -32,13 +32,27 @@ typedef struct {
 } __attribute__((packed)) FatDirectoryEntry;
 typedef struct {
     void *fat;
-    BiosParameterBlock *bpb;
     char fat_type;
+    uint8_t sectors_per_cluster;
+    uint16_t num_reserved_sectors;
+    uint8_t num_fats;
+    uint32_t sectors_per_fat;
+    uint16_t max_root_directory_entries; // FAT12/16 only
+    uint32_t total_sectors;
+    uint32_t root_dir_start;
+    uint32_t volume_id;
+    char partition_volume_label[11];
+    char file_system_type[8];
 } FatInstanceData;
 enum FatType {
     FAT12 = 0,
     FAT16,
     FAT32,
+};
+char *FatTypeName[] = {
+    "FAT12",
+    "FAT16",
+    "FAT32",
 };
 
 /**
@@ -47,11 +61,10 @@ enum FatType {
 bool fat12_init(DiskDevice* device, FileSystem* filesystem_out);
 bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out);
 bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer);
-static bool fat12_read_fat(DiskDevice* device, BiosParameterBlock *bpb, uint8_t *fat);
+static bool fat12_read_fat(DiskDevice* device, FatInstanceData *instance_data, uint8_t *fat);
 static uint32_t fat12_decode_fat_entry(uint32_t cluster_num, FileSystem *fs);
-static FatInstanceData * instance_data(FileSystem *fs);
-static int root_dir_start(FileSystem *fs);
-static int first_data_sector(FileSystem *fs);
+static FatInstanceData * get_instance_data(FileSystem *fs);
+static unsigned int first_data_sector(FileSystem *fs);
 static bool cluster_is_end_of_chain(uint32_t cluster, FileSystem *fs);
 
 FileSystemDriver fs_fat12 = {
@@ -68,28 +81,56 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
     // Read the BPB - return promptly if not FAT12
     uint8_t buffer[BYTES_PER_SECTOR];
     device->driver->read_sectors(device, 0, 1, buffer);
-    BiosParameterBlock *bpb = malloc(sizeof(BiosParameterBlock));
-    memcpy(buffer + 11, bpb, sizeof(BiosParameterBlock));
+    Dos331BiosParameterBlock *bpb = (Dos331BiosParameterBlock *) (buffer + 11);
 
     char fat_type;
-    if (strcmp_wl(bpb->file_system_type, "FAT12", 5) > 0) {
+    if (strcmp_wl(((ExtendedBiosParameterBlock *) bpb)->file_system_type, FatTypeName[FAT12], 5) > 0) {
         fat_type = FAT12;
-    } else if (strcmp_wl(bpb->file_system_type, "FAT16", 5) > 0) {
+    } else if (strcmp_wl(((ExtendedBiosParameterBlock *) bpb)->file_system_type, FatTypeName[FAT16], 5) > 0) {
         fat_type = FAT16;
-    } else if (strcmp_wl(bpb->file_system_type, "FAT32", 5) > 0) {
+    } else if (strcmp_wl(((Fat32ExtendedBiosParameterBlock *) bpb)->file_system_type, FatTypeName[FAT32], 5) > 0) {
         fat_type = FAT32;
     } else {
         fprintf(stddebug, "Not a FAT volume\n");
         return FAILURE;
     }
-    bpb->file_system_type[5] = 0; // NULL-terminate the FS type so we can use it as a string
-
-    // Allocate buffer to store File Allocation Table
-    uint8_t *fat = malloc(bpb->sectors_per_fat * BYTES_PER_SECTOR);
 
     // Allocate memory for instance data structure
     FatInstanceData *instance_data = malloc(sizeof(FatInstanceData));
-    instance_data->bpb = bpb;
+
+    // Parse BPB/EBPB info into a consistent structure. Some things are common between all FAT versions, while others
+    // are located in different places for FAT32 vs FAT12/16.
+    instance_data->sectors_per_cluster = bpb->sectors_per_cluster;
+    instance_data->num_reserved_sectors = bpb->num_reserved_sectors;
+    instance_data->num_fats = bpb->num_fats;
+    instance_data->max_root_directory_entries = bpb->max_root_directory_entries;
+    if (bpb->num_sectors > 0) {
+        instance_data->total_sectors = bpb->num_sectors;
+    } else if (bpb->total_logical_sectors_large > 0) { // only applicable if the above is zero
+        instance_data->total_sectors = bpb->total_logical_sectors_large;
+    } else {
+        // Could get it from the partition record but we will probably never see this condition
+        fprintf(stderr, "FAT BPB does not specify number of sectors\n");
+        return FAILURE;
+    }
+
+    if (fat_type == FAT32) {
+        Fat32ExtendedBiosParameterBlock *ebpb = (Fat32ExtendedBiosParameterBlock *) bpb;
+        instance_data->sectors_per_fat = ebpb->sectors_per_fat;
+        instance_data->root_dir_start = ebpb->root_dir_start;
+        instance_data->volume_id = ebpb->volume_id;
+        memcpy(ebpb->partition_volume_label, instance_data->partition_volume_label, sizeof(ebpb->partition_volume_label));
+    } else {
+        ExtendedBiosParameterBlock *ebpb = (ExtendedBiosParameterBlock *) bpb;
+        instance_data->sectors_per_fat = bpb->sectors_per_fat;
+        // This value is not specified in the BPB, as it can be calculated based on other values
+        instance_data->root_dir_start = instance_data->num_reserved_sectors + (instance_data->sectors_per_fat * instance_data->num_fats);
+        instance_data->volume_id = ebpb->volume_id;
+        memcpy(ebpb->partition_volume_label, instance_data->partition_volume_label, sizeof(ebpb->partition_volume_label));
+    }
+
+    // Allocate buffer to store File Allocation Table
+    uint8_t *fat = malloc(instance_data->sectors_per_fat * BYTES_PER_SECTOR);
     instance_data->fat = fat;
     instance_data->fat_type = fat_type;
 
@@ -100,31 +141,30 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
     filesystem_out->case_sensitive = false;
 
     // Print debug info
-    fprintf(stddebug, "Initialising %s volume\n", bpb->file_system_type);
-    fprintf(stddebug, "  Reserved sectors: %d\n", bpb->num_reserved_sectors);
-    fprintf(stddebug, "  Sectors per FAT: %d\n", bpb->sectors_per_fat);
-    fprintf(stddebug, "  Number of FATs: %d\n", bpb->num_fats);
-    fprintf(stddebug, "  Root dir entries: %d\n", bpb->max_root_directory_entries);
+    fprintf(stddebug, "Initialising %s volume\n", FatTypeName[fat_type]);
+    fprintf(stddebug, "  Reserved sectors: %d\n",instance_data->num_reserved_sectors);
+    fprintf(stddebug, "  Sectors per FAT: %d\n", instance_data->sectors_per_fat);
+    fprintf(stddebug, "  Number of FATs: %d\n", instance_data->num_fats);
+    fprintf(stddebug, "  Root dir entries: %d\n", instance_data->max_root_directory_entries);
 
     // Print user-readable message
     char label[12];
-    memcpy(bpb->partition_volume_label, label, 11);
+    memcpy(instance_data->partition_volume_label, label, 11);
     label[11] = 0;
-    printf("Mounting %s filesystem with label %s\n", bpb->file_system_type, label);
+    printf("Mounting %s filesystem with label %s\n", FatTypeName[fat_type], label);
 
     // Read the FAT
-    if (fat12_read_fat(device, bpb, fat) == FAILURE) return FAILURE;
+    if (fat12_read_fat(device, instance_data, fat) == FAILURE) return FAILURE;
     return SUCCESS;
 }
 
 /** List the files in a directory into dir_entry_list_out, and set num_entries_out */
 bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
-    BiosParameterBlock *bpb = ((FatInstanceData *) fs->instance_data)->bpb;
-    int sectors_per_dir = bpb->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR;
-    FatDirectoryEntry dir_entry_buffer[bpb->max_root_directory_entries];
+    int sectors_per_dir = get_instance_data(fs)->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR;
+    FatDirectoryEntry dir_entry_buffer[get_instance_data(fs)->max_root_directory_entries];
     // Assume root dir for now, and just read one sector
-    read_sectors_lba(fs->device, root_dir_start(fs), sectors_per_dir, dir_entry_buffer);
-    for (int i=0; i<bpb->max_root_directory_entries; i++) {
+    read_sectors_lba(fs->device, get_instance_data(fs)->root_dir_start, sectors_per_dir, dir_entry_buffer);
+    for (int i=0; i < get_instance_data(fs)->max_root_directory_entries; i++) {
         // printf("Checking entry %d\n", i);
         FatDirectoryEntry fat12entry = dir_entry_buffer[i];
 
@@ -164,17 +204,17 @@ bool fat12_list_dir(FileSystem* fs, char* path, DirEntry* dir_entry_list_out, ui
         dir_entry_list_out[i].file_size = fat12entry.file_size;
         // For FAT32, use this value as the high part of the first cluster - otherwise, don't use it as it may be used
         // for a different purpose
-        uint16_t start_of_file_high = instance_data(fs)->fat_type == FAT32 ? fat12entry.fat32_start_of_file_high : 0;
+        uint16_t start_of_file_high = get_instance_data(fs)->fat_type == FAT32 ? fat12entry.fat32_start_of_file_high : 0;
         dir_entry_list_out[i].location_on_disk = fat12entry.start_of_file_low + (start_of_file_high << 16);
     }
-    *num_entries_out = bpb->max_root_directory_entries;
+    *num_entries_out = get_instance_data(fs)->max_root_directory_entries;
     return SUCCESS;
 }
 
 /** Read an entire file into the supplied buffer, and set length_out */
 bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer) {
-    int data_start = first_data_sector(fs);
-    int sectors_per_cluster = instance_data(fs)->bpb->sectors_per_cluster;
+    unsigned int data_start = first_data_sector(fs);
+    int sectors_per_cluster = get_instance_data(fs)->sectors_per_cluster;
 
     fprintf(stddebug, "Data start: %d\n", data_start);
     int cluster_index = 1; // we print the first cluster outside the loop
@@ -206,15 +246,15 @@ bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer) {
  */
 
 /** Read the whole FAT into a buffer */
-static bool fat12_read_fat(DiskDevice* device, BiosParameterBlock *bpb, uint8_t *fat) {
+static bool fat12_read_fat(DiskDevice* device, FatInstanceData *instance_data, uint8_t *fat) {
     fprintf(stddebug, "Reading FAT\n");
-    return read_sectors_lba(device, bpb->num_reserved_sectors, bpb->sectors_per_fat, fat);
+    return read_sectors_lba(device, instance_data->num_reserved_sectors, instance_data->sectors_per_fat, fat);
 }
 
 /** Return the location of the next cluster, if any, given a cluster number */
 static uint32_t fat12_decode_fat_entry(uint32_t cluster_num, FileSystem *fs) {
-    uint8_t* fat = instance_data(fs)->fat;
-    char fat_type = instance_data(fs)->fat_type;
+    uint8_t* fat = get_instance_data(fs)->fat;
+    char fat_type = get_instance_data(fs)->fat_type;
     if (fat_type != FAT12) {
         // This is the easy case, for FAT16 and FAT32, as they are multiples of 1 byte
         return *(fat + cluster_num);
@@ -240,27 +280,18 @@ static uint32_t fat12_decode_fat_entry(uint32_t cluster_num, FileSystem *fs) {
     }
 }
 
-/** Return the location of the next cluster, if any, given a cluster number */
-static uint32_t fat32_decode_fat_entry(uint32_t cluster_num, const uint8_t *fat) {
-    return *(fat + cluster_num);
-}
-
-static FatInstanceData * instance_data(FileSystem *fs) {
+static FatInstanceData * get_instance_data(FileSystem *fs) {
     return ((FatInstanceData *) fs->instance_data);
 }
 
-static int root_dir_start(FileSystem *fs) {
-    BiosParameterBlock *bpb = ((FatInstanceData *) fs->instance_data)->bpb;
-    return bpb->num_reserved_sectors + (bpb->sectors_per_fat * bpb->num_fats);
-}
-
-static int first_data_sector(FileSystem *fs) {
-    BiosParameterBlock *bpb = ((FatInstanceData *) fs->instance_data)->bpb;
-    return bpb->num_reserved_sectors + (bpb->sectors_per_fat * bpb->num_fats) + (bpb->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR);
+static unsigned int first_data_sector(FileSystem *fs) {
+    return get_instance_data(fs)->num_reserved_sectors +
+           (get_instance_data(fs)->sectors_per_fat * get_instance_data(fs)->num_fats) +
+           (get_instance_data(fs)->max_root_directory_entries * DIR_ENTRY_SIZE / BYTES_PER_SECTOR);
 }
 
 static bool cluster_is_end_of_chain(uint32_t cluster, FileSystem *fs) {
-    char fat_type = instance_data(fs)->fat_type;
+    char fat_type = get_instance_data(fs)->fat_type;
     if (fat_type == FAT12) {
         return (bool) (cluster >= 0xFF8);
     } else if (fat_type == FAT16) {
