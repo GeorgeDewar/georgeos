@@ -4,9 +4,9 @@ switch_prot:
     cli
 
     ; Enable A20 line
-    ; in al, 0x92
-    ; or al, 2
-    ; out 0x92, al
+    in al, 0x92
+    or al, 2
+    out 0x92, al
 
     lgdt [gdt_descriptor]
     mov eax, cr0 ; To make the switch to protected mode , we set
