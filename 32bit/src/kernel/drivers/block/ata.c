@@ -122,9 +122,9 @@ void ata_init() {
     // Set these to the default values now so it's sorted if we either don't find a PCI controller, or either channel
     // is in compatibility mode
     channels[0].base = 0x1F0;
-    channels[0].ctrl = 0x3F6;
+    channels[0].ctrl = 0x3F4; // +2 for CTRL
     channels[1].base = 0x170;
-    channels[1].ctrl = 0x376;
+    channels[1].ctrl = 0x374; // +2 for CTRL
 
     if (found) {
         fprintf(stderr, "Found IDE controller (%x:%x) on PCI bus at %x:%x:%x\n",
