@@ -444,3 +444,6 @@ void ata_init();
 
 /* AHCI */
 bool ahci_init();
+
+/* Debug */
+void print_mem_info();
