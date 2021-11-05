@@ -189,10 +189,11 @@ bool fat12_list_root(FileSystem* fs, DirEntry* dir_entry_list_out, uint16_t* num
 bool fat12_list_dir(FileSystem* fs, uint32_t cluster, DirEntry* dir_entry_list_out, uint16_t* num_entries_out) {
     // Read the directory like a file
     uint32_t clusters_read;
-    uint8_t buffer[DIR_ENTRY_SIZE * 128]; // Will overflow if more than 128 files in dir
+    uint16_t entries_per_cluster = get_instance_data(fs)->sectors_per_cluster * DIR_ENTRIES_PER_SECTOR;
+    uint8_t buffer[entries_per_cluster * DIR_ENTRY_SIZE]; // TODO: Will overflow if more than one cluster worth - this is why we need read(bytes)
     if (fat12_read_file(fs, cluster, buffer, &clusters_read) == FAILURE) return FAILURE;
 
-    return fat_parse_dir_entries(fs, buffer, clusters_read * get_instance_data(fs)->sectors_per_cluster * DIR_ENTRIES_PER_SECTOR, dir_entry_list_out, num_entries_out);
+    return fat_parse_dir_entries(fs, buffer, clusters_read * entries_per_cluster, dir_entry_list_out, num_entries_out);
 }
 
 /**
