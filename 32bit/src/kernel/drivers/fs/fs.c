@@ -139,6 +139,7 @@ int open_file(char* path) {
     // Find file in FS
     DirEntry dir_entry;
     if (find_file(fs, fs_path, &dir_entry) < 0) {
+        fprintf(stddebug, "Did not find file\n");
         return -1;
     }
     fprintf(stddebug, "Found file\n");
@@ -201,7 +202,9 @@ bool read_file(char* path, uint8_t* buffer, uint16_t* length_out) {
         printf("Failed to open file\n");
         return FAILURE;
     }
-    *length_out = read(fd, buffer, 10000);
+    int result = read(fd, buffer, 10000);
+    if (result == FAILURE) return FAILURE;
+    *length_out = result;
     close_file(fd);
     return SUCCESS;
 }

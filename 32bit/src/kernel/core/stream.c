@@ -18,7 +18,9 @@ int32_t read(int16_t fp, void* buffer, int len) {
         FileDescriptor fd = handle.file_descriptor;
         FileSystem *filesystem = handle.file_descriptor.filesystem;
         uint32_t clusters_read;
-        filesystem->driver->read_file(filesystem, fd.location_on_disk, buffer, &clusters_read); // TODO: Len
+        if (filesystem->driver->read_file(filesystem, fd.location_on_disk, buffer, &clusters_read) == FAILURE) {
+            return FAILURE;
+        }
         return fd.size;
     } else if(handle.type == BLOCK) {
         fprintf(stddebug, "Reading from block device\n");

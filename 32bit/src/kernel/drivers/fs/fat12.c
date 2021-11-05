@@ -270,7 +270,11 @@ bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer, uint32_t* 
         }
 
         cluster = fat12_decode_fat_entry(cluster, fs);
-        if(cluster_is_end_of_chain(cluster, fs)) break; // we've read the last cluster already
+        if (cluster_is_end_of_chain(cluster, fs)) break; // we've read the last cluster already
+        if (cluster < 2) {
+            fprintf(stderr, "Invalid cluster value: %d\n", cluster);
+            return FAILURE;
+        }
 
         cluster_index++;
     }
