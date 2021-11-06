@@ -11,6 +11,10 @@ easier to boot from any kind of device (PXE, USB, etc) supported by BIOS and
 have a read-only filesystem in place including the shell, allowing far easier
 debugging of real storage device drivers and file system implementations.
 
+Related:
+- Get C-based bootloader working
+- Build PXE-specific bootloader
+
 Desired features in order of priority:
 - [x] Hardware support for screen, keyboard, serial communication
 - [x] Timer (delay, etc)
