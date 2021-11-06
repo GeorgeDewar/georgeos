@@ -4,19 +4,28 @@ A toy/educational operating system.
 
 This is the 32-bit re-write of the earlier beginnings found in the 16bit directory.
 
+**6/11/2021 Plan:**
+Develop the ability for the bootloader to load an "initrd" (initial ramdisk)
+image into memory, which is then mounted by the kernel. This will make it much
+easier to boot from any kind of device (PXE, USB, etc) supported by BIOS and
+have a read-only filesystem in place including the shell, allowing far easier
+debugging of real storage device drivers and file system implementations.
+
 Desired features in order of priority:
 - [x] Hardware support for screen, keyboard, serial communication
 - [x] Timer (delay, etc)
 - Drive support:
+  - [ ] RAM disk (initrd)
   - [x] Floppy
-  - [ ] ATA hard disk
+  - [x] ATA hard disk (read)
   - [ ] USB mass storage
-- File systems:
+- File systems (read):
+  - [ ] TAR (for ram disk)? or simplified fat perhaps...
   - [x] FAT12
-  - [ ] FAT16
-  - [ ] FAT32
+  - [x] FAT16
+  - [x] FAT32
 - Dynamic memory allocation
-- A filesystem that draws from Unix and Windows principals
+- [x] A filesystem that draws from Unix and Windows principals
   - Forward slashes, root is /
   - Everything is a file (that can be read from or written to)
   - Every file on a drive is under the drive, e.g. /drive/floppy1/file.txt

@@ -236,6 +236,7 @@ static bool fat_parse_dir_entries(FileSystem* fs, void *buffer_in, uint16_t max_
         }
         // Append a NULL byte
         dir_entry_list_out[i].filename[bufferIndex] = 0;
+        printf("  %s\n", dir_entry_list_out[i].filename);
         // Copy flags
         dir_entry_list_out[i].archive = fat12entry.archive;
         dir_entry_list_out[i].read_only = fat12entry.readOnly;
