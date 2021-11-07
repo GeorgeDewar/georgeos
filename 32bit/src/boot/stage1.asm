@@ -65,8 +65,8 @@ fatal_error:
     call print_string
     jmp $
 
-%include "src/boot/print_string.asm"
-%include "src/boot/pause.asm"
+%include "print_string.asm"
+%include "pause.asm"
 
 ; -----------------------------------------------------------------------------
 ; Strings and variables
@@ -95,14 +95,14 @@ DAP:
 
 bootend:
     ; Print MDP to upper left of screen in white on light magenta
-    mov ax, 0xb800
-    mov es, ax
-    mov word [es:0x0000], 0x57<<8 | 'M'
-    mov word [es:0x0002], 0x57<<8 | 'D'
-    mov word [es:0x0004], 0x57<<8 | 'P'
+    ;mov ax, 0xb800
+    ;mov es, ax
+    ;mov word [es:0x0000], 0x57<<8 | 'M'
+    ;mov word [es:0x0002], 0x57<<8 | 'D'
+    ;mov word [es:0x0004], 0x57<<8 | 'P'
 
     ; Infinite loop so we don't have the CPU wander memory
-    cli
+    ;cli
 endloop:
-    hlt
-    jmp endloop
+    ;hlt
+    ;jmp endloop
