@@ -26,7 +26,21 @@ debug: all
 	  	-ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
-		-ex "break kernel.c:33" \
+		-ex "break *0x7e00" \
+		-ex "continue" \
+		-ex "display/10i \$$pc"
+	pkill qemu
+
+debugboot2: all
+	qemu-system-i386.exe \
+		-boot c \
+		-drive file=build/hdd.img,format=raw \
+		-s -S -serial stdio &
+	gdb.exe \
+	  	-ex "file build/boot/stage2.elf" \
+		-ex "target remote localhost:1234" \
+		-ex "set architecture i8086" \
+		-ex "break *0x7e00" \
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu
@@ -38,14 +52,14 @@ cliondebug: all
 		-s -S -serial stdio
 
 hdd.img: bootload.bin
-	cp build/bootload.bin build/hdd.img
+	cp build/boot/boot.img build/hdd.img
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
 	objcopy -O binary --remove-section .note.gnu.property build/kernel.elf build/$@
 
-bootload.bin: src/boot/*.asm
-	nasm -O0 -f bin -o build/bootload.bin src/boot/stage1.asm
+bootload.bin: src/boot/*
+	make -C src/boot all
 
 userland:
 	$(MAKE) -C src/userland

@@ -1,9 +1,9 @@
 /* entry point of our kernel */
-ENTRY(main)
+ENTRY(_start)
 
 SECTIONS
 {
-	. = 0x7c00;
+	. = 0x7e00;
 
   	/* text section */
 	.text  : 
