@@ -83,7 +83,7 @@ fatal_error:
 ; Disk address packet
 DAP:
                         db 10h, 0
-    sectors_to_read     dw 1 ; Number of sectors to be loaded
+    sectors_to_read     dw 2 ; Number of sectors to be loaded
     read_dest           dd bootend
     read_from_sector    dq 1
 

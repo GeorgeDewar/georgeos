@@ -5,6 +5,7 @@ all: $(OBJDIR)/boot.img
 
 $(OBJDIR)/boot.img: $(OBJDIR)/stage1.bin $(OBJDIR)/stage2.bin
 	cat $^ > $@
+	truncate $@ --size 10MB
 
 $(OBJDIR)/stage1.bin: stage1.asm
 	nasm -O0 -f bin -o $(OBJDIR)/stage1.bin stage1.asm
