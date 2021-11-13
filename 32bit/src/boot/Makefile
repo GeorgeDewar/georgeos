@@ -20,7 +20,7 @@ $(OBJDIR)/stage2_entry.o: stage2_entry.asm
 
 $(OBJDIR)/stage2.o: stage2.c
 	gcc -c $< -o $(OBJDIR)/$@ -g -fno-PIE -static -std=gnu99 -m16 -Os -mregparm=3 \
-    	-fomit-frame-pointer -nostdlib -ffreestanding -Wall -Wextra -fno-zero-initialized-in-bss
+    	-fomit-frame-pointer -nostdlib -ffreestanding -Wall -Wextra -fno-zero-initialized-in-bss -I.
 
 clean:
 	find $(OBJDIR)/ -name '*.img' -delete

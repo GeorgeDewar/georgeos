@@ -35,10 +35,11 @@ debugboot2: all
 	qemu-system-i386.exe \
 		-boot c \
 		-drive file=build/hdd.img,format=raw \
-		-s -S -serial stdio &
+		-gdb tcp::1234 -S -serial stdio &
 	gdb.exe \
-	  	-ex "file build/boot/stage2.elf" \
-		-ex "target remote localhost:1234" \
+		-ex "file build/boot/stage2.elf" \
+		-ex "target remote desktop1.local:1234" \
+		-ex "set tdesc filename target.xml" \
 		-ex "set architecture i8086" \
 		-ex "break *0x7e00" \
 		-ex "continue" \
