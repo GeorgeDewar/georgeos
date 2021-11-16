@@ -13,10 +13,11 @@ void main() {
 
     uint16_t result;
     char* edid_buffer = (char *) 0x9200;
-    result = read_edid(&edid_buffer);
+    result = read_edid(edid_buffer);
     if (result == 0x004f) {
         print_string("EDID Success\r\n");
     }
+    for(;;);
 
     result = get_mode_list((uint16_t) infoblock);
     if (result == 0x004f) {

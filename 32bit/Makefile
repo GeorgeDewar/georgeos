@@ -33,6 +33,7 @@ debug: all
 
 debugboot2: all
 	qemu-system-i386.exe \
+	  	-device VGA,edid=on,xres=1280,yres=800 \
 		-boot c \
 		-drive file=build/hdd.img,format=raw \
 		-gdb tcp::1234 -S -serial stdio &
