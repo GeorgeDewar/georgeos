@@ -41,6 +41,7 @@ debugboot: all
 		-ex "set architecture i8086" \
 		-ex "break *0x7c00" \
 		-ex "continue" \
+		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu
 
@@ -75,7 +76,7 @@ kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 # 	objcopy -O binary build/stage1.elf build/$@
 
 stage1.bin: src/boot/*.asm
-	nasm -O0 -f bin -o build/stage1.bin src/boot/stage1.asm
+	nasm -O0 -f bin -o build/boot/stage1.bin src/boot/stage1.asm
 
 userland:
 	$(MAKE) -C src/userland

@@ -42,11 +42,9 @@ bootloader_start:
     mov si, bootloader_hi
     call print_string
 
-    jmp $
-
     ; Show the boot device
-    mov ax, [bootdev]
-    push ax                     ; Push on stack as 1st parameter
+    xor dh, dh                  ; Clear dh so we don't print part of something else as well
+    push dx                     ; Push on stack as 1st parameter
     call print_hex_word         ; Print 16-bit value as hex
     mov si, new_line
     call print_string

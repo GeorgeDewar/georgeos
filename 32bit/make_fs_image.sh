@@ -29,5 +29,7 @@ truncate -s $size_bytes $outfile
 parted -s ${outfile} mklabel msdos
 # Create a partition
 parted -s ${outfile} unit B mkpart primary fat32 $partition_1_start $(expr ${size_bytes} \- 1)
+# Make bootable
+parted -s ${outfile} toggle 1 boot
 # Copy the partition into the whole file system
 dd if=/tmp/partition of=$outfile bs=512 seek=$partition_1_start_sectors
