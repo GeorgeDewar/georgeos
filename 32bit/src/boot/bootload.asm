@@ -1,30 +1,24 @@
 ; ==================================================================
 ; The GeorgeOS simple bootloader
 ;
-; Based on the MikeOS bootloader. It scans the FAT12
-; floppy for KERNEL.BIN (the GeorgeOS kernel), loads it and executes it.
-; This must grow no larger than 512 bytes (one sector), with the final
-; two bytes being the boot signature (AA55h). Note that in FAT12,
-; a cluster is the same as a sector: 512 bytes. KERNEL.BIN must be the
-; first file in the root directory.
+; 2-stage bootloader. The first stage loads stage2 from sector 2 (
+; sector 1 may be an FS info sector). Stage 2 will load the RAM
+; disk and kernel.
 ;
 ; Memory Map:
-; 0000 - 7BFF = Stack       (grows downwards)
-; 7C00 - 83FF = Bootloader  (up to 2KB reserved)
-; 8400 - A3FF = Disk Buffer (8KB)
-; 9000 (overlapping)        VESA mode information
-; A400 - B5FF = FAT         (4,608 bytes)
-; B600 - 
-; C000 - C200 = VESA controller info
+; 00000000 - 00007BFF = Stack       (grows downwards)
+; 00007C00 - 000083FF = Bootloader  (up to 2KB reserved)
+; 00009000 (overlapping)        VESA mode information
+; 0000B600 -
+; 0000C000 - 0000C200 = VESA controller info
+; 00010000 - 0001FFFF = RAM Disk
+; 00020000 - 0002FFFF = Kernel
 ; ==================================================================
 
     BITS 16
 
     %define LOAD_ADDRESS    7c00h          ; This is where the BIOS puts us
     org LOAD_ADDRESS                       ; Assume all code is at this offset
-
-    %define DISK_BUFFER     8400h          ; Where in memory to put temporarily read sectors from disk
-    %define FAT             0a400h         ; Where in memory to put the FAT
 
     %define KERNEL_SEGMENT  2000h          ; Where we are going to load the kernel
     %define KERNEL_OFFSET   0000h          ; 2000:0000h = 20000h
@@ -33,7 +27,6 @@
     nop                         ; Pad out before disk description
 
     %include "src/boot/disk_description_table.asm"
-    %include "src/boot/gdt.asm"
 
 ; ------------------------------------------------------------------
 ; Main bootloader code
@@ -62,22 +55,21 @@ bootloader_start:
     ; Print value 0xaa55 to the display
     mov ax, [bootdev]
     push ax                 ; Push on stack as 1st parameter
-    ; push 2
-    ; push 16
     call print_hex_word               ; Print 16-bit value as hex
     mov si, new_line
     call print_string
 
     ; Load the rest of the bootloader from sector 1
-    mov bx, 1           ; start at sector 1
-    mov al, 2           ; read two sectors
-    mov si, stage2      ; put it at stage2
-    call read_sectors   ; call
+    mov si, DAP
+    mov ah, 42h
+    stc
+    int 13h
+    jc fatal_error
 
     ; Jump to stage 2, which we just loaded
     mov si, jumping_to_pt2
     call print_string
-    jmp stage2
+    jmp bootend
 
 ; [bits 16]
 ; ------------------------------------------------------------------

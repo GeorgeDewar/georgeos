@@ -11,24 +11,35 @@ HEADERS = $(wildcard $(SRCDIR)/include/*.h)
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(C_SOURCES))
 OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fonts/zap-vga16.o
 # Default build target
-all: georgeos_1440.img hdd.img
+all: hdd.img
 run: all
 	qemu-system-i386.exe \
-		-boot a \
+		-boot c \
 		-drive file=build/hdd.img,format=raw \
-		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-serial stdio
 debug: all
 	qemu-system-i386.exe \
-		-boot a \
+		-boot c \
 		-drive file=build/hdd.img,format=raw \
-		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio &
 	gdb.exe \
 	  	-ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
-		-ex "break kernel.c:33" \
+		-ex "break *0x7c00" \
+		-ex "continue" \
+		-ex "display/10i \$$pc"
+	pkill qemu
+debugboot: all
+	qemu-system-i386.exe \
+		-boot c \
+		-drive file=build/hdd.img,format=raw \
+		-s -S -serial stdio &
+	gdb.exe \
+		-ex "target remote localhost:1234" \
+		-ex "set tdesc filename qemu-target.xml" \
+		-ex "set architecture i8086" \
+		-ex "break *0x7c00" \
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu
@@ -40,28 +51,31 @@ cliondebug: all
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio
 
-georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
-	echo Initializing disk image...
-	rm -f build/$@
-	mkfs.fat -F 12 -R 2 -C build/$@ 1440
+#georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
+#	echo Initializing disk image...
+#	rm -f build/$@
+#	mkfs.fat -F 12 -R 2 -C build/$@ 1440
+#
+#	echo Adding bootsector to disk image...
+#	dd seek=0 bs=512 if=build/bootload.bin of=build/$@ conv=notrunc
+#
+#	echo Copying kernel and applications to disk image...
+#	mcopy -i build/$@ build/kernel.bin ::/
+#	mcopy -i build/$@ src/data/* ::/
+#	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
-	echo Adding bootsector to disk image...
-	dd seek=0 bs=512 if=build/bootload.bin of=build/$@ conv=notrunc
-
-	echo Copying kernel and applications to disk image...
-	mcopy -i build/$@ build/kernel.bin ::/
-	mcopy -i build/$@ src/data/* ::/
-	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
-
-hdd.img: make_fs_image.sh src/data/example.txt
-	./make_fs_image.sh build/hdd.img 40
+hdd.img: make_fs_image.sh src/data/example.txt stage1.bin
+	./make_fs_image.sh build/hdd.img 10
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
 	objcopy -O binary --remove-section .note.gnu.property build/kernel.elf build/$@
 
-bootload.bin: src/boot/*.asm
-	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/bootload.bin src/boot/bootload.asm
+# stage1.bin: stage1.elf
+# 	objcopy -O binary build/stage1.elf build/$@
+
+stage1.bin: src/boot/*.asm
+	nasm -O0 -f bin -o build/stage1.bin src/boot/stage1.asm
 
 userland:
 	$(MAKE) -C src/userland

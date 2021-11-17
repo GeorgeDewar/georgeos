@@ -11,10 +11,14 @@ echo "Creating image of ${size_mb}MB"
 
 partition_size=$(expr ${size_bytes} \- ${partition_1_start})
 
+# Create the partition
 echo > /tmp/partition
 truncate -s $partition_size /tmp/partition
-#mkfs.vfat /tmp/partition
-mkfs.vfat -F 32 -R 16 /tmp/partition
+mkfs.vfat -F 32 -R 16 -b 15 /tmp/partition
+# Copy the stage 1 bootloader code into the Volume Boot Record (sector 0 of the partition) without overwriting the BPB
+dd if=build/boot/stage1.bin of=/tmp/partition bs=1 conv=notrunc count=3
+dd if=build/boot/stage1.bin of=/tmp/partition bs=1 seek=90 skip=90 conv=notrunc count=422
+
 echo Copying files to disk image...
 mcopy -i /tmp/partition src/data/example.txt ::/
 
