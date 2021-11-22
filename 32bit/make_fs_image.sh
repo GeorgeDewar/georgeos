@@ -23,6 +23,8 @@ echo Copying files to disk image...
 mcopy -i /tmp/partition src/data/example.txt ::/
 
 # Create an output file of the appropriate size
+echo Creating partition layout...
+set -v
 echo > $outfile
 truncate -s $size_bytes $outfile
 # Create a partition table

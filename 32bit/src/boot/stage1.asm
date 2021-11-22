@@ -1,7 +1,9 @@
 ; ==================================================================
 ; The GeorgeOS bootloader
 ;
-; Just loads the Stage2
+; Just loads the Stage2 from sector 2-5 of the boot volume, allowing
+; for up to 2KB stage2 without interfering with the usual locations
+; of the FSInfo and backup boot sectors under FAT32.
 ;
 ; Memory Map:
 ; 00000000 - 00007BFF = Stack       (grows downwards)
@@ -42,16 +44,17 @@ bootloader_start:
     mov si, bootloader_hi
     call print_string
 
-    ; Show the boot device
-    xor dh, dh                  ; Clear dh so we don't print part of something else as well
-    push dx                     ; Push on stack as 1st parameter
-    call print_hex_word         ; Print 16-bit value as hex
+    ; Print the boot device
+    mov ax, [bootdev]
+    mov bx, 16
+    mov cx, 2
+    call itoa
+
     mov si, new_line
     call print_string
 
-    jmp $
-
     ; Load the rest of the bootloader from sector 1
+    mov dl, [bootdev]
     mov si, DAP
     mov ah, 42h
     stc
@@ -70,6 +73,11 @@ bootloader_start:
 fatal_error:
     mov si, disk_error
     call print_string
+    xor al, al ; We only want to print the error code in AH
+    shr ax, 8
+    mov bx, 16
+    mov cx, 2
+    call itoa
     jmp $
 
 %include "src/boot/print_string.asm"
@@ -79,7 +87,7 @@ fatal_error:
 ; Strings and variables
 ; -----------------------------------------------------------------------------
 
-    bootloader_hi       db "Starting GeorgeOS", 0x0D, 0x0A, 0
+    bootloader_hi       db "Starting GeorgeOS", 0x0D, 0x0A, "Boot Drive: 0x", 0
     jumping_to_pt2      db "Jumping to bootloader stage 2", 0x0D, 0x0A, 0
     new_line            db 0x0D, 0x0A, 0
 
