@@ -13,7 +13,7 @@ OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fon
 # Default build target
 all: georgeos_1440.img hdd.img
 run: all
-	qemu-system-i386.exe \
+	qemu-system-i386 \
 		-boot a \
 		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \

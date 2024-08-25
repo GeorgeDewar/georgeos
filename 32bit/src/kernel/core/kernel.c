@@ -43,7 +43,7 @@ void main () {
     open_files[stderr].type = STREAM;
     open_files[stderr].stream_device = sd_screen_console;
     open_files[stddebug].type = STREAM;
-    open_files[stddebug].stream_device = sd_screen_console;
+    open_files[stddebug].stream_device = sd_com1;
 
     printf("Kernel loaded successfully. Welcome to GeorgeOS!\n");
     extern uint8_t* video_memory;
