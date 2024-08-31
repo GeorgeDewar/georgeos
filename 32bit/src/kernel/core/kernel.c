@@ -102,12 +102,12 @@ void main () {
             // Create a FAT12 FileSystem instance - floppies always use FAT12
             FileSystem *fs = malloc(sizeof(FileSystem));
             fs_fat12.init(&block_devices[i].dev, fs);
-            mount_fs(fs, "floppy");
+            mount_fs(fs, "fd");
         } else if (block_devices[i].dev.type == HARD_DISK && block_devices[i].dev.partition > 0) {
             // Create a FAT12 FileSystem instance - just for now
             FileSystem *fs = malloc(sizeof(FileSystem));
             if (fs_fat12.init(&block_devices[i].dev, fs) == SUCCESS) {
-                mount_fs(fs, "hdd");
+                mount_fs(fs, "hd");
             }
         }
     }
