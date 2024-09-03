@@ -21,12 +21,12 @@ run: all
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-serial stdio
 debug: all
-	qemu-system-i386.exe \
+	qemu-system-i386 \
 		-boot a \
 		-drive file=build/hdd.img,format=raw \
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio &
-	gdb.exe \
+	gdb \
 	  	-ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
