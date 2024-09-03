@@ -16,21 +16,19 @@ run: all
 	qemu-system-i386 \
 		-nodefaults \
 		-vga std \
-		-boot a \
+		-boot c \
 		-drive file=build/hdd.img,format=raw \
-		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-serial stdio
 debug: all
 	qemu-system-i386 \
-		-boot a \
+		-boot c \
 		-drive file=build/hdd.img,format=raw \
-		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio &
 	gdb \
 	  	-ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
-		-ex "break kernel.c:33" \
+		-ex "break *0x7c00" \
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu
@@ -55,12 +53,15 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	mcopy -i build/$@ src/data/* ::/
 	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
-hdd.img: make_fs_image.sh src/data/example.txt
+hdd.img: bootload.bin mbr.bin make_fs_image.sh src/data/example.txt
 	./make_fs_image.sh build/hdd.img 40
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
 	objcopy -O binary --remove-section .note.gnu.property build/kernel.elf build/$@
+
+mbr.bin: src/boot/mbr.asm
+	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/mbr.bin src/boot/mbr.asm
 
 bootload.bin: src/boot/*.asm
 	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/bootload.bin src/boot/bootload.asm
