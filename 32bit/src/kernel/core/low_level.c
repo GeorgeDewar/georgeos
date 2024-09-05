@@ -15,7 +15,7 @@ unsigned short port_word_in ( unsigned short port ) {
 
 unsigned long port_long_in ( unsigned short port ) {
     unsigned long result ;
-    __asm__("inl %%dx, %%ax " : "=a" (result) : "d" (port));
+    __asm__("inl %%dx, %%eax " : "=a" (result) : "d" (port));
     return result ;
 }
 
@@ -30,5 +30,5 @@ void port_word_out ( unsigned short port , unsigned short data ) {
 }
 
 void port_long_out ( unsigned short port , unsigned long data ) {
-    __asm__("outl %%ax, %%dx " : :"a" (data), "d" (port));
+    __asm__("outl %%eax, %%dx " : :"a" (data), "d" (port));
 }
