@@ -53,6 +53,7 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	echo Copying kernel and applications to disk image...
 	mcopy -i build/$@ build/kernel.bin ::/
 	mcopy -i build/$@ src/data/* ::/
+	mkdir -p tftp
 	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
 hdd.img: make_fs_image.sh src/data/example.txt
@@ -73,9 +74,11 @@ userland:
 # For simplicity , we C files depend on all header files .
 # -fno-zero-initialized-in-bss is because we have no header, so don't know when bss starts, so can't zero it ourselves
 $(OBJDIR)/%.o: $(SRCDIR)/%.c ${HEADERS}
-	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/kernel/include -g -fno-zero-initialized-in-bss
+	mkdir -p $(dir $@)
+	gcc -fcommon -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/kernel/include -g -fno-zero-initialized-in-bss
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
+	mkdir -p $(dir $@)
 	nasm -f elf -o $@ $<
 
 clean:

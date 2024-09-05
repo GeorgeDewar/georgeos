@@ -15,9 +15,11 @@ PROGRAM_BINS = $(patsubst $(SRCDIR)/programs/%.c,$(OBJDIR)/programs/%.exe,$(PROG
 # Generic rule for compiling C code to an object file
 # For simplicity , we C files depend on all header files .
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(LIB_HEADERS)
+	@ mkdir -p $(dir $@)
 	gcc -m32 -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRCDIR)/lib -g -fdata-sections -ffunction-sections
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
+	@ mkdir -p $(dir $@)
 	nasm -f elf -o $@ $<
 
 $(OBJDIR)/programs/%.exe: $(OBJDIR)/user_entry.o $(OBJDIR)/lib/system.o $(OBJDIR)/programs/%.o 
