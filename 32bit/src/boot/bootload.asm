@@ -83,6 +83,7 @@ bootloader_start:
     mov bx, 1           ; start at sector 1
     mov al, 2           ; read two sectors
     mov si, stage2      ; put it at stage2
+    mov cx, 0
     call read_sectors   ; call
 
     ; Jump to stage 2, which we just loaded
@@ -151,6 +152,7 @@ stage2:
     mov bx, ROOT_DIR_LOCATION    ; start at sector
     mov al, SECTORS_PER_DIR      ; sectors to read
     mov si, DISK_BUFFER          ; put it in the general disk buffer
+    mov cx, 0
     call read_sectors            ; call the function
 
     mov si, looking_for_kernel
@@ -158,12 +160,12 @@ stage2:
     %include "src/boot/find_kernel.asm"
 
     ; Load the File Allocation Table (FAT)
-    mov si, loading_fat
-    call print_string
-    mov bx, NUM_RESERVED_SECTORS ; start at sector
-    mov al, SECTORS_PER_FAT      ; sectors to read
-    mov si, FAT                  ; put it in the FAT location
-    call read_sectors            ; call the function
+    ; mov si, loading_fat
+    ; call print_string
+    ; mov bx, NUM_RESERVED_SECTORS ; start at sector
+    ; mov al, SECTORS_PER_FAT      ; sectors to read
+    ; mov si, FAT                  ; put it in the FAT location
+    ; call read_sectors            ; call the function
 
     mov si, loading_kernel
     call print_string

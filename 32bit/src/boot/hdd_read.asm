@@ -5,7 +5,7 @@ disk_address_packet:
 	db	0
 blkcnt:	dw	0		; int 13 resets this to # of blocks actually read/written
 db_add:	dw	0		; memory buffer destination address (0:7c00)
-	dw	0		; in memory page zero
+db_seg:	dw	0		; in memory page zero
 d_lba:	dd	0		; put the lba to read in this spot
 	dd	0		; more storage bytes only for big lba's ( > 4 bytes )
 
@@ -26,6 +26,7 @@ read_sectors:
     mov [d_lba], bx
     mov [blkcnt], al
     mov [db_add], si
+    mov [db_seg], cx
 
     ; Read the requested sectors
     mov si, disk_address_packet	; address of "disk address packet"
