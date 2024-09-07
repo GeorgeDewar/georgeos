@@ -12,7 +12,7 @@ OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(C_SOURCES))
 OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fonts/zap-vga16.o
 # Default build target
 all: georgeos_1440.img hdd.img
-run: all
+run: hdd.img
 	qemu-system-i386 \
 		-nodefaults \
 		-vga std \

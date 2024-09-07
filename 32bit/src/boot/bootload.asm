@@ -32,7 +32,12 @@
     jmp short bootloader_start  ; Jump past disk description section
     nop                         ; Pad out before disk description
 
-    %include "src/boot/disk_description_table.asm"
+    
+%ifdef FLOPPY
+    %include "src/boot/hdd/disk_description_table.asm"
+%elifdef HDD
+    %include "src/boot/hdd/disk_description_table.asm"
+%endif
 
 ; ------------------------------------------------------------------
 ; Main bootloader code
