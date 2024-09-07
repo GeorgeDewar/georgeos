@@ -20,14 +20,14 @@
     %define RELOAD_LOC      0600h          ; Where in memory to move this code
     org RELOAD_LOC                         ; Assume all code is at this offset (wrong until we relocate)
 
-disk_address_packet:
-	db	0x10
-	db	0
-blkcnt:	dw	16		; int 13 resets this to # of blocks actually read/written
-db_add:	dw	0x7C00		; memory buffer destination address (0:7c00)
-	dw	0		; in memory page zero
-d_lba:	dd	1		; put the lba to read in this spot
-	dd	0		; more storage bytes only for big lba's ( > 4 bytes )
+jmp short bootloader_start
+nop
+;
+;	bios paramater block area is from offset 0 to 0x5a
+;	actual code starts at offset 0x5a. Formatting software
+;	installs the BPB in this area
+;
+times 0x5a db 0
 
 ; ------------------------------------------------------------------
 ; Main bootloader code
@@ -117,6 +117,15 @@ print_dot:
 ; Strings and variables
 ; -----------------------------------------------------------------------------
 
+disk_address_packet:
+	db	0x10
+	db	0
+blkcnt:	dw	16		; int 13 resets this to # of blocks actually read/written
+db_add:	dw	0x7C00		; memory buffer destination address (0:7c00)
+	dw	0		; in memory page zero
+d_lba:	dd	1		; put the lba to read in this spot
+	dd	0		; more storage bytes only for big lba's ( > 4 bytes )
+
     bootloader_hi       db "MBR Loading...", 0x0D, 0x0A, 0
 
     new_line            db 0x0D, 0x0A, 0
@@ -130,38 +139,40 @@ print_dot:
 ; ------------------------------------------------------------------
 ; END OF MBR CODE
 
-    times 436-($-$$) db 0    ; Pad remainder of boot sector with zeros
+    times 510-($-$$) db 0    ; Pad remainder of boot sector with zeros
 
 ; PARTITION TABLE
 
-UID: times 10   db 0
+; UID: times 10   db 0
 
-partition_1: 
-    db 0x80 ; Active partition
-    db 0x00 ; CHS start
-    db 0x00
-    db 0x00
-    db 0x0B ; Partition type
-    db 0x00 ; CHS end
-    db 0x00
-    db 0x00
-    dd 0x01 ; LBA start
-    dd 40960 ; 20MB
+; partition_1: 
+;     db 0x80 ; Active partition
+;     db 0x00 ; CHS start
+;     db 0x00
+;     db 0x00
+;     db 0x0B ; Partition type
+;     db 0x00 ; CHS end
+;     db 0x00
+;     db 0x00
+;     dd 0x01 ; LBA start
+;     dd 40960 ; 20MB
 
 ; Second partition is just for testing, no practical purpose
-partition_2: 
-    db 0x00 ; Not active partition
-    db 0x00 ; CHS start
-    db 0x00
-    db 0x00
-    db 0x0B ; Partition type
-    db 0x00 ; CHS end
-    db 0x00
-    db 0x00
-    dd 40961 ; LBA start
-    dd 20480 ; 10MB
+; partition_2: 
+;     db 0x00 ; Not active partition
+;     db 0x00 ; CHS start
+;     db 0x00
+;     db 0x00
+;     db 0x0B ; Partition type
+;     db 0x00 ; CHS end
+;     db 0x00
+;     db 0x00
+;     dd 40961 ; LBA start
+;     dd 20480 ; 10MB
 
-partition_3: times 16 db 0
-partition_4: times 16 db 0
+; partition_1: times 16 db 0
+; partition_2: times 16 db 0
+; partition_3: times 16 db 0
+; partition_4: times 16 db 0
 
     dw 0AA55h                ; Boot signature (DO NOT CHANGE!)

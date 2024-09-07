@@ -54,6 +54,9 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 	mkdir -p tftp
 	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
+hdd.vdi: hdd.img
+	qemu-img convert -f raw -O vdi build/hdd.img build/hdd.vdi
+
 hdd.img: bootload.bin mbr.bin make_fs_image.sh src/data/example.txt
 	./make_fs_image.sh build/hdd.img 40
 
