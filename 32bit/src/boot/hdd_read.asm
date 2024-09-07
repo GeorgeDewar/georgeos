@@ -3,10 +3,10 @@
 disk_address_packet:
 	db	0x10
 	db	0
-blkcnt:	dw	16		; int 13 resets this to # of blocks actually read/written
-db_add:	dw	0x7C00		; memory buffer destination address (0:7c00)
+blkcnt:	dw	0		; int 13 resets this to # of blocks actually read/written
+db_add:	dw	0		; memory buffer destination address (0:7c00)
 	dw	0		; in memory page zero
-d_lba:	dd	1		; put the lba to read in this spot
+d_lba:	dd	0		; put the lba to read in this spot
 	dd	0		; more storage bytes only for big lba's ( > 4 bytes )
 
 check_lba:
@@ -20,8 +20,10 @@ check_lba:
     ret
 
 read_sectors:
+    pusha
+
     ; Set the disk address packet values
-    mov [d_lba], dx
+    mov [d_lba], bx
     mov [blkcnt], al
     mov [db_add], si
 
@@ -31,3 +33,5 @@ read_sectors:
 	mov dl, [bootdev]
 	int 0x13
 	jc fatal_error
+    popa
+    ret
