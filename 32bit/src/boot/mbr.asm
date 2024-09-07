@@ -69,7 +69,7 @@ post_reload:
     push ax                 ; Push on stack as 1st parameter
     ; push 2
     ; push 16
-    call print_hex_word               ; Print 16-bit value as hex
+    call print_hex_byte               ; Print 16-bit value as hex
     mov si, new_line
     call print_string
 

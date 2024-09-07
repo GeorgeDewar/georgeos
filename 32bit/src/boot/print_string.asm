@@ -20,18 +20,28 @@ print_string:
     pop ax
     ret
 
-; Print 16 bit value passed on stack as first parameter
+; Print 8/16 bit value passed on stack as first parameter
 ; in hexadecimal. This routine will work on 80186+ processors
 ; Use page number and foreground color passed in second parameter
 
-print_hex_word:
+print_hex_byte:
     pusha           ; Save all registers, 16 bytes total
     mov bp, sp      ; BP=SP, on 8086 can't use sp in memory operand
-    mov cx, 0x0404  ; CH = number of nibbles to process = 4 (4*4=16 bits)
+    mov cx, 0x0204  ; CH = number of nibbles to process = 2 (2*4=8 bits)
                     ; CL = Number of bits to rotate each iteration = 4 (a nibble)
-    mov dx, [bp+18] ; DX = word parameter on stack at [bp+18] to print
+    mov dx, [bp+17] ; DX = word parameter on stack at [bp+17] to print
     mov bx, [bp+20] ; BX = page / foreground attr is at [bp+20]
+;     jmp print_hex
 
+; print_hex_word:
+;     pusha           ; Save all registers, 16 bytes total
+;     mov bp, sp      ; BP=SP, on 8086 can't use sp in memory operand
+;     mov cx, 0x0404  ; CH = number of nibbles to process = 2 (2*4=8 bits)
+;                     ; CL = Number of bits to rotate each iteration = 4 (a nibble)
+;     mov dx, [bp+18] ; DX = word parameter on stack at [bp+18] to print
+;     mov bx, [bp+20] ; BX = page / foreground attr is at [bp+20]
+
+print_hex:
 .loop:
     rol dx, cl      ; Roll 4 bits left. Lower nibble is value to print
     mov ax, 0x0e0f  ; AH=0E (BIOS tty print),AL=mask to get lower nibble

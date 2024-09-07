@@ -19,6 +19,13 @@ run: all
 		-boot c \
 		-drive file=build/hdd.img,format=raw \
 		-serial stdio
+run-floppy: all
+	qemu-system-i386 \
+		-nodefaults \
+		-vga std \
+		-boot a \
+		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
+		-serial stdio
 debug: all
 	qemu-system-i386 \
 		-boot c \
@@ -28,7 +35,8 @@ debug: all
 	  	-ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
-		-ex "break *0x7c00" \
+		-ex "break *0x7c6d" \
+		-ex "break *0x7d13" \
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu
@@ -68,7 +76,7 @@ mbr.bin: src/boot/mbr.asm
 	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/mbr.bin src/boot/mbr.asm
 
 bootload.bin: src/boot/*.asm
-	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/bootload.bin src/boot/bootload.asm
+	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -DHDD -DPAUSE -o build/bootload.bin src/boot/bootload.asm
 
 userland:
 	$(MAKE) -C src/userland

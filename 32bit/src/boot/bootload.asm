@@ -33,7 +33,6 @@
     nop                         ; Pad out before disk description
 
     %include "src/boot/disk_description_table.asm"
-    %include "src/boot/gdt.asm"
 
 ; ------------------------------------------------------------------
 ; Main bootloader code
@@ -59,14 +58,21 @@ bootloader_start:
     call print_string
 
     ; Show the boot device
-    ; Print value 0xaa55 to the display
+    mov si, boot
+    call print_string
     mov ax, [bootdev]
-    push ax                 ; Push on stack as 1st parameter
-    ; push 2
-    ; push 16
-    call print_hex_word               ; Print 16-bit value as hex
+    push ax                           ; Push on stack as 1st parameter
+    call print_hex_byte               ; Print 8-bit value as hex
     mov si, new_line
     call print_string
+
+%ifdef PAUSE
+    call pause
+%endif
+
+%ifdef HDD
+    call check_lba
+%endif
 
     ; Load the rest of the bootloader from sector 1
     mov bx, 1           ; start at sector 1
@@ -97,31 +103,32 @@ print_dot:
     ret
 
 %include "src/boot/print_string.asm"
-%include "src/boot/l2hts.asm"
+%ifdef FLOPPY
+    %include "src/boot/floppy_read.asm"
+%elifdef HDD
+    %include "src/boot/hdd_read.asm"
+%endif
 %include "src/boot/pause.asm"
 
 ; -----------------------------------------------------------------------------
 ; Strings and variables
 ; -----------------------------------------------------------------------------
 
-    kern_filename       db "KERNEL  BIN"    ; Kernel filename
-
     bootloader_hi       db "Starting GeorgeOS", 0x0D, 0x0A, 0
-
-    jumping_to_pt2      db "Jumping to bootloader stage 2", 0x0D, 0x0A, 0
+    boot                db "Boot ", 0
+    jumping_to_pt2      db "Entering stage 2", 0x0D, 0x0A, 0
     new_line            db 0x0D, 0x0A, 0
 
     disk_error          db "Disk read error", 0x0D, 0x0A, 0
-    wrong_file          db "File 0 is not KERNEL.BIN", 0x0D, 0x0A, 0
 
     bootdev             db 0     ; Boot device number
-    cluster             dw 0     ; Cluster of the file we want to load
-    pointer             dw 0     ; Pointer into Buffer, for loading kernel
 
 ; ------------------------------------------------------------------
 ; END OF BOOT SECTOR STAGE 1
 
-    times 510-($-$$) db 0    ; Pad remainder of boot sector with zeros
+    times 436-($-$$) db 0    ; Pad remainder of boot sector with zeros
+
+partition_table: times 74 db 0
     dw 0AA55h                ; Boot signature (DO NOT CHANGE!)
 
 ; START OF STAGE 2 (loaded immediately after stage 1)
@@ -156,8 +163,20 @@ stage2:
     mov si, loading_kernel
     call print_string
 
-    %include "src/boot/load_kernel.asm"
+    %ifdef FLOPPY
+        %include "src/boot/floppy/load_kernel.asm"
+    %elifdef HDD
+        %include "src/boot/hdd/load_kernel.asm"
+    %endif
+
+    %ifdef PAUSE
+        call pause
+    %endif
     %include "src/boot/vesa.asm"
+
+    %ifdef PAUSE
+        call pause
+    %endif
 
 switch_to_prot:
     ;mov si, switching_to_prot
@@ -181,6 +200,9 @@ switch_to_prot:
 ; Strings and variables (stage 2)
 ; -----------------------------------------------------------------------------
 
+    %include "src/boot/gdt.asm"
+
+    kern_filename        db "KERNEL  BIN"    ; Kernel filename
     loading_root_dir     db "Loading root directory", 0x0D, 0x0A, 0
     looking_for_kernel   db "Locating KERNEL.BIN", 0x0D, 0x0A, 0
     file_not_found       db 0x0D, 0x0A, "Could not find KERNEL.BIN in root directory", 0x0D, 0x0A, 0
@@ -190,6 +212,8 @@ switch_to_prot:
     identifying_modes    db "Identifying supported video modes", 0x0D, 0x0A, 0
     no_vesa              db "VESA is not supported", 0x0D, 0x0A, 0
     str_x                db "x", 0
+    cluster              dw 0     ; Cluster of the file we want to load
+    pointer              dw 0     ; Pointer into Buffer, for loading kernel
 
     vesa_mode_list       db 0     ; Address of mode list
     selected_mode        db 0
