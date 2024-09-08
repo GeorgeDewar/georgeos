@@ -32,3 +32,8 @@ void port_word_out ( unsigned short port , unsigned short data ) {
 void port_long_out ( unsigned short port , unsigned long data ) {
     __asm__("outl %%eax, %%dx " : :"a" (data), "d" (port));
 }
+
+void halt() {
+    __asm__("cli");
+    __asm__("hlt");
+}

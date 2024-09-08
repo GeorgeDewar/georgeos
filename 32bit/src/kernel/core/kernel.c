@@ -130,7 +130,7 @@ void main () {
         printf("Failed to execute shell!\n");
     }
 
-    for(;;);
+    halt();
 }
 
 _Noreturn void loopback() {
