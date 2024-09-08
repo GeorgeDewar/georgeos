@@ -64,15 +64,12 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 hdd.vdi: hdd.img
 	qemu-img convert -f raw -O vdi build/hdd.img build/hdd.vdi
 
-hdd.img: bootload.bin mbr.bin make_fs_image.sh src/data/example.txt
+hdd.img: bootload.bin make_fs_image.sh src/data/example.txt
 	./make_fs_image.sh build/hdd.img 40
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
 	objcopy -O binary --remove-section .note.gnu.property build/kernel.elf build/$@
-
-mbr.bin: src/boot/mbr.asm
-	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/mbr.bin src/boot/mbr.asm
 
 bootload.bin: src/boot/*.asm
 	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -DHDD -o build/bootload.bin src/boot/bootload.asm
