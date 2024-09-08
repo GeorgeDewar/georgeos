@@ -19,6 +19,14 @@ run: hdd.img
 		-boot c \
 		-drive file=build/hdd.img,format=raw \
 		-serial stdio
+run-usb: hdd.img
+	qemu-system-i386 \
+		-nodefaults \
+		-vga std \
+		-device usb-ehci,id=ehci \
+		-device usb-storage,bus=ehci.0,drive=usbstick \
+		-drive if=none,id=usbstick,file=build/hdd.img,format=raw \
+		-serial stdio
 run-floppy: all
 	qemu-system-i386 \
 		-nodefaults \
