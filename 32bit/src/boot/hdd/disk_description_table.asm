@@ -28,7 +28,7 @@ RootDirEntries      dw ROOT_DIR_ENTRIES     ; Number of entries in root dir
 LogicalSectors      dw 2880                 ; Number of logical sectors
 MediumByte          db 0F0h                 ; Medium descriptor byte
 SectorsPerFat       dw SECTORS_PER_FAT      ; Sectors per FAT
-SectorsPerTrack     dw SECTORS_PER_TRACK    ; Varies by disk size, set externally
+SectorsPerTrack     dw 0                    ; Varies by disk size, set externally
 Sides               dw 2                    ; Number of sides/heads
 HiddenSectors       dd 0                    ; Number of hidden sectors
 LargeSectors        dd 0                    ; Number of LBA sectors

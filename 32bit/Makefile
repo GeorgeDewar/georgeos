@@ -47,7 +47,7 @@ cliondebug: all
 		-drive file=build/georgeos_1440.img,format=raw,index=0,if=floppy \
 		-s -S -serial stdio
 
-georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
+georgeos_1440.img: bootload-floppy.bin kernel.bin src/data/* userland
 	echo Initializing disk image...
 	rm -f build/$@
 	mkfs.fat -F 12 -R 2 -C build/$@ 1440
@@ -64,15 +64,18 @@ georgeos_1440.img: bootload.bin kernel.bin src/data/* userland
 hdd.vdi: hdd.img
 	qemu-img convert -f raw -O vdi build/hdd.img build/hdd.vdi
 
-hdd.img: bootload.bin make_fs_image.sh src/data/example.txt
+hdd.img: bootload-hdd.bin make_fs_image.sh src/data/example.txt
 	./make_fs_image.sh build/hdd.img 40
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}
 	ld -o build/kernel.elf -T src/kernel/linker.ld -m elf_i386 -nostdlib $^
 	objcopy -O binary --remove-section .note.gnu.property build/kernel.elf build/$@
 
-bootload.bin: src/boot/*.asm
-	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -DHDD -o build/bootload.bin src/boot/bootload.asm
+bootload-hdd.bin: src/boot/*.asm
+	nasm -O0 -f bin -DHDD -o build/bootload.bin src/boot/bootload.asm
+
+bootload-floppy.bin: src/boot/*.asm
+	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -DFLOPPY -o build/bootload.bin src/boot/bootload.asm
 
 userland:
 	$(MAKE) -C src/userland

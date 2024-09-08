@@ -34,7 +34,7 @@
 
     
 %ifdef FLOPPY
-    %include "src/boot/hdd/disk_description_table.asm"
+    %include "src/boot/floppy/disk_description_table.asm"
 %elifdef HDD
     %include "src/boot/hdd/disk_description_table.asm"
 %endif
