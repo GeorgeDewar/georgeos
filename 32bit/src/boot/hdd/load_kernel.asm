@@ -9,21 +9,15 @@
     xor dx, dx
     mov bx, 512
     div bx ; ax = ax / 512
-    push ax
-    call print_hex_byte
-
-
-; file size is at 0x1C
+    add ax, 1; read one extra sector to be safe as there may be a partially filled sector
 
 ; Now we must load the kernel file from the disk. We add the known start-of-data location to the cluster number.
 ; We use the size to get the number of sectors to read.
 
-load_file_sector:
     mov bx, word [cluster]       ; Convert cluster number to logical sector
     add bx, DATA_START
     add bx, -2 ; don't know why yet, but it's at 3295 not 3297
 
-    mov al, 85                    ; sectors to read (TODO)
     mov si, 0
     mov cx, KERNEL_SEGMENT       ; put it in the KERNEL_SEGMENT location
     call read_sectors            ; call the function

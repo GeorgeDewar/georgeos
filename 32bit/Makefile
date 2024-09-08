@@ -35,6 +35,7 @@ debug: all
 	  	-ex "file build/kernel.elf" \
 		-ex "target remote localhost:1234" \
 		-ex "set architecture i8086" \
+		-ex "break *0x7e61"
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu
