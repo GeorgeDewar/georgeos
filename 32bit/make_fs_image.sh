@@ -18,6 +18,7 @@ mkfs.vfat -F 32 -R 16 /tmp/partition
 echo Copying files to disk image...
 mcopy -i /tmp/partition build/kernel.bin ::/
 mcopy -i /tmp/partition src/data/example.txt ::/
+mcopy -i /tmp/partition build/userland/programs/shell.exe ::/
 
 # Create an output file of the appropriate size
 echo > $outfile
