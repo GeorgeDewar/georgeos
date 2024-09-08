@@ -72,7 +72,7 @@ georgeos_1440.img: bootload-floppy.bin kernel.bin src/data/* userland
 hdd.vdi: hdd.img
 	qemu-img convert -f raw -O vdi build/hdd.img build/hdd.vdi
 
-hdd.img: bootload-hdd.bin make_fs_image.sh src/data/example.txt
+hdd.img: bootload-hdd.bin make_fs_image.sh src/data/example.txt kernel.bin build/userland/programs/shell.exe
 	./make_fs_image.sh build/hdd.img 40
 
 kernel.bin: build/kernel/core/kernel_entry.o ${OBJ}

@@ -432,6 +432,7 @@ struct pci_device {
     uint16_t device_id;
     uint8_t class;
     uint8_t subclass;
+    uint8_t prog_if;
 };
 extern struct pci_device pci_devices[32];
 extern int pci_device_count;

@@ -113,6 +113,7 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     uint16_t device_id = pci_get_device_id(bus, device, function);
     uint16_t device_class = pci_get_class_id(bus, device, function);
     uint16_t device_subclass = pci_get_subclass_id(bus, device, function);
+    uint8_t device_prog_if = pci_get_prog_if(bus, device, function);
 
     pci_devices[pci_device_count].bus = bus;
     pci_devices[pci_device_count].device = device;
@@ -121,8 +122,9 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     pci_devices[pci_device_count].device_id = device_id;
     pci_devices[pci_device_count].class = device_class;
     pci_devices[pci_device_count].subclass = device_subclass;
+    pci_devices[pci_device_count].prog_if = device_prog_if;
     pci_device_count++;
 
-    fprintf(stdout, "PCI Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x\n",
-            bus, device, function, vendor_id, device_id, device_class, device_subclass);
+    fprintf(stdout, "PCI Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x, IF: %x\n",
+            bus, device, function, vendor_id, device_id, device_class, device_subclass, device_prog_if);
 }
