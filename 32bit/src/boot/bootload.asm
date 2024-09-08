@@ -159,13 +159,18 @@ stage2:
     call print_string
     %include "src/boot/find_kernel.asm"
 
-    ; Load the File Allocation Table (FAT)
-    ; mov si, loading_fat
-    ; call print_string
-    ; mov bx, NUM_RESERVED_SECTORS ; start at sector
-    ; mov al, SECTORS_PER_FAT      ; sectors to read
-    ; mov si, FAT                  ; put it in the FAT location
-    ; call read_sectors            ; call the function
+    %ifdef FLOPPY
+        ; Load the File Allocation Table (FAT)
+        mov si, loading_fat
+        call print_string
+        mov bx, NUM_RESERVED_SECTORS ; start at sector
+        mov al, SECTORS_PER_FAT      ; sectors to read
+        mov si, FAT                  ; put it in the FAT location
+        call read_sectors            ; call the function
+    %endif
+
+    mov si, new_line
+    call print_string
 
     mov si, loading_kernel
     call print_string
@@ -180,10 +185,6 @@ stage2:
         call pause
     %endif
     %include "src/boot/vesa.asm"
-
-    %ifdef PAUSE
-        call pause
-    %endif
 
 switch_to_prot:
     ;mov si, switching_to_prot

@@ -74,7 +74,7 @@ mbr.bin: src/boot/mbr.asm
 	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -o build/mbr.bin src/boot/mbr.asm
 
 bootload.bin: src/boot/*.asm
-	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -DHDD -DPAUSE -o build/bootload.bin src/boot/bootload.asm
+	nasm -O0 -f bin -DSECTORS_PER_TRACK=18 -DHDD -o build/bootload.bin src/boot/bootload.asm
 
 userland:
 	$(MAKE) -C src/userland
