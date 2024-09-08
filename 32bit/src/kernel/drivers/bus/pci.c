@@ -125,6 +125,6 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     pci_devices[pci_device_count].prog_if = device_prog_if;
     pci_device_count++;
 
-    fprintf(stdout, "PCI Bus %d, Device %d, Function %d: [%x:%x], Class %x:%x, IF: %x\n",
+    fprintf(stdout, "PCI Bus %x, Device %x, Function %x: [%x:%x], Class %x:%x, IF: %x\n",
             bus, device, function, vendor_id, device_id, device_class, device_subclass, device_prog_if);
 }

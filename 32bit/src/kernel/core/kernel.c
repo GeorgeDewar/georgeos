@@ -72,6 +72,7 @@ void main () {
     printf(init, "Enumerating PCI devices");
     printf("\n");
     pci_init();
+    usb_ehci_init();
 
     // Initialise storage devices
     install_floppy();

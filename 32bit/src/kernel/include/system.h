@@ -446,5 +446,8 @@ void ata_init();
 /* AHCI */
 bool ahci_init();
 
+/* USB 2.0 (EHCI) */
+bool usb_ehci_init();
+
 /* Debug */
 void print_mem_info();
