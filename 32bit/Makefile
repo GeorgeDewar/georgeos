@@ -23,8 +23,8 @@ run-usb: hdd.img
 	qemu-system-i386 \
 		-nodefaults \
 		-vga std \
-		-device usb-ehci,id=ehci \
-		-device usb-storage,bus=ehci.0,drive=usbstick \
+		-usb \
+		-device usb-storage,bus=usb-bus.0,drive=usbstick \
 		-drive if=none,id=usbstick,file=build/hdd.img,format=raw \
 		-serial stdio
 run-floppy: all

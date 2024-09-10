@@ -96,17 +96,20 @@ uint8_t pci_get_prog_if(uint16_t bus, uint16_t device, uint16_t function)
     return (r0 & ~0x00FF) >> 8;
 }
 
-// BAR = Base Address Register, there are six
+// BAR = Base Address Register, there are six. Suitable for 16-bit memory BARs only due to masking.
 uint32_t pci_get_bar(uint16_t bus, uint16_t device, uint16_t function, uint8_t bar) {
     return pci_config_read_word(bus,device,function,0x10 + bar * 0x04) & 0xFFFC;
 }
 
-//void pci_get_header(uint16_t bus, uint16_t device, uint16_t function, void* buffer) {
+// void pci_get_header(uint16_t bus, uint16_t device, uint16_t function, uint16_t* buffer) {
 //    for(int i=0; i<32; i++) {
-//        pci_config_read_word
+//        buffer[i] = pci_config_read_word(bus, device, function, i*2);
 //    }
-//}
+// }
 
+/**
+ * Load enough data for driver identification
+ */
 void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     uint16_t vendor_id = pci_get_vendor_id(bus, device, function);
     if (vendor_id == 0xFFFF) return;        // Device doesn't exist
@@ -114,6 +117,7 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     uint16_t device_class = pci_get_class_id(bus, device, function);
     uint16_t device_subclass = pci_get_subclass_id(bus, device, function);
     uint8_t device_prog_if = pci_get_prog_if(bus, device, function);
+    uint8_t device_interrupt_line = pci_config_read_word(bus, device, function, 0x3F);
 
     pci_devices[pci_device_count].bus = bus;
     pci_devices[pci_device_count].device = device;
@@ -123,8 +127,13 @@ void pci_check_device(uint8_t bus, uint8_t device, uint8_t function) {
     pci_devices[pci_device_count].class = device_class;
     pci_devices[pci_device_count].subclass = device_subclass;
     pci_devices[pci_device_count].prog_if = device_prog_if;
+    pci_devices[pci_device_count].irq = device_interrupt_line;
     pci_device_count++;
 
-    fprintf(stdout, "PCI Bus %x, Device %x, Function %x: [%x:%x], Class %x:%x, IF: %x\n",
-            bus, device, function, vendor_id, device_id, device_class, device_subclass, device_prog_if);
+    fprintf(stdout, "PCI Bus %x, Device %x, Function %x: [%x:%x], Class %x:%x, IF: %x, IRQ: %d\n",
+            bus, device, function, vendor_id, device_id, device_class, device_subclass, device_prog_if, device_interrupt_line);
 }
+
+/**
+ * Load all other generically useful data from PCI configuration space
+ */

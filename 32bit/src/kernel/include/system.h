@@ -57,6 +57,7 @@ void port_long_out ( unsigned short port , unsigned long data );
 
 /* Memory management & manipulation */
 void *malloc(size_t size);
+void *memalign(size_t alignment, size_t size);
 void free(void *ptr);
 void memset(void* source, uint8_t value, uint32_t length);
 void memcpy(void* source, void* dest, uint32_t length);
@@ -433,10 +434,12 @@ struct pci_device {
     uint8_t class;
     uint8_t subclass;
     uint8_t prog_if;
+    uint8_t irq;
 };
 extern struct pci_device pci_devices[32];
 extern int pci_device_count;
 // Extra fields not part of the basic pci_device structure
+uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
 uint8_t pci_get_prog_if(uint16_t bus, uint16_t device, uint16_t function);
 uint32_t pci_get_bar(uint16_t bus, uint16_t device, uint16_t function, uint8_t bar);
 
@@ -445,6 +448,15 @@ void ata_init();
 
 /* AHCI */
 bool ahci_init();
+
+/* USB 1.1 (UHCI) */
+bool usb_uhci_init();
+struct uhci_controller {
+    int id;
+    struct pci_device *pci_device;
+    uint32_t io_base;
+    void *stack_frame; // 1024 dwords
+};
 
 /* USB 2.0 (EHCI) */
 bool usb_ehci_init();

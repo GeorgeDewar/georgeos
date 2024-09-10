@@ -17,7 +17,7 @@ bool usb_ehci_init() {
     }
 
     if (found) {
-        fprintf(stderr, "Found USB 2.0 controller (%x:%x) on PCI bus at %x:%x:%x\n",
+        fprintf(stderr, "Found EHCI controller (%x:%x) on PCI bus at %x:%x:%x (not yet supported)\n",
                 device->vendor_id, device->device_id, device->bus, device->device, device->function);
     }
 
