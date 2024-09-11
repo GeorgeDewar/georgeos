@@ -70,6 +70,22 @@ uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t o
     return (uint16_t)((port_long_in(0xCFC) >> ((offset & 2) * 8)) & 0xffff);
 }
 
+uint32_t pci_config_read_dword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset) {
+    uint32_t address;
+    uint32_t lbus  = (uint32_t) bus;
+    uint32_t lslot = (uint32_t) slot;
+    uint32_t lfunc = (uint32_t) func;
+
+    /* create configuration address as per Figure 1 */
+    address = (uint32_t)((lbus << 16) | (lslot << 11) |
+                         (lfunc << 8) | (offset & 0xfc) | ((uint32_t)0x80000000));
+
+    /* write out the address */
+    port_long_out(0xCF8, address);
+    /* read in the data */
+    return (uint32_t) port_long_in(0xCFC);
+}
+
 uint16_t pci_get_vendor_id(uint8_t bus, uint8_t slot, uint8_t function) {
     return pci_config_read_word(bus, slot, function, 0x00);
 }

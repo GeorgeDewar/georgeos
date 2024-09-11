@@ -72,8 +72,8 @@ void main () {
     printf(init, "Enumerating PCI devices");
     printf("\n");
     pci_init();
+    usb_ehci_init(); // do this first so we can disable EHCI, allowing USB 2.0 devices via UHCI
     usb_uhci_init();
-    usb_ehci_init();
 
     // Initialise storage devices
     install_floppy();

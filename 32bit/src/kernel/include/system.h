@@ -440,6 +440,7 @@ extern struct pci_device pci_devices[32];
 extern int pci_device_count;
 // Extra fields not part of the basic pci_device structure
 uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+uint32_t pci_config_read_dword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
 uint8_t pci_get_prog_if(uint16_t bus, uint16_t device, uint16_t function);
 uint32_t pci_get_bar(uint16_t bus, uint16_t device, uint16_t function, uint8_t bar);
 
@@ -460,6 +461,11 @@ struct uhci_controller {
 
 /* USB 2.0 (EHCI) */
 bool usb_ehci_init();
+struct ehci_controller {
+    int id;
+    struct pci_device *pci_device;
+    uint32_t mmio_base;
+};
 
 /* Debug */
 void print_mem_info();
