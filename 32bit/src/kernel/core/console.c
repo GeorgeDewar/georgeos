@@ -5,6 +5,9 @@ volatile char next_char_received = 0;
 
 /** callback from keyboard driver */
 void on_key_event(struct KeyEvent event) {
+    if (event.event == EVENT_KEYPRESS && event.ctrl_down && event.alt_down && event.keyCode == KEYCODE_Delete) {
+        reboot();
+    }
     if(event.event == EVENT_KEYPRESS && event.character > 0) {
         next_char_received = event.character;
     }

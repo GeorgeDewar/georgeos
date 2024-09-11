@@ -463,3 +463,6 @@ bool usb_ehci_init();
 
 /* Debug */
 void print_mem_info();
+
+/* To be homed later */
+void reboot();

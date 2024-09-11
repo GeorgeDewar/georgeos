@@ -1,9 +1,10 @@
 ; -----------------------------------------------------------------------------
 ; Disk description table
 ; 
-; This makes the floppy identifiable. The values are mostly those used by IBM
-; for a 1.44 MB, 3.5" diskette, but I have notably set ReservedForBoot to 2 so
-; that we can have a larger bootloader.
+; This uses up the space in the MBR where the disk description table would be,
+; since the BIOS may expect that, and also contains some filesystem-specific
+; defines.
+; TODO: Don't hardcode SECTORS_PER_FAT, it locks the size of the FS to 40MB.
 ; -----------------------------------------------------------------------------
 
 %define PARTITION_START_SECTOR  2048
