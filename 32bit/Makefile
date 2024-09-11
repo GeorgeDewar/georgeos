@@ -3,7 +3,7 @@ OBJDIR=./build
 
 # Automatically generate lists of sources using wildcards .
 C_SOURCES = $(wildcard $(SRCDIR)/kernel/core/*.c $(SRCDIR)/kernel/drivers/*.c $(SRCDIR)/kernel/drivers/fs/*.c \
-	$(SRCDIR)/kernel/drivers/bus/*.c $(SRCDIR)/kernel/drivers/block/*.c)
+	$(SRCDIR)/kernel/drivers/bus/*.c $(SRCDIR)/kernel/drivers/bus/usb/*.c $(SRCDIR)/kernel/drivers/block/*.c)
 HEADERS = $(wildcard $(SRCDIR)/include/*.h)
 
 # TODO : Make sources dep on all header files .
@@ -25,18 +25,15 @@ run-usb: hdd.img
 		-vga std \
 		-usb \
 		-device usb-ehci,id=ehci \
-		-device usb-storage,bus=ehci.0,drive=usbstick \
+		-device usb-storage,bus=usb-bus.0,drive=usbstick \
 		-drive if=none,id=usbstick,file=build/hdd.img,format=raw \
 		-serial stdio
 run-alpine:
 	qemu-system-i386 \
-		-nodefaults \
-		-vga std \
 		-usb \
 		-device usb-ehci,id=ehci \
 		-drive file=tmp/alpine-hdd.img,format=raw \
-		-cdrom ~/Downloads/alpine-extended-3.20.3-x86.iso \
-		-serial stdio
+		-nic user
 run-floppy: all
 	qemu-system-i386 \
 		-nodefaults \

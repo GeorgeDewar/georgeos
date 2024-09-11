@@ -1,4 +1,5 @@
 #include "system.h"
+#include "usb.h"
 
 const uint8_t MAX_CONTROLLERS = 16;
 const uint8_t RESET_TIMEOUT = 50;
@@ -38,6 +39,47 @@ const uint16_t PORTSC_PORT_ENABLE_CHANGED = 0x0008; // Bit 3
 const uint16_t PORTSC_PORT_ENABLED = 0x0004; // Bit 2
 const uint16_t PORTSC_CONNECT_STATUS_CHANGE = 0x0002; // Bit 1
 const uint16_t PORTSC_CURRENT_CONNECT_STATUS = 0x0001; // Bit 0
+
+typedef struct {
+    // TD LINK POINTER (DWORD 0: 00-03h)
+    uint32_t link_pointer   : 28; // Bit 31:4
+    uint8_t _reserved1      : 1; // Bit 3
+    uint8_t depth_first     : 1; // Bit 2
+    uint8_t qh_td_select    : 1; // Bit 1
+    uint8_t terminate       : 1; // Bit 0
+
+    // TD CONTROL AND STATUS (DWORD 1: 04-07h)
+    uint8_t _reserved2              : 2; // Bit 31:30
+    uint8_t short_packet_detect     : 1; // Bit 29
+    uint8_t error_count             : 2; // Bit 28:27
+    uint8_t low_speed_device        : 1; // Bit 26
+    uint8_t isochronous_select      : 1; // Bit 25
+    uint8_t interrupt_on_complete   : 1; // Bit 24
+    uint8_t status_active           : 1; // Bit 23
+    uint8_t status_stalled          : 1; // Bit 22
+    uint8_t status_data_buffer_err  : 1; // Bit 21
+    uint8_t status_babble_detected  : 1; // Bit 20
+    uint8_t status_nak_received     : 1; // Bit 19
+    uint8_t status_crc_time_out_err : 1; // Bit 18
+    uint8_t status_bitstuff_err     : 1; // Bit 17
+    uint8_t _reserved3              : 1; // Bit 16
+    uint8_t _reserved4              : 5; // Bit 15:11
+    uint16_t actual_length          : 11; // Bit 10:0
+
+    // TD TOKEN (DWORD 2: 08-0Bh)
+    uint16_t max_length             : 11; // Bit 31:21
+    uint8_t _reserved5              : 1; // Bit 20
+    uint8_t data_toggle             : 1; // Bit 19
+    uint8_t endpoint                : 4; // Bit 18:15
+    uint8_t device_address          : 7; // Bit 14:8
+    uint8_t packet_identification   : 8; // Bit 7:0
+
+    // TD BUFFER POINTER (DWORD 3: 0C-0Fh)
+    uint32_t buffer_pointer;
+
+    // RESERVED FOR SOFTWARE (DWORDS [7:4])
+    uint32_t _reserved6[4];
+} TransferDescriptor;
 
 struct uhci_controller *uhci_controllers;
 int uhci_controller_count;

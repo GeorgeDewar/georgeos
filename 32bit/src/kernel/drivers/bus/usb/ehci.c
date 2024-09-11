@@ -44,12 +44,17 @@ bool usb_ehci_disable_controller(struct pci_device *device) {
     fprintf(stderr, "Base address: %x\n", controller->mmio_base);
 
     // Find the EHCI Extended Capabilities Pointer (EECP)
-    void *EECP = (* ((unsigned long int*) ( ((char*)controller->mmio_base) + 0x08 )) & 0x0FF00) >> 16;
-    if (EECP <= 0x40) {
-        fprintf(stderr, "EHCI[%d]: Controller does not implement extended capabilities\n", controller->id);
-    } else {
-        fprintf(stderr, "EHCI[%d]: EECP = %x\n", controller->id, EECP);
-    }
+    // void *EECP = (* ((unsigned long int*) ( ((char*)controller->mmio_base) + 0x08 )) & 0x0FF00) >> 16;
+    // if (EECP <= 0x40) {
+    //     fprintf(stderr, "EHCI[%d]: Controller does not implement extended capabilities\n", controller->id);
+    // } else {
+    //     fprintf(stderr, "EHCI[%d]: EECP = %x\n", controller->id, EECP);
+    // }
+
+    uint8_t *OPREGS = controller->mmio_base + ( (* ((unsigned long int*) (controller->mmio_base))) & 0x0FF );
+    OPREGS[0x40 / sizeof(OPREGS[0])] = 0x00;
+
+    delay(100); // So when we set up a UHCI controller, it sees the devices
 
     return SUCCESS;
 }
