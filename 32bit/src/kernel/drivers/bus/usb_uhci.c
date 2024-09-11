@@ -2,11 +2,16 @@
 
 const uint8_t MAX_CONTROLLERS = 16;
 const uint8_t RESET_TIMEOUT = 50;
+const uint8_t PORT_ENABLE_TIMEOUT = 50;
 
 const uint8_t PCI_CLASS_SERIAL_BUS = 0x0C;
 const uint8_t PCI_SUBCLASS_USB = 0x03;
 const uint8_t PCI_PROG_IF_UHCI = 0x00;
 
+// Error values
+const int8_t ERR_NO_DEVICE = -2;
+
+// USB registers
 const uint8_t REG_USB_COMMAND = 0x00; // R/W
 const uint8_t REG_USB_STATUS = 0x02; // R/WC
 const uint8_t REG_USB_INTERRUPT_ENABLE = 0x04; // R/W
@@ -16,15 +21,30 @@ const uint8_t REG_SOFMOD = 0x0C; // Start of Frame Modify (1 byte), R/W
 const uint8_t REG_PORTSC1 = 0x10; // Port 1 Status/Control, Word R/WC
 const uint8_t REG_PORTSC2 = 0x12; // Port 2 Status/Control, Word R/WC
 
-const uint16_t USBCMD_GLOBAL_RESET = 0b100; // Bit 3
-const uint16_t USBCMD_HCRESET = 0b10; // Bit 2
-const uint16_t USBCMD_RUN_STOP = 0b1; // Bit 1
+// Bit masks for the USBCMD register
+const uint16_t USBCMD_GLOBAL_RESET = 0x0004; // Bit 2
+const uint16_t USBCMD_HCRESET = 0x0002; // Bit 1
+const uint16_t USBCMD_RUN_STOP = 0x0001; // Bit 0
+
+// Bit masks for the PORTSC registers
+const uint16_t PORTSC_SUSPEND = 0x1000; // Bit 12
+const uint16_t PORTSC_PORT_RESET = 0x0200; // Bit 9
+const uint16_t PORTSC_LOW_SPEED_DEVICE = 0x0100; // Bit 8
+const uint16_t PORTSC_ALWAYS1 = 0x0080; // Bit 7
+const uint16_t PORTSC_RESUME_DETECT = 0x0040; // Bit 6
+const uint16_t PORTSC_LINE_DMINUS = 0x0020; // Bit 5
+const uint16_t PORTSC_LINE_DPLUS = 0x0010; // Bit 4
+const uint16_t PORTSC_PORT_ENABLE_CHANGED = 0x0008; // Bit 3
+const uint16_t PORTSC_PORT_ENABLED = 0x0004; // Bit 2
+const uint16_t PORTSC_CONNECT_STATUS_CHANGE = 0x0002; // Bit 1
+const uint16_t PORTSC_CURRENT_CONNECT_STATUS = 0x0001; // Bit 0
 
 struct uhci_controller *uhci_controllers;
 int uhci_controller_count;
 
 bool usb_uhci_init_controller(struct pci_device *device);
 bool uhci_controller_reset(struct uhci_controller *controller);
+bool uhci_reset_port(struct uhci_controller *controller, uint8_t port);
 
 // The UHCI data structures include a Frame List, Isochronous Transfer Descriptors, Queue Heads, and queued
 // Transfer Descriptors.
@@ -99,6 +119,19 @@ bool usb_uhci_init_controller(struct pci_device *device) {
 
     // Set the Run/Stop bit to start the schedule
     port_word_out(controller->io_base + REG_USB_COMMAND, USBCMD_RUN_STOP);
+
+    // Check the ports
+    
+    for(int i=0; i<2; i++) {
+        bool result = uhci_reset_port(controller, i);
+        if (result == SUCCESS) {
+            fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
+        } else if (result == ERR_NO_DEVICE) {
+            fprintf(stdout, "UHCI[%d]: No device on port %d\n", controller->id, i);
+        } else {
+            fprintf(stderr, "UHCI[%d]: Failed to reset port %d\n", controller->id, i);
+        }
+    }
 }
 
 bool uhci_controller_reset(struct uhci_controller *controller) {
@@ -112,5 +145,41 @@ bool uhci_controller_reset(struct uhci_controller *controller) {
     }
     
     fprintf(stderr, "UHCI[%d]: Controller did not reset within %dms\n", controller->id, RESET_TIMEOUT);
+    return FAILURE;
+}
+
+/**
+ * Reset the provided USB port, where 0 is the first port and 1 is the second.
+ * If there is no device attached, ERRthe port will not be reset.
+ */
+bool uhci_reset_port(struct uhci_controller *controller, uint8_t port) {
+    fprintf(stddebug, "UHCI[%d]: Resetting port %d\n", controller->id, port);
+    uint8_t reg_offset = (port == 1 ? REG_PORTSC1 : REG_PORTSC2);
+    
+    // Check the status
+    uint16_t port_reg = port_word_in(controller->io_base + reg_offset);
+    fprintf(stddebug, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
+    if (!(port_reg & PORTSC_CURRENT_CONNECT_STATUS)) {
+        return ERR_NO_DEVICE;
+    }
+
+    // Do the reset
+    port_word_out(controller->io_base + reg_offset, port_reg | PORTSC_PORT_RESET);
+    delay(50); // Reset time for a root port (TDRSTR)
+    port_word_out(controller->io_base + reg_offset, port_reg & ~PORTSC_PORT_RESET);
+    delay(10); // Recovery time (TRSTRCY)
+
+    // Verify success. We keep checking and setting PORTSC_PORT_ENABLED until it's enabled or we give up
+    for (int i=0; i<PORT_ENABLE_TIMEOUT; i++) {
+        uint16_t port_reg = port_word_in(controller->io_base + reg_offset);
+        fprintf(stddebug, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
+        if (port_reg & PORTSC_PORT_ENABLED) {
+            return SUCCESS;
+        }
+        port_word_out(controller->io_base + reg_offset, port_reg | PORTSC_PORT_ENABLED);
+        delay(1);
+    }
+
+    fprintf(stddebug, "UHCI[%d:%d]: Port reset timed out\n", controller->id, port);
     return FAILURE;
 }
