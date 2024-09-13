@@ -442,7 +442,7 @@ struct uhci_controller {
     int id;
     struct pci_device *pci_device;
     uint32_t io_base;
-    void *stack_frame; // 1024 dwords
+    uint32_t *stack_frame; // 1024 dwords
 };
 
 /* USB 2.0 (EHCI) */

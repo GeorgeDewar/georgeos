@@ -98,9 +98,18 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
 }
 
 static void vsprintf(char* buffer, char* string, va_list argp) {
+    uint8_t num_length = 0;
     while(*string != 0) {
         if (*string == '%') {
+            num_length = 0;
             string++;
+            
+            if (*string == '0') {
+                string++; // next digit is num digits
+                num_length = *string - '0';
+                string++;
+            }
+
             if(*string == '%'){ // %% escapes %
                 *buffer++ = *string;
             } else if (*string == 's') {
@@ -117,6 +126,12 @@ static void vsprintf(char* buffer, char* string, va_list argp) {
                 int number = va_arg(argp, int);
                 char num_string[16] = {0};
                 int_to_string(number, 16, num_string);
+                int num_digits = strlen(num_string);
+                int padding = num_length - num_digits;
+                while (padding > 0) {
+                    *buffer++ = '0';
+                    padding--;
+                }
                 strcpy(num_string, buffer);
                 buffer += strlen(num_string); // erase null byte
             }

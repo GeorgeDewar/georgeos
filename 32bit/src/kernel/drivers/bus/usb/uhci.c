@@ -42,37 +42,37 @@ const uint16_t PORTSC_CURRENT_CONNECT_STATUS = 0x0001; // Bit 0
 
 typedef struct {
     // TD LINK POINTER (DWORD 0: 00-03h)
+    uint32_t terminate       : 1; // Bit 0
+    uint32_t qh_td_select    : 1; // Bit 1
+    uint32_t depth_first     : 1; // Bit 2
+    uint32_t _reserved1      : 1; // Bit 3
     uint32_t link_pointer   : 28; // Bit 31:4
-    uint8_t _reserved1      : 1; // Bit 3
-    uint8_t depth_first     : 1; // Bit 2
-    uint8_t qh_td_select    : 1; // Bit 1
-    uint8_t terminate       : 1; // Bit 0
 
     // TD CONTROL AND STATUS (DWORD 1: 04-07h)
-    uint8_t _reserved2              : 2; // Bit 31:30
-    uint8_t short_packet_detect     : 1; // Bit 29
-    uint8_t error_count             : 2; // Bit 28:27
-    uint8_t low_speed_device        : 1; // Bit 26
-    uint8_t isochronous_select      : 1; // Bit 25
-    uint8_t interrupt_on_complete   : 1; // Bit 24
-    uint8_t status_active           : 1; // Bit 23
-    uint8_t status_stalled          : 1; // Bit 22
-    uint8_t status_data_buffer_err  : 1; // Bit 21
-    uint8_t status_babble_detected  : 1; // Bit 20
-    uint8_t status_nak_received     : 1; // Bit 19
-    uint8_t status_crc_time_out_err : 1; // Bit 18
-    uint8_t status_bitstuff_err     : 1; // Bit 17
-    uint8_t _reserved3              : 1; // Bit 16
-    uint8_t _reserved4              : 5; // Bit 15:11
-    uint16_t actual_length          : 11; // Bit 10:0
+    uint32_t actual_length          : 11; // Bit 10:0
+    uint32_t _reserved4              : 5; // Bit 15:11
+    uint32_t _reserved3              : 1; // Bit 16
+    uint32_t status_bitstuff_err     : 1; // Bit 17
+    uint32_t status_crc_time_out_err : 1; // Bit 18
+    uint32_t status_nak_received     : 1; // Bit 19
+    uint32_t status_babble_detected  : 1; // Bit 20
+    uint32_t status_data_buffer_err  : 1; // Bit 21
+    uint32_t status_stalled          : 1; // Bit 22
+    uint32_t status_active           : 1; // Bit 23
+    uint32_t interrupt_on_complete   : 1; // Bit 24
+    uint32_t isochronous_select      : 1; // Bit 25
+    uint32_t low_speed_device        : 1; // Bit 26
+    uint32_t error_count             : 2; // Bit 28:27
+    uint32_t short_packet_detect     : 1; // Bit 29
+    uint32_t _reserved2              : 2; // Bit 31:30
 
     // TD TOKEN (DWORD 2: 08-0Bh)
-    uint16_t max_length             : 11; // Bit 31:21
-    uint8_t _reserved5              : 1; // Bit 20
-    uint8_t data_toggle             : 1; // Bit 19
-    uint8_t endpoint                : 4; // Bit 18:15
-    uint8_t device_address          : 7; // Bit 14:8
-    uint8_t packet_identification   : 8; // Bit 7:0
+    uint32_t packet_identification   : 8; // Bit 7:0
+    uint32_t device_address          : 7; // Bit 14:8
+    uint32_t endpoint                : 4; // Bit 18:15
+    uint32_t data_toggle             : 1; // Bit 19
+    uint32_t _reserved5              : 1; // Bit 20
+    uint32_t max_length             : 11; // Bit 31:21
 
     // TD BUFFER POINTER (DWORD 3: 0C-0Fh)
     uint32_t buffer_pointer;
@@ -163,16 +163,107 @@ bool usb_uhci_init_controller(struct pci_device *device) {
     port_word_out(controller->io_base + REG_USB_COMMAND, USBCMD_RUN_STOP);
 
     // Check the ports
-    
     for(int i=0; i<2; i++) {
         bool result = uhci_reset_port(controller, i);
         if (result == SUCCESS) {
             fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
+
+            DeviceRequestPacket packet;
+            packet.request_type = 0x80;
+            packet.request = 0x06;
+            packet.value = 0x0100;
+            packet.index = 0;
+            packet.length = 8;
+
+            uint32_t descriptor[2];
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor value %08x %08x\n", controller->id, i, descriptor[0], descriptor[1]);
+
+            uint8_t *buffer = memalign(16, 128); // Buffer must be paragraph-aligned
+            memset(buffer, 0, 128);
+            fprintf(stdout, "UHCI[%d:%d]: paragraph-aligned buffer at %x\n", controller->id, i, buffer);
+            
+            // Make a queue
+            UsbQueue *queue = buffer;
+            queue->head_link_pointer = 0x01; // terminate
+            queue->element_link_pointer = buffer + 0x10;
+            
+            TransferDescriptor *descriptors = buffer + 0x10;
+
+            // Setup packet
+            descriptors[0].link_pointer = buffer + 32;
+            descriptors[0].depth_first = true;
+
+            descriptors[0].error_count = 3;
+            descriptors[0].low_speed_device = 0; // TBD
+            descriptors[0].status_active = true;
+
+            descriptors[0].max_length = 7;
+            descriptors[0].data_toggle = 1;
+            descriptors[0].packet_identification = 0x2D;
+
+            descriptors[0].buffer_pointer = &packet;
+
+            // IN packet
+            descriptors[1].link_pointer = buffer + 64;
+            descriptors[1].depth_first = true;
+            descriptors[1].error_count = 3;
+            descriptors[1].low_speed_device = 0; // TBD
+            descriptors[1].status_active = true;
+            descriptors[1].max_length = 7;
+            descriptors[1].data_toggle = 0;
+            descriptors[1].packet_identification = 0x69;
+            descriptors[1].buffer_pointer = &descriptor;
+
+            // OUT packet
+            descriptors[2].link_pointer = buffer + 64;
+            descriptors[2].depth_first = true;
+            descriptors[2].error_count = 3;
+            descriptors[2].low_speed_device = 0; // TBD
+            descriptors[2].status_active = true;
+            descriptors[2].max_length = 0x7FF;
+            descriptors[2].data_toggle = 1;
+            descriptors[2].packet_identification = 0xE1;
+            descriptors[2].buffer_pointer = &descriptor;
+            descriptors[2].interrupt_on_complete = true;
+            descriptors[2].terminate = true;
+
+            TransferDescriptor descriptor0 = descriptors[0];
+            uint32_t *dwords = descriptors;
+
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %x %x %x %x %x %x %x %x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3], dwords[4], dwords[5],  dwords[6],  dwords[7]);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %x %x %x %x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11]);
+
+            dump_mem("Mem1 ", buffer, 128);
+
+
+            // Place the queue
+            controller->stack_frame[0] = ((uint32_t) queue | 0x02);
+
+            delay(2000);
+
+
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %x %x %x %x %x %x %x %x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3], dwords[4], dwords[5],  dwords[6],  dwords[7]);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %x %x %x %x %x %x %x %x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11], dwords[12], dwords[13], dwords[14], dwords[15]);
+
+
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor value %x %x\n", controller->id, i, descriptor[0], descriptor[1]);
+            dump_mem("Mem2 ", buffer, 128);
         } else if (result == ERR_NO_DEVICE) {
             fprintf(stdout, "UHCI[%d]: No device on port %d\n", controller->id, i);
         } else {
             fprintf(stderr, "UHCI[%d]: Failed to reset port %d\n", controller->id, i);
         }
+    }
+}
+
+void dump_mem(char *prefix, char *buffer, int bytes) {
+    int lines = bytes / 8;
+    fprintf(stddebug, "Dumping %d bytes from 0x%x\n", bytes, buffer);
+    for(int line=0; line<lines; line++) {
+        char *dwords = buffer + (line * 8);
+        fprintf(stddebug, "%s %02x %02x %02x %02x %02x %02x %02x %02x\n", prefix, 
+            dwords[0] & 0xff, dwords[1] & 0xff, dwords[2] & 0xff, (uint32_t) dwords[3] & 0xff, 
+            (uint32_t) dwords[4] & 0xff, (uint32_t) dwords[5] & 0xff,  (uint32_t) dwords[6] & 0xff,  (uint32_t) dwords[7] & 0xff);
     }
 }
 

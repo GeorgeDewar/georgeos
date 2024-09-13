@@ -12,14 +12,10 @@ void *malloc(size_t size) {
 
 void *memalign(size_t alignment, size_t size) {
     // Allocate enough to get the required aligned block, and return it
-    if (alignment == 4096) {
-        uint32_t diff = ((uint8_t) free_memory_start) & (alignment - 1); // this is how much has been allocated above the last alignment boundary
-        uint32_t waste = alignment - diff;
-        void *allocation = malloc(size + waste);
-        return allocation + waste;
-    } else {
-        return 0; // only supporting 4KB
-    }
+    uint32_t diff = ((uint8_t) free_memory_start) & (alignment - 1); // this is how much has been allocated above the last alignment boundary
+    uint32_t waste = alignment - diff;
+    void *allocation = malloc(size + waste);
+    return allocation + waste;
 }
 
 /** We can't do this yet, so we just pretend */
