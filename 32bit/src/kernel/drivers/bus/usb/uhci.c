@@ -100,7 +100,7 @@ int uhci_controller_count;
 bool usb_uhci_init_controller(struct pci_device *device);
 bool uhci_controller_reset(struct uhci_controller *controller);
 bool uhci_reset_port(struct uhci_controller *controller, uint8_t port);
-bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port, char *buffer);
+bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer);
 
 // The UHCI data structures include a Frame List, Isochronous Transfer Descriptors, Queue Heads, and queued
 // Transfer Descriptors.
@@ -192,9 +192,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
         if (result == SUCCESS) {
             fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
 
-            char device_descriptor[8] = {0};
-            if (uhci_get_device_descriptor(controller, i, device_descriptor)) {
-                dump_mem8("Device descriptor: ", device_descriptor, 8);
+            UsbStandardDeviceDescriptor device_descriptor;
+            if (uhci_get_device_descriptor(controller, i, &device_descriptor)) {
+                dump_mem8("Device descriptor: ", &device_descriptor, 8);
+                fprintf(stdout, "UHCI[%d:%d]: Loaded first 8 bytes; length is %d, class is %02x\n", controller->id, i, device_descriptor.length, device_descriptor.device_class);
             } else {
                 fprintf(stderr, "UHCI[%d:%d]: Failed to get device descriptor\n", controller->id, i);
             }
@@ -261,7 +262,7 @@ bool uhci_reset_port(struct uhci_controller *controller, uint8_t port) {
     return FAILURE;
 }
 
-bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port, char *buffer) {
+bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer) {
     DeviceRequestPacket packet;
     packet.request_type = REQ_PKT_DIR_DEVICE_TO_HOST;
     packet.request = REQ_PKT_REQ_CODE_GET_DESCRIPTOR;
