@@ -256,10 +256,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
 
                 //fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x, active = %d\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19], descriptors[2].status_active);
 
-                delay(100);
+                delay(1);
             }
 
-            fprintf(stdout, "[%08d] Continued after %d iterations", timer_ticks, j);
+            fprintf(stdout, "[%08d] Continued after %d iterations\n", timer_ticks, j);
 
             status = port_word_in(controller->io_base + REG_USB_STATUS);
             frnum = port_word_in(controller->io_base + REG_FRAME_NUM);
