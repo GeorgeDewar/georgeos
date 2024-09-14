@@ -40,6 +40,14 @@ const uint16_t PORTSC_PORT_ENABLED = 0x0004; // Bit 2
 const uint16_t PORTSC_CONNECT_STATUS_CHANGE = 0x0002; // Bit 1
 const uint16_t PORTSC_CURRENT_CONNECT_STATUS = 0x0001; // Bit 0
 
+// Device request packet
+const uint8_t REQ_PKT_DIR_DEVICE_TO_HOST = (1<<7);
+
+// Transfer descriptor
+const uint8_t TD_PID_SETUP = 0x2D;
+const uint8_t TD_PID_IN = 0x69;
+const uint8_t TD_PID_OUT = 0xE1;
+
 typedef struct {
     // TD LINK POINTER (DWORD 0: 00-03h)
     uint32_t terminate       : 1; // Bit 0
@@ -177,7 +185,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
 
             DeviceRequestPacket packet;
-            packet.request_type = 0x80;
+            packet.request_type = REQ_PKT_DIR_DEVICE_TO_HOST;
             packet.request = 0x06;
             packet.value = 0x0100;
             packet.index = 0;
@@ -202,7 +210,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
 
             descriptors[0].max_length = 7;
             descriptors[0].data_toggle = 1;
-            descriptors[0].packet_identification = 0x2D;
+            descriptors[0].packet_identification = TD_PID_SETUP;
 
             descriptors[0].buffer_pointer = &packet;
 
@@ -214,7 +222,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             descriptors[1].status_active = true;
             descriptors[1].max_length = 7;
             descriptors[1].data_toggle = 0;
-            descriptors[1].packet_identification = 0x69;
+            descriptors[1].packet_identification = TD_PID_IN;
             descriptors[1].buffer_pointer = descriptor;
 
             // OUT packet
@@ -225,7 +233,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             descriptors[2].status_active = true;
             descriptors[2].max_length = 0x7FF;
             descriptors[2].data_toggle = 1;
-            descriptors[2].packet_identification = 0xE1;
+            descriptors[2].packet_identification = TD_PID_OUT;
             descriptors[2].buffer_pointer = 0;
             descriptors[2].interrupt_on_complete = false;
             descriptors[2].terminate = true;
