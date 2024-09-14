@@ -244,7 +244,22 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             uint16_t frnum = port_word_in(controller->io_base + REG_FRAME_NUM);
             fprintf(stddebug, "Status: %04x, Frame Num: %d\n", status & 0xFFFF, frnum);
 
-            delay(1100);
+            int max_wait = 2000;
+            int j=0;
+            for(j=0; j<max_wait; j++) {
+                
+                if (descriptors[2].status_active == false) {
+                    fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x, active = %d\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19], descriptors[2].status_active);
+
+                    break;
+                }
+
+                //fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x, active = %d\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19], descriptors[2].status_active);
+
+                delay(100);
+            }
+
+            fprintf(stdout, "[%08d] Continued after %d iterations", timer_ticks, j);
 
             status = port_word_in(controller->io_base + REG_USB_STATUS);
             frnum = port_word_in(controller->io_base + REG_FRAME_NUM);

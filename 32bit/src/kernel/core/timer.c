@@ -25,11 +25,11 @@ static void timer_handler()
     timer_ticks++;
 
     // Render the console to the screen
-    if (console_modified || timer_ticks % 10 == 0) {
+    if (console_modified || timer_ticks % 400 == 0) {
         console_modified = false;
 
         void console_update_cursor(bool on);
-        console_update_cursor(timer_ticks % 20 == 0);
+        console_update_cursor(timer_ticks % 800 == 0);
 
 //        default_graphics_device->clear_screen();
 //        console_render(0, 0, default_graphics_device->screen_width, default_graphics_device->screen_height);
@@ -62,6 +62,8 @@ static void timer_handler()
 *  into IRQ0 */
 void timer_install()
 {
+    set_timer_freq(1000);
+
     /* Installs 'timer_handler' to IRQ0 */
     irq_install_handler(0, timer_handler);
 
@@ -71,7 +73,7 @@ void timer_install()
 /** Busy wait for the specified duration */
 void delay(uint32_t ms) {
     uint32_t start_time = timer_ticks;
-    uint32_t ticks_to_delay = ms / 55;
+    uint32_t ticks_to_delay = ms / 1;
     while(timer_ticks < start_time + ticks_to_delay);
 }
 
@@ -79,4 +81,11 @@ void delay(uint32_t ms) {
 uint8_t timer_register_callback(void (*callback)()) {
     callbacks[callbacks_count].callback = callback;
     return callbacks_count++;
+}
+
+void set_timer_freq(int hz) {
+    int divisor = 1193180 / hz;       /* Calculate our divisor */
+    port_byte_out(0x43, 0x36);             /* Set our command byte 0x36 */
+    port_byte_out(0x40, divisor & 0xFF);   /* Set low byte of divisor */
+    port_byte_out(0x40, divisor >> 8);     /* Set high byte of divisor */
 }

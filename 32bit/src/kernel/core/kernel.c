@@ -140,6 +140,9 @@ _Noreturn void loopback() {
     char buffer[256];
     while(true) {
         sd_screen_console.read(buffer, 256, true);
+        printf("Before: %d", timer_ticks);
+        delay(1000);
+        printf("After: %d", timer_ticks);
     }
 }
 

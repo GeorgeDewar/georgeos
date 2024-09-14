@@ -99,6 +99,10 @@ void irq_handler(struct regs *r)
     /* This is a blank function pointer */
     void (*handler)(struct regs *r);
 
+    // if (r->int_no - 32 != 0) {
+    //     fprintf(stddebug, "Int %02xh\n", r->int_no - 32);
+    // }
+
     /* Find out if we have a custom handler to run for this
     *  IRQ, and then finally, run it */
     handler = irq_routines[r->int_no - 32];
