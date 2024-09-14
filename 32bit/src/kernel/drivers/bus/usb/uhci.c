@@ -154,7 +154,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
         return FAILURE;
     }
     fprintf(stddebug, "UHCI[%d]: Allocated stack frame at 0x%x\n", controller->id, controller->stack_frame);
-    port_word_out(controller->io_base + REG_FRBASEADD, controller->stack_frame);
+    port_long_out(controller->io_base + REG_FRBASEADD, controller->stack_frame);
 
     // Clear the status register
     port_word_out(controller->io_base + REG_USB_STATUS, 0xFFFF);
@@ -190,7 +190,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             TransferDescriptor *descriptors = buffer + 0x10;
 
             // Setup packet
-            descriptors[0].link_pointer = buffer + 32;
+            descriptors[0].link_pointer = ((uint32_t) buffer + 0x30) >> 4;
             descriptors[0].depth_first = true;
 
             descriptors[0].error_count = 3;
@@ -204,7 +204,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             descriptors[0].buffer_pointer = &packet;
 
             // IN packet
-            descriptors[1].link_pointer = buffer + 64;
+            descriptors[1].link_pointer = ((uint32_t) buffer + 0x50) >> 4;
             descriptors[1].depth_first = true;
             descriptors[1].error_count = 3;
             descriptors[1].low_speed_device = 0; // TBD
@@ -212,10 +212,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             descriptors[1].max_length = 7;
             descriptors[1].data_toggle = 0;
             descriptors[1].packet_identification = 0x69;
-            descriptors[1].buffer_pointer = &descriptor;
+            descriptors[1].buffer_pointer = descriptor;
 
             // OUT packet
-            descriptors[2].link_pointer = buffer + 64;
+            descriptors[2].link_pointer = 0;
             descriptors[2].depth_first = true;
             descriptors[2].error_count = 3;
             descriptors[2].low_speed_device = 0; // TBD
@@ -223,31 +223,40 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             descriptors[2].max_length = 0x7FF;
             descriptors[2].data_toggle = 1;
             descriptors[2].packet_identification = 0xE1;
-            descriptors[2].buffer_pointer = &descriptor;
-            descriptors[2].interrupt_on_complete = true;
+            descriptors[2].buffer_pointer = 0;
+            descriptors[2].interrupt_on_complete = false;
             descriptors[2].terminate = true;
 
             TransferDescriptor descriptor0 = descriptors[0];
             uint32_t *dwords = descriptors;
 
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %x %x %x %x %x %x %x %x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3], dwords[4], dwords[5],  dwords[6],  dwords[7]);
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %x %x %x %x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11]);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %08x %08x %08x %08x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3]);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %08x %08x %08x %08x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11]);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19]);
 
-            dump_mem("Mem1 ", buffer, 128);
+            dump_mem32("Mem1 ", buffer, 128);
 
 
             // Place the queue
             controller->stack_frame[0] = ((uint32_t) queue | 0x02);
 
-            delay(2000);
+            uint16_t status = port_word_in(controller->io_base + REG_USB_STATUS);
+            uint16_t frnum = port_word_in(controller->io_base + REG_FRAME_NUM);
+            fprintf(stddebug, "Status: %04x, Frame Num: %d\n", status & 0xFFFF, frnum);
+
+            delay(1100);
+
+            status = port_word_in(controller->io_base + REG_USB_STATUS);
+            frnum = port_word_in(controller->io_base + REG_FRAME_NUM);
+            fprintf(stddebug, "Status: %04x, Frame Num: %d\n", status & 0xFFFF, frnum);
 
 
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %x %x %x %x %x %x %x %x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3], dwords[4], dwords[5],  dwords[6],  dwords[7]);
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %x %x %x %x %x %x %x %x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11], dwords[12], dwords[13], dwords[14], dwords[15]);
-
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %08x %08x %08x %08x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3]);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %08x %08x %08x %08x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11]);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19]);
 
             fprintf(stdout, "UHCI[%d:%d]: Descriptor value %x %x\n", controller->id, i, descriptor[0], descriptor[1]);
-            dump_mem("Mem2 ", buffer, 128);
+            dump_mem32("Mem2 ", buffer, 128);
         } else if (result == ERR_NO_DEVICE) {
             fprintf(stdout, "UHCI[%d]: No device on port %d\n", controller->id, i);
         } else {
@@ -256,14 +265,24 @@ bool usb_uhci_init_controller(struct pci_device *device) {
     }
 }
 
-void dump_mem(char *prefix, char *buffer, int bytes) {
+void dump_mem8(char *prefix, char *buffer, int bytes) {
     int lines = bytes / 8;
-    fprintf(stddebug, "Dumping %d bytes from 0x%x\n", bytes, buffer);
+    fprintf(stddebug, "Dumping %d bytes from 0x%08x\n", bytes, buffer);
     for(int line=0; line<lines; line++) {
         char *dwords = buffer + (line * 8);
         fprintf(stddebug, "%s %02x %02x %02x %02x %02x %02x %02x %02x\n", prefix, 
             dwords[0] & 0xff, dwords[1] & 0xff, dwords[2] & 0xff, (uint32_t) dwords[3] & 0xff, 
             (uint32_t) dwords[4] & 0xff, (uint32_t) dwords[5] & 0xff,  (uint32_t) dwords[6] & 0xff,  (uint32_t) dwords[7] & 0xff);
+    }
+}
+
+void dump_mem32(char *prefix, uint32_t *buffer, int bytes) {
+    int lines = bytes / 4;
+    fprintf(stddebug, "Dumping %d bytes from 0x%08x\n", bytes, buffer);
+    for(int line=0; line<lines; line++) {
+        uint32_t *dwords = buffer + (line);
+        fprintf(stddebug, "%s %08x: %08x\n", prefix, dwords, 
+            dwords[0]);
     }
 }
 

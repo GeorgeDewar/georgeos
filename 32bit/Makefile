@@ -54,6 +54,22 @@ debug: all
 		-ex "continue" \
 		-ex "display/10i \$$pc"
 	pkill qemu
+debug-usb: all
+	qemu-system-i386 \
+		-nodefaults \
+		-vga std \
+		-usb \
+		-device usb-ehci,id=ehci \
+		-device usb-storage,bus=usb-bus.0,drive=usbstick \
+		-drive if=none,id=usbstick,file=build/hdd.img,format=raw \
+		-s -S -serial stdio &
+	gdb \
+	  	-ex "file build/kernel.elf" \
+		-ex "target remote localhost:1234" \
+		-ex "continue" \
+		-ex "watch *0xA04B00"
+		-ex "display/10i \$$pc"
+	pkill qemu
 
 cliondebug: all
 	qemu-system-i386.exe \
