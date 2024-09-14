@@ -15,7 +15,9 @@ void on_key_event(struct KeyEvent event) {
 
 /** wait for a keypress and return the character typed */
 char get_char() {
-    while(next_char_received == 0);             // wait until there is a character
+    while(next_char_received == 0) {
+        __asm__("hlt");
+    }; // wait until there is a character
     char captured_char = next_char_received;    // store it so we can clear it
     next_char_received = 0;                     // clear it
     return captured_char;                       // return what we stored
