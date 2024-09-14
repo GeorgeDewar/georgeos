@@ -42,6 +42,11 @@ const uint16_t PORTSC_CURRENT_CONNECT_STATUS = 0x0001; // Bit 0
 
 // Device request packet
 const uint8_t REQ_PKT_DIR_DEVICE_TO_HOST = (1<<7);
+const uint8_t REQ_PKT_REQ_CODE_SET_ADDRESS = 0x05;
+const uint8_t REQ_PKT_REQ_CODE_GET_DESCRIPTOR = 0x06;
+
+// Descriptor types
+const uint8_t DESCRIPTOR_DEVICE = 0x01;
 
 // Transfer descriptor
 const uint8_t TD_PID_SETUP = 0x2D;
@@ -175,8 +180,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
     controller->queue_default->head_link_pointer = 0x01; // terminate
     controller->queue_default->element_link_pointer = 0x01; // terminate
 
-    // Place the queue
-    controller->stack_frame[0] = ((uint32_t) controller->queue_default | 0x02);
+    // Place the queue into *every* stack frame so that it always has the chance to run
+    for (int i=0; i<1024; i++) {
+        controller->stack_frame[i] = ((uint32_t) controller->queue_default | 0x02);
+    }
 
     // Check the ports
     for(int i=0; i<2; i++) {
@@ -186,10 +193,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
 
             DeviceRequestPacket packet;
             packet.request_type = REQ_PKT_DIR_DEVICE_TO_HOST;
-            packet.request = 0x06;
-            packet.value = 0x0100;
-            packet.index = 0;
-            packet.length = 8;
+            packet.request = REQ_PKT_REQ_CODE_GET_DESCRIPTOR;
+            packet.value = DESCRIPTOR_DEVICE << 8;
+            packet.index = 0; // Language
+            packet.length = 8; // Max for low-speed
 
             uint32_t descriptor[2];
             
