@@ -192,7 +192,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             packet.length = 8;
 
             uint32_t descriptor[2];
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor value %08x %08x\n", controller->id, i, descriptor[0], descriptor[1]);
+            
 
             uint8_t *buffer = memalign(16, 128); // Buffer must be paragraph-aligned
             memset(buffer, 0, 128);
@@ -240,50 +240,20 @@ bool usb_uhci_init_controller(struct pci_device *device) {
 
             controller->queue_default->element_link_pointer = descriptors;
 
-            TransferDescriptor descriptor0 = descriptors[0];
-            uint32_t *dwords = descriptors;
-
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %08x %08x %08x %08x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3]);
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %08x %08x %08x %08x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11]);
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19]);
-
-            dump_mem32("Mem1 ", buffer, 128);
-
-
-
-
-            uint16_t status = port_word_in(controller->io_base + REG_USB_STATUS);
-            uint16_t frnum = port_word_in(controller->io_base + REG_FRAME_NUM);
-            fprintf(stddebug, "Status: %04x, Frame Num: %d\n", status & 0xFFFF, frnum);
-
             int max_wait = 2000;
             int j=0;
             for(j=0; j<max_wait; j++) {
-                
-                if (descriptors[2].status_active == false) {
-                    fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x, active = %d\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19], descriptors[2].status_active);
-
-                    break;
-                }
-
-                //fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x, active = %d\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19], descriptors[2].status_active);
-
+                if (descriptors[2].status_active == false) break;
                 delay(1);
             }
 
+            if (j == 2000) {
+                fprintf(stdout, "[%08d] Timed out waiting for transfer to complete\n", timer_ticks);
+                return FAILURE;
+            }
+
             fprintf(stdout, "[%08d] Continued after %d iterations\n", timer_ticks, j);
-
-            status = port_word_in(controller->io_base + REG_USB_STATUS);
-            frnum = port_word_in(controller->io_base + REG_FRAME_NUM);
-            fprintf(stddebug, "Status: %04x, Frame Num: %d\n", status & 0xFFFF, frnum);
-
-
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 0 = %08x %08x %08x %08x\n", controller->id, i, dwords[0], dwords[1], dwords[2], dwords[3]);
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 1 = %08x %08x %08x %08x\n", controller->id, i, dwords[8], dwords[9], dwords[10], dwords[11]);
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor 2 = %08x %08x %08x %08x\n", controller->id, i, dwords[16], dwords[17], dwords[18], dwords[19]);
-
-            fprintf(stdout, "UHCI[%d:%d]: Descriptor value %x %x\n", controller->id, i, descriptor[0], descriptor[1]);
-            dump_mem32("Mem2 ", buffer, 128);
+            fprintf(stdout, "UHCI[%d:%d]: Descriptor value %08x %08x\n", controller->id, i, descriptor[0], descriptor[1]);
         } else if (result == ERR_NO_DEVICE) {
             fprintf(stdout, "UHCI[%d]: No device on port %d\n", controller->id, i);
         } else {
