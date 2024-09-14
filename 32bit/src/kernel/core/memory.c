@@ -34,3 +34,30 @@ void memcpy(void* source, void* dest, uint32_t length) {
         ((uint8_t *) dest)[i] = ((uint8_t *) source)[i];
     }
 }
+
+/**
+ * Print out the specified number of bytes from the buffer, one byte at a time, 8 per line
+ */
+void dump_mem8(char *prefix, char *buffer, int bytes) {
+    int lines = bytes / 8;
+    fprintf(stddebug, "Dumping %d bytes from 0x%08x\n", bytes, buffer);
+    for(int line=0; line<lines; line++) {
+        char *dwords = buffer + (line * 8);
+        fprintf(stddebug, "%s %02x %02x %02x %02x %02x %02x %02x %02x\n", prefix, 
+            dwords[0] & 0xff, dwords[1] & 0xff, dwords[2] & 0xff, (uint32_t) dwords[3] & 0xff, 
+            (uint32_t) dwords[4] & 0xff, (uint32_t) dwords[5] & 0xff,  (uint32_t) dwords[6] & 0xff,  (uint32_t) dwords[7] & 0xff);
+    }
+}
+
+/**
+ * Print out the specified number of bytes from the buffer, one dword at a time, 1 per line
+ */
+void dump_mem32(char *prefix, uint32_t *buffer, int bytes) {
+    int lines = bytes / 4;
+    fprintf(stddebug, "Dumping %d bytes from 0x%08x\n", bytes, buffer);
+    for(int line=0; line<lines; line++) {
+        uint32_t *dwords = buffer + (line);
+        fprintf(stddebug, "%s %08x: %08x\n", prefix, dwords, 
+            dwords[0]);
+    }
+}

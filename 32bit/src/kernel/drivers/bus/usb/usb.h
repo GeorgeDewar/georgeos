@@ -31,3 +31,11 @@ typedef struct {
     uint32_t _unused1;
     uint32_t _unused2;
 } UsbQueue;
+
+struct uhci_controller {
+    int id;
+    struct pci_device *pci_device;
+    uint32_t io_base;
+    uint32_t *stack_frame; // 1024 dwords
+    UsbQueue *queue_default; // For control and bulk operations
+};

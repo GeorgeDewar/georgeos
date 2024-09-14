@@ -438,12 +438,6 @@ bool ahci_init();
 
 /* USB 1.1 (UHCI) */
 bool usb_uhci_init();
-struct uhci_controller {
-    int id;
-    struct pci_device *pci_device;
-    uint32_t io_base;
-    uint32_t *stack_frame; // 1024 dwords
-};
 
 /* USB 2.0 (EHCI) */
 bool usb_ehci_init();
