@@ -101,6 +101,7 @@ bool usb_uhci_init_controller(struct pci_device *device);
 bool uhci_controller_reset(struct uhci_controller *controller);
 bool uhci_reset_port(struct uhci_controller *controller, uint8_t port);
 bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer);
+bool wait_for_transfer(TransferDescriptor *td, uint16_t timeout);
 
 // The UHCI data structures include a Frame List, Isochronous Transfer Descriptors, Queue Heads, and queued
 // Transfer Descriptors.
@@ -194,8 +195,8 @@ bool usb_uhci_init_controller(struct pci_device *device) {
 
             UsbStandardDeviceDescriptor device_descriptor;
             if (uhci_get_device_descriptor(controller, i, &device_descriptor)) {
-                dump_mem8("Device descriptor: ", &device_descriptor, 8);
-                fprintf(stdout, "UHCI[%d:%d]: Loaded first 8 bytes; length is %d, class is %02x\n", controller->id, i, device_descriptor.length, device_descriptor.device_class);
+                dump_mem8("Device descriptor: ", &device_descriptor, device_descriptor.length);
+                fprintf(stdout, "UHCI[%d:%d]: Loaded device descriptor; length is %d, class is %02x\n", controller->id, i, device_descriptor.length, device_descriptor.device_class);
             } else {
                 fprintf(stderr, "UHCI[%d:%d]: Failed to get device descriptor\n", controller->id, i);
             }
@@ -263,12 +264,14 @@ bool uhci_reset_port(struct uhci_controller *controller, uint8_t port) {
 }
 
 bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer) {
+    const uint8_t initial_length = 8; // Max for low-speed, fetch the rest later
+    
     DeviceRequestPacket packet;
     packet.request_type = REQ_PKT_DIR_DEVICE_TO_HOST;
     packet.request = REQ_PKT_REQ_CODE_GET_DESCRIPTOR;
     packet.value = DESCRIPTOR_DEVICE << 8;
     packet.index = 0; // Language
-    packet.length = 8; // Max for low-speed
+    packet.length = initial_length;
 
     int num_packets = 3;
     int low_speed_device = 0; // TBD
@@ -276,6 +279,7 @@ bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port
     TransferDescriptor *descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
     fprintf(stddebug, "UHCI[%d:%d]: paragraph-aligned buffer at %x\n", controller->id, port, descriptors);
+    fprintf(stddebug, "TD size %d", sizeof(TransferDescriptor));
 
     // Setup packet
     descriptors[0].link_pointer = ((uint32_t) descriptors + 0x20) >> 4;
@@ -312,22 +316,97 @@ bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port
     descriptors[2].interrupt_on_complete = false;
     descriptors[2].terminate = true;
 
+    dump_mem32("TDs: ", descriptors, 3 * sizeof(TransferDescriptor));
+
     controller->queue_default->element_link_pointer = descriptors;
 
-    int max_wait = 2000;
-    int j=0;
-    for(j=0; j<max_wait; j++) {
-        if (descriptors[2].status_active == false) break;
-        delay(1);
+    if (!wait_for_transfer(&descriptors[2], 2000)) return FAILURE;
+
+    // Get the rest
+    uint16_t full_length = buffer->length;
+    fprintf(stddebug, "Fetching all %d bytes of transfer descriptor\n", full_length);
+
+    // Reuse the packet
+    packet.value = DESCRIPTOR_DEVICE << 8;
+    packet.index = 0; // Language
+    packet.length = full_length;
+
+    // SETUP, IN per 8 bytes, STATUS
+    int data_packets = full_length / 8;
+    int remainder = full_length - data_packets * 8;
+    if (remainder) data_packets++;
+    num_packets = 2 + data_packets;
+
+    int descriptor_num = 0;
+    descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
+    memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
+    fprintf(stddebug, "UHCI[%d:%d]: paragraph-aligned buffer at %x\n", controller->id, port, descriptors);
+
+    // Setup packet
+    fprintf(stddebug, "UHCI[%d:%d]: Preparing setup packet (0)\n", controller->id, port);
+    descriptors[0].link_pointer = ((uint32_t) &(descriptors[1])) >> 4;
+    descriptors[0].depth_first = true;
+    descriptors[0].error_count = 3;
+    descriptors[0].low_speed_device = low_speed_device;
+    descriptors[0].status_active = true;
+    descriptors[0].max_length = 7;
+    descriptors[0].data_toggle = 1;
+    descriptors[0].packet_identification = TD_PID_SETUP;
+    descriptors[0].buffer_pointer = &packet;
+    descriptor_num++;
+
+    // IN packets
+    for(descriptor_num; descriptor_num<num_packets - 1; descriptor_num++) {
+        fprintf(stddebug, "UHCI[%d:%d]: Preparing data packet (%d)\n", controller->id, port, descriptor_num);
+        descriptors[descriptor_num].link_pointer = ((uint32_t) &(descriptors[descriptor_num + 1])) >> 4;
+        descriptors[descriptor_num].depth_first = true;
+        descriptors[descriptor_num].error_count = 3;
+        descriptors[descriptor_num].low_speed_device = low_speed_device;
+        descriptors[descriptor_num].status_active = true;
+        descriptors[descriptor_num].max_length = 7;
+        descriptors[descriptor_num].data_toggle = 0;
+        descriptors[descriptor_num].packet_identification = TD_PID_IN;
+        descriptors[descriptor_num].buffer_pointer = buffer + (8 * (descriptor_num - 1));
     }
 
-    if (j == 2000) {
-        fprintf(stdout, "[%08d] Timed out waiting for transfer to complete\n", timer_ticks);
+    // OUT packet
+    fprintf(stddebug, "UHCI[%d:%d]: Preparing status packet (%d)\n", controller->id, port, descriptor_num);
+    descriptors[descriptor_num].link_pointer = 0;
+    descriptors[descriptor_num].depth_first = true;
+    descriptors[descriptor_num].error_count = 3;
+    descriptors[descriptor_num].low_speed_device = low_speed_device;
+    descriptors[descriptor_num].status_active = true;
+    descriptors[descriptor_num].max_length = 0x7FF;
+    descriptors[descriptor_num].data_toggle = 1;
+    descriptors[descriptor_num].packet_identification = TD_PID_OUT;
+    descriptors[descriptor_num].buffer_pointer = 0;
+    descriptors[descriptor_num].interrupt_on_complete = false;
+    descriptors[descriptor_num].terminate = true;
+
+    dump_mem32("TDs: ", descriptors, num_packets * sizeof(TransferDescriptor));
+
+    controller->queue_default->element_link_pointer = descriptors;
+
+    if (!wait_for_transfer(&descriptors[descriptor_num], 2000)) {
+        dump_mem32("TDs: ", descriptors, num_packets * sizeof(TransferDescriptor));
         return FAILURE;
     }
 
-    fprintf(stdout, "[%08d] Continued after %d iterations\n", timer_ticks, j);
     return SUCCESS;
+}
+
+bool wait_for_transfer(TransferDescriptor *td, uint16_t timeout) {
+    int j=0;
+    for(j=0; j<timeout; j++) {
+        if (td->status_active == false) break;
+        delay(1);
+    }
+    if (j == timeout) {
+        fprintf(stderr, "Timed out waiting for transfer to complete\n");
+        return FAILURE;
+    }
+
+    fprintf(stddebug, "Continued after %dms\n", j);
 }
 
 bool uhci_send_device_to_host_packet(struct uhci_controller *controller, uint8_t port, uint8_t address, DeviceRequestPacket *packet, char *buffer) {
