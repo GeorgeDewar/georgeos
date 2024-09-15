@@ -49,8 +49,8 @@ void memset(void* source, uint8_t value, uint32_t length);
 void memcpy(void* source, void* dest, uint32_t length);
 
 /* Memory debugging */
-void dump_mem8(char *prefix, char *buffer, int bytes);
-void dump_mem32(char *prefix, uint32_t *buffer, int bytes);
+void dump_mem8(int16_t fp, char *prefix, char *buffer, int bytes);
+void dump_mem32(int16_t fp, char *prefix, uint32_t *buffer, int bytes);
 
 /* Timer */
 void timer_install();

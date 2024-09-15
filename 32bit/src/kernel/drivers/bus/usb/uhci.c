@@ -194,11 +194,12 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
 
             UsbStandardDeviceDescriptor device_descriptor;
-            if (uhci_get_device_descriptor(controller, i, &device_descriptor)) {
-                dump_mem8("Device descriptor: ", &device_descriptor, device_descriptor.length);
+            bool response = uhci_get_device_descriptor(controller, i, &device_descriptor);
+            if (response > 0) {
+                dump_mem8(stdout, "Device descriptor: ", &device_descriptor, device_descriptor.length);
                 fprintf(stdout, "UHCI[%d:%d]: Loaded device descriptor; length is %d, class is %02x\n", controller->id, i, device_descriptor.length, device_descriptor.device_class);
             } else {
-                fprintf(stderr, "UHCI[%d:%d]: Failed to get device descriptor\n", controller->id, i);
+                fprintf(stderr, "UHCI[%d:%d]: Failed to get device descriptor: %d\n", controller->id, i, response);
             }
             
             
@@ -316,11 +317,14 @@ bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port
     descriptors[2].interrupt_on_complete = false;
     descriptors[2].terminate = true;
 
-    dump_mem32("TDs: ", descriptors, 3 * sizeof(TransferDescriptor));
+    dump_mem32(stddebug, "TDs: ", descriptors, 3 * sizeof(TransferDescriptor));
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (!wait_for_transfer(&descriptors[2], 2000)) return FAILURE;
+    if (!wait_for_transfer(&descriptors[2], 2000)) {
+        dump_mem32(stderr, "TDs: ", descriptors, num_packets * sizeof(TransferDescriptor));
+        return FAILURE;
+    }
 
     // Get the rest
     uint16_t full_length = buffer->length;
@@ -383,12 +387,12 @@ bool uhci_get_device_descriptor(struct uhci_controller *controller, uint8_t port
     descriptors[descriptor_num].interrupt_on_complete = false;
     descriptors[descriptor_num].terminate = true;
 
-    dump_mem32("TDs: ", descriptors, num_packets * sizeof(TransferDescriptor));
+    dump_mem32(stddebug, "TDs: ", descriptors, num_packets * sizeof(TransferDescriptor));
 
     controller->queue_default->element_link_pointer = descriptors;
 
     if (!wait_for_transfer(&descriptors[descriptor_num], 2000)) {
-        dump_mem32("TDs: ", descriptors, num_packets * sizeof(TransferDescriptor));
+        dump_mem32(stdout, "TDs: ", descriptors, num_packets * sizeof(TransferDescriptor));
         return FAILURE;
     }
 
