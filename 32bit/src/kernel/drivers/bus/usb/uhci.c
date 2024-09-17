@@ -196,7 +196,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
         bool result = uhci_reset_port(controller, i);
         if (result == SUCCESS) {
             uint16_t port_reg = read_port_sc(controller, i);
-            uint8_t low_speed = port_reg & PORTSC_LOW_SPEED_DEVICE;
+            uint8_t low_speed = port_reg | PORTSC_LOW_SPEED_DEVICE;
             printf("Port %d reset successfully with a %s speed device\n", i, low_speed ? "low" : "full");
             fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
 
@@ -286,8 +286,8 @@ static uint16_t read_port_sc(UhciController *controller, uint8_t port) {
 
 bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer) {
     uint16_t port_sc = read_port_sc(controller, port);
-    int low_speed_device = 0;// = port_sc & PORTSC_LOW_SPEED_DEVICE;
-    
+
+    int low_speed_device = port_sc | PORTSC_LOW_SPEED_DEVICE;
     const uint8_t initial_length = low_speed_device ? 8 : 64; // Max for low-speed, fetch the rest later
     
     DeviceRequestPacket *packet = memalign(16, sizeof(DeviceRequestPacket));
@@ -387,7 +387,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     descriptors[0].low_speed_device = low_speed_device;
     descriptors[0].status_active = true;
     descriptors[0].max_length = 7;
-    descriptors[0].data_toggle = 1;
+    descriptors[0].data_toggle = 0;
     descriptors[0].packet_identification = TD_PID_SETUP;
     descriptors[0].buffer_pointer = packet;
     descriptor_num++;
@@ -401,7 +401,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
         descriptors[descriptor_num].low_speed_device = low_speed_device;
         descriptors[descriptor_num].status_active = true;
         descriptors[descriptor_num].max_length = 7;
-        descriptors[descriptor_num].data_toggle = 0;
+        descriptors[descriptor_num].data_toggle = descriptor_num % 2;
         descriptors[descriptor_num].packet_identification = TD_PID_IN;
         descriptors[descriptor_num].buffer_pointer = ((char *) buffer) + (8 * (descriptor_num - 1));
     }
