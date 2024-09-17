@@ -286,7 +286,7 @@ static uint16_t read_port_sc(UhciController *controller, uint8_t port) {
 
 bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer) {
     uint16_t port_sc = read_port_sc(controller, port);
-    int low_speed_device = port_sc & PORTSC_LOW_SPEED_DEVICE;
+    int low_speed_device = 0;// = port_sc & PORTSC_LOW_SPEED_DEVICE;
     
     const uint8_t initial_length = low_speed_device ? 8 : 64; // Max for low-speed, fetch the rest later
     
@@ -313,7 +313,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     descriptors[0].low_speed_device = low_speed_device;
     descriptors[0].status_active = true;
     descriptors[0].max_length = 7;
-    descriptors[0].data_toggle = 1;
+    descriptors[0].data_toggle = 0;
     descriptors[0].packet_identification = TD_PID_SETUP;
     descriptors[0].buffer_pointer = packet;
 
@@ -324,7 +324,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     descriptors[1].low_speed_device = low_speed_device;
     descriptors[1].status_active = true;
     descriptors[1].max_length = initial_length - 1;
-    descriptors[1].data_toggle = 0;
+    descriptors[1].data_toggle = 1;
     descriptors[1].packet_identification = TD_PID_IN;
     descriptors[1].buffer_pointer = buffer;
 
