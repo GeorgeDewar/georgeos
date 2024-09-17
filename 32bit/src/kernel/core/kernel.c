@@ -76,8 +76,8 @@ void main () {
     usb_uhci_init();
 
     // Initialise storage devices
-    install_floppy();
-    ata_init();
+    //install_floppy();
+    //ata_init();
 
     // If there are none, we can't do much more
     if (block_devices_count == 0) {
@@ -132,7 +132,7 @@ void main () {
         printf("Failed to execute shell!\n");
     }
 
-    halt();
+    loopback();
 }
 
 _Noreturn void loopback() {

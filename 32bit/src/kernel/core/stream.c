@@ -75,6 +75,19 @@ void int_to_string(uint32_t i, uint8_t base, char* buffer) {
     buffer[opos] = 0;
 }
 
+int string_to_int(char *string) {
+    int value = 0;
+    int len = strlen(string);
+    int multiplier = 1;
+    for(int i=0; i<len; i++) {
+        char chr = string[len - (i+1)];
+        uint8_t digit_val = chr - '0';
+        value += digit_val * multiplier;
+        multiplier *= 10;
+    }
+    return value;
+}
+
 void printf(char* string, ...) {
     va_list argp;
     va_start(argp, string);
@@ -104,10 +117,19 @@ static void vsprintf(char* buffer, char* string, va_list argp) {
             num_length = 0;
             string++;
             
-            if (*string == '0') {
+            // If there is a number, copy it into a buffer and parse it
+            uint8_t zero_pad_string_length = 0;
+            char zero_pad_length_str[8];
+            while (*string >= '0' && *string <= '9') {
+                //fprintf(stddebug, "Adding chr %x\n", *string);
+                zero_pad_length_str[zero_pad_string_length++] = *string;
                 string++; // next digit is num digits
-                num_length = *string - '0';
-                string++;
+            }
+            zero_pad_length_str[zero_pad_string_length] = 0;
+            if (zero_pad_string_length > 0) {
+                //fprintf(stddebug, "%s\n", zero_pad_length_str);
+                num_length = string_to_int(zero_pad_length_str);
+                //fprintf(stddebug, "%d\n", num_length);
             }
 
             if(*string == '%'){ // %% escapes %

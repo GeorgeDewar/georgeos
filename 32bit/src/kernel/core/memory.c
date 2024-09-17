@@ -12,9 +12,13 @@ void *malloc(size_t size) {
 
 void *memalign(size_t alignment, size_t size) {
     // Allocate enough to get the required aligned block, and return it
-    uint32_t diff = ((uint8_t) free_memory_start) & (alignment - 1); // this is how much has been allocated above the last alignment boundary
+    //printf("Allocation %d bytes with %d alignment. Current start is %08x\n", size, alignment, free_memory_start);
+    uint32_t diff = ((uint32_t) free_memory_start) & (alignment - 1); // this is how much has been allocated above the last alignment boundary
+    if (diff == 0) return malloc(size);
+
     uint32_t waste = alignment - diff;
     void *allocation = malloc(size + waste);
+    //printf("Diff: %d, Waste: %d, Allocation @ %08x, Returning %08x\n", diff, waste, allocation, allocation + waste);
     return allocation + waste;
 }
 
@@ -39,14 +43,17 @@ void memcpy(void* source, void* dest, uint32_t length) {
  * Print out the specified number of bytes from the buffer, one byte at a time, 8 per line
  */
 void dump_mem8(int16_t fp, char *prefix, char *buffer, int bytes) {
-    int lines = bytes / 8;
-    fprintf(fp, "Dumping %d bytes from 0x%08x\n", bytes, buffer);
-    for(int line=0; line<lines; line++) {
-        char *dwords = buffer + (line * 8);
-        fprintf(fp, "%s %02x %02x %02x %02x %02x %02x %02x %02x\n", prefix, 
-            dwords[0] & 0xff, dwords[1] & 0xff, dwords[2] & 0xff, (uint32_t) dwords[3] & 0xff, 
-            (uint32_t) dwords[4] & 0xff, (uint32_t) dwords[5] & 0xff,  (uint32_t) dwords[6] & 0xff,  (uint32_t) dwords[7] & 0xff);
+    int bytes_per_line = 8;
+    fprintf(fp, "Dumping %d bytes from 0x%08x", bytes, buffer);
+    
+    for(int i=0; i<bytes; i++) {
+        char byte = buffer[i];
+        if (i % bytes_per_line == 0) {
+            fprintf(fp, "\n%s", prefix);
+        }
+        fprintf(fp, "%02x ", byte & 0xFF);
     }
+    fprintf(fp, "\n");
 }
 
 /**

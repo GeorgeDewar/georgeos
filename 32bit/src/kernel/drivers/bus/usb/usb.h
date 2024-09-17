@@ -1,5 +1,8 @@
 #include "stdint.h"
 
+const uint8_t SPEED_LOW = 0;
+const uint8_t SPEED_FULL = 1;
+
 typedef struct {
     uint8_t length;
     uint8_t type;
@@ -32,10 +35,14 @@ typedef struct {
     uint32_t _unused2;
 } UsbQueue;
 
-struct uhci_controller {
+// typedef struct {
+//     uint8_t speed;
+// } UhciPort;
+
+typedef struct {
     int id;
     struct pci_device *pci_device;
     uint32_t io_base;
     uint32_t *stack_frame; // 1024 dwords
     UsbQueue *queue_default; // For control and bulk operations
-};
+} UhciController;
