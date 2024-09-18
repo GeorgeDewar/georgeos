@@ -103,6 +103,7 @@ bool uhci_reset_port(UhciController *controller, uint8_t port);
 bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer);
 bool wait_for_transfer(TransferDescriptor *td, uint16_t timeout);
 static uint16_t read_port_sc(UhciController *controller, uint8_t port);
+static void write_port_sc(UhciController *controller, uint8_t port, uint16_t data);
 
 static void print_driver_status(int16_t fp, UhciController *controller);
 static void print_tds(int16_t fp, char *prefix, TransferDescriptor *tds, uint16_t count);
@@ -194,12 +195,17 @@ bool usb_uhci_init_controller(struct pci_device *device) {
         controller->stack_frame[i] = ((uint32_t) controller->queue_default | 0x02);
     }
 
+    // Disable the ports so we can enumerate the devices one port at a time
+    for(int i=0; i<2; i++) {
+        write_port_sc(controller, i, 0); // clear all bits including enabled
+    }
+
     // Check the ports
     for(int i=0; i<2; i++) {
         bool result = uhci_reset_port(controller, i);
         if (result == SUCCESS) {
             uint16_t port_reg = read_port_sc(controller, i);
-            uint8_t low_speed = port_reg & PORTSC_LOW_SPEED_DEVICE != 0;
+            uint8_t low_speed = (port_reg & PORTSC_LOW_SPEED_DEVICE) != 0;
             printf("Port %d reset successfully with a %s speed device\n", i, low_speed ? "low" : "full");
             fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
 
@@ -300,10 +306,15 @@ static uint16_t read_port_sc(UhciController *controller, uint8_t port) {
     return port_word_in(controller->io_base + reg_offset);
 }
 
+static void write_port_sc(UhciController *controller, uint8_t port, uint16_t data) {
+    uint8_t reg_offset = (port == 1 ? REG_PORTSC1 : REG_PORTSC2);
+    return port_word_out(controller->io_base + reg_offset, data);
+}
+
 bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer) {
     uint16_t port_sc = read_port_sc(controller, port);
 
-    int low_speed_device = port_sc & PORTSC_LOW_SPEED_DEVICE != 0;
+    uint8_t low_speed_device = (port_sc & PORTSC_LOW_SPEED_DEVICE) != 0;
     const uint8_t initial_length = low_speed_device ? 8 : 64; // Max for low-speed, fetch the rest later
     
     DeviceRequestPacket *packet = memalign(16, sizeof(DeviceRequestPacket));
