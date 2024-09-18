@@ -152,7 +152,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
     // Check command register
     if (port_word_in(controller->io_base + REG_USB_COMMAND) != 0x0000) return FAILURE;
     // Check status register
-    if (port_word_in(controller->io_base + REG_USB_STATUS) != 0x0020) return FAILURE;
+    uint16_t usbsts = port_word_in(controller->io_base + REG_USB_STATUS);
+    if (usbsts != 0x0020) return FAILURE;
+    // Clear status register
+    port_word_out(controller->io_base + REG_USB_STATUS, usbsts);
     // Check SOF register
     if (port_byte_in(controller->io_base + REG_SOFMOD) != 0x40) return FAILURE;
     fprintf(stddebug, "UHCI[%d]: Initial register checks OK\n", controller_id);
@@ -196,7 +199,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
         bool result = uhci_reset_port(controller, i);
         if (result == SUCCESS) {
             uint16_t port_reg = read_port_sc(controller, i);
-            uint8_t low_speed = port_reg | PORTSC_LOW_SPEED_DEVICE;
+            uint8_t low_speed = port_reg & PORTSC_LOW_SPEED_DEVICE != 0;
             printf("Port %d reset successfully with a %s speed device\n", i, low_speed ? "low" : "full");
             fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
 
@@ -253,16 +256,29 @@ bool uhci_reset_port(UhciController *controller, uint8_t port) {
     
     // Check the status
     uint16_t port_reg = port_word_in(controller->io_base + reg_offset);
-    fprintf(stddebug, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
+    fprintf(stderr, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
     if (!(port_reg & PORTSC_CURRENT_CONNECT_STATUS)) {
         return ERR_NO_DEVICE;
     }
+
+    // Clear CSC (connect status change) and enable status change
+    port_reg |= PORTSC_CONNECT_STATUS_CHANGE;
+    port_reg |= PORTSC_PORT_ENABLE_CHANGED;
+    port_word_out(controller->io_base + reg_offset, port_reg);
+
+    // Read the value again so we don't try to change while resetting
+    port_reg = port_word_in(controller->io_base + reg_offset);
 
     // Do the reset
     port_word_out(controller->io_base + reg_offset, port_reg | PORTSC_PORT_RESET);
     delay(50); // Reset time for a root port (TDRSTR)
     port_word_out(controller->io_base + reg_offset, port_reg & ~PORTSC_PORT_RESET);
     delay(10); // Recovery time (TRSTRCY)
+
+    // Clear CSC (connect status change) and enable status change
+    port_reg |= PORTSC_CONNECT_STATUS_CHANGE;
+    port_reg |= PORTSC_PORT_ENABLE_CHANGED;
+    port_word_out(controller->io_base + reg_offset, port_reg);
 
     // Verify success. We keep checking and setting PORTSC_PORT_ENABLED until it's enabled or we give up
     for (int i=0; i<PORT_ENABLE_TIMEOUT; i++) {
@@ -287,7 +303,7 @@ static uint16_t read_port_sc(UhciController *controller, uint8_t port) {
 bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer) {
     uint16_t port_sc = read_port_sc(controller, port);
 
-    int low_speed_device = port_sc | PORTSC_LOW_SPEED_DEVICE;
+    int low_speed_device = port_sc & PORTSC_LOW_SPEED_DEVICE != 0;
     const uint8_t initial_length = low_speed_device ? 8 : 64; // Max for low-speed, fetch the rest later
     
     DeviceRequestPacket *packet = memalign(16, sizeof(DeviceRequestPacket));
