@@ -179,7 +179,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
         fprintf(stderr, "UHCI[%d]: Failed to allocate memory\n", controller->id);
         return FAILURE;
     }
-    fprintf(stdout, "UHCI[%d]: Allocated stack frame at 0x%x\n", controller->id, controller->stack_frame);
+    fprintf(stddebug, "UHCI[%d]: Allocated stack frame at 0x%x\n", controller->id, controller->stack_frame);
     port_long_out(controller->io_base + REG_FRBASEADD, controller->stack_frame);
 
     // Clear the status register
@@ -233,7 +233,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                     return FAILURE;
                 }
 
-                fprintf(stderr, "Registering device as %d", device_id);
+                fprintf(stderr, "Registering device as %d\n", device_id);
                 bool response = uhci_set_address(controller, i, device_id);
                 if (response > 0) {
                     controller->devices[device_id].address = device_id;
@@ -281,7 +281,7 @@ bool uhci_reset_port(UhciController *controller, uint8_t port) {
     
     // Check the status
     uint16_t port_reg = port_word_in(controller->io_base + reg_offset);
-    fprintf(stderr, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
+    fprintf(stddebug, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
     if (!(port_reg & PORTSC_CURRENT_CONNECT_STATUS)) {
         return ERR_NO_DEVICE;
     }
@@ -343,7 +343,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     packet->index = 0; // Language
     packet->length = initial_length;
 
-    dump_mem8(stderr, "Pkt: ", packet, sizeof(DeviceRequestPacket));
+    dump_mem8(stddebug, "Pkt: ", packet, sizeof(DeviceRequestPacket));
 
     int num_packets = 3;
 
@@ -398,7 +398,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
         return FAILURE;
     }
 
-    print_tds(stderr, "TDs", descriptors, 3);
+    print_tds(stddebug, "TDs", descriptors, 3);
 
     if (descriptors[1].actual_length > 7 && descriptors[1].actual_length + 1 == buffer->length) {
         fprintf(stddebug, "Got %d bytes, so we must have the full descriptor\n", descriptors[1].actual_length + 1);
@@ -492,7 +492,7 @@ bool uhci_set_address(UhciController *controller, uint8_t port, uint8_t device_i
     packet->index = 0;
     packet->length = 0;
 
-    dump_mem8(stderr, "Pkt: ", packet, sizeof(DeviceRequestPacket));
+    dump_mem8(stddebug, "Pkt: ", packet, sizeof(DeviceRequestPacket));
 
     int num_packets = 2;
 
@@ -531,12 +531,12 @@ bool uhci_set_address(UhciController *controller, uint8_t port, uint8_t device_i
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (wait_for_transfer(&descriptors[2], 2000) < 0) {
+    if (wait_for_transfer(&descriptors[1], 2000) < 0) {
         print_tds(stderr, "TDs", descriptors, num_packets);
         return FAILURE;
     }
 
-    print_tds(stderr, "TDs", descriptors, num_packets);
+    print_tds(stddebug, "TDs", descriptors, num_packets);
     return SUCCESS;
 }
 
