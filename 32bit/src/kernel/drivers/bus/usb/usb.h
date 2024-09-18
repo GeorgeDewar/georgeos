@@ -1,5 +1,7 @@
 #include "stdint.h"
 
+const uint8_t MAX_DEVICES = 127;
+
 const uint8_t SPEED_LOW = 0;
 const uint8_t SPEED_FULL = 1;
 
@@ -40,9 +42,15 @@ typedef struct {
 // } UhciPort;
 
 typedef struct {
+    uint8_t address;
+    UsbStandardDeviceDescriptor descriptor;
+} UsbDevice;
+
+typedef struct {
     int id;
     struct pci_device *pci_device;
     uint32_t io_base;
     uint32_t *stack_frame; // 1024 dwords
     UsbQueue *queue_default; // For control and bulk operations
+    UsbDevice devices[128];
 } UhciController;
