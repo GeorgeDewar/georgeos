@@ -34,8 +34,21 @@ void memset(void* dest, uint8_t value, uint32_t length) {
 }
 
 void memcpy(void* source, void* dest, uint32_t length) {
-    for(uint32_t i=0; i<length; i++) {
-        ((uint8_t *) dest)[i] = ((uint8_t *) source)[i];
+    // TODO: This could still be massively improved by using SSE and MMX
+
+    uint32_t num_dwords = length / 4;
+    uint32_t num_bytes = length % 4;
+    uint32_t *dest32 = (uint32_t*) dest;
+    uint32_t *src32 = (uint32_t*) source;
+    uint8_t *dest8 = ((uint8_t*) dest) + num_dwords * 4;
+    uint8_t *src8 = ((uint8_t*) source) + num_dwords * 4;
+    uint32_t i;
+
+    for (i=0;i<num_dwords;i++) {
+        dest32[i] = src32[i];
+    }
+    for (i=0;i<num_bytes;i++) {
+        dest8[i] = src8[i];
     }
 }
 
