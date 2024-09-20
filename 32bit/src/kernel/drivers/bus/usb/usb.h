@@ -42,6 +42,7 @@ typedef struct {
 // } UhciPort;
 
 typedef struct {
+    uint8_t port;
     uint8_t address;
     UsbStandardDeviceDescriptor descriptor;
 } UsbDevice;

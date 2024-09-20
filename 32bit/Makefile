@@ -25,7 +25,7 @@ run-usb: hdd.img
 		-vga std \
 		-usb \
 		-device usb-ehci,id=ehci \
-		-device usb-storage,bus=usb-bus.0,drive=usbstick \
+		-device usb-storage,bus=usb-bus.0,drive=usbstick,pcap=uhci.pcap \
 		-drive if=none,id=usbstick,file=build/hdd.img,format=raw \
 		-serial stdio
 run-alpine:
