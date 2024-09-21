@@ -6,7 +6,7 @@
     0x    1000   Floppy DMA buffer
     0x    9000   VESA mode information block
     0x    C000   VESA controller info
-    0x   20000   Kernel + statically allocated stuff (goes to 0x2bcxxx at time of writing [objdump])
+    0x   20000   Kernel + statically allocated stuff (goes to 0x30760 at time of writing [objdump])
     0x   7FFFF   Kernel stack ^
     0x   80000   to 0x9FFFF = RESERVED - EBDA (Extended BIOS Data Area)
     0x   A0000   to 0xFFFFF = RESERVED - Video memory, BIOS, etc
@@ -45,13 +45,13 @@ void main () {
     open_files[stddebug].type = STREAM;
     open_files[stddebug].stream_device = sd_com1;
 
-    printf("Kernel loaded successfully. Welcome to GeorgeOS!\n");
+    kprintf(INFO, "Kernel loaded successfully. Welcome to GeorgeOS!\n");
     extern uint8_t* video_memory;
-    printf("Resolution: %dx%d, Frame Buffer: %x \n",
+    kprintf(INFO, "Resolution: %dx%d, Frame Buffer: %x \n",
            vesa_graphics_device.screen_width,
            vesa_graphics_device.screen_height,
            video_memory);
-    fprintf(stddebug, "Serial connected\n");
+    kprintf(DEBUG, "Serial connected\n");
 
     // Set up interrupts
     char* init = "\rInitialising hardware: %s                                    ";
@@ -76,7 +76,7 @@ void main () {
     usb_uhci_init();
 
     // Initialise storage devices
-    //install_floppy();
+    install_floppy();
     //ata_init();
 
     // If there are none, we can't do much more
@@ -89,7 +89,7 @@ void main () {
     printf("\n");
 
     // Find partitions
-    printf("Looking for partitions\n");
+    kprintf(INFO, "Looking for partitions\n");
     for (int i=0; i<block_devices_count; i++) {
         if (block_devices[i].dev.type == HARD_DISK && block_devices[i].dev.partition == RAW_DEVICE) {
             find_partitions(&block_devices[i]);
@@ -97,9 +97,9 @@ void main () {
     }
 
     // Detect the FS for each block device
-    printf("Looking for file systems\n");
+    kprintf(INFO, "Looking for file systems\n");
     for (int i=0; i<block_devices_count; i++) {
-        fprintf(stddebug, "Processing device: %s\n", block_devices[i].device_name);
+        kprintf(DEBUG, "Processing device: %s\n", block_devices[i].device_name);
         if (block_devices[i].dev.type == FLOPPY) {
             // Create a FAT12 FileSystem instance - floppies always use FAT12
             FileSystem *fs = malloc(sizeof(FileSystem));
@@ -116,7 +116,7 @@ void main () {
 
     // If there are none, we can't do much more
     if (fs_mounts_count == 0) {
-        printf("No filesystems detected\n");
+        kprintf(INFO, "No filesystems detected\n");
         loopback();
     }
 
@@ -127,9 +127,9 @@ void main () {
     strcat(cwd, mountpoint);
 
     // Start shell from disk
-    printf("Loading SHELL.EXE... ");
+    kprintf(INFO, "Loading SHELL.EXE... ");
     if(exec("shell.exe") < 0) {
-        printf("Failed to execute shell!\n");
+        kprintf(ERROR, "Failed to execute shell!\n");
     }
 
     loopback();
@@ -140,9 +140,6 @@ _Noreturn void loopback() {
     char buffer[256];
     while(true) {
         sd_screen_console.read(buffer, 256, true);
-        printf("Before: %d", timer_ticks);
-        delay(1000);
-        printf("After: %d", timer_ticks);
     }
 }
 

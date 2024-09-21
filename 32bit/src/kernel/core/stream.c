@@ -104,6 +104,27 @@ void fprintf(int16_t fp, char* string, ...) {
     va_end(argp);
 }
 
+void kprintf(uint8_t level, char* string, ...) {
+    uint8_t debug_level = DEBUG;
+    uint8_t display_level = INFO;
+    char buffer[1024];
+
+    // First render the message into a buffer
+    va_list argp;
+    va_start(argp, string);
+    vsprintf(buffer, string, argp);
+    va_end(argp);
+
+    // Then print it to the appropriate places
+    if (level <= display_level) {
+        fprintf(stdout, "\1[32m[%6d]\1[0m %s", timer_ticks, buffer);
+    }
+
+    if (level <= debug_level) {
+        fprintf(stddebug, "[%6d] %s", timer_ticks, buffer);
+    }
+}
+
 void vfprintf(int16_t fp, char* string, va_list argp) {
     char buffer[128];
     vsprintf(buffer, string, argp);
@@ -121,15 +142,12 @@ static void vsprintf(char* buffer, char* string, va_list argp) {
             uint8_t zero_pad_string_length = 0;
             char zero_pad_length_str[8];
             while (*string >= '0' && *string <= '9') {
-                //fprintf(stddebug, "Adding chr %x\n", *string);
                 zero_pad_length_str[zero_pad_string_length++] = *string;
                 string++; // next digit is num digits
             }
             zero_pad_length_str[zero_pad_string_length] = 0;
             if (zero_pad_string_length > 0) {
-                //fprintf(stddebug, "%s\n", zero_pad_length_str);
                 num_length = string_to_int(zero_pad_length_str);
-                //fprintf(stddebug, "%d\n", num_length);
             }
 
             if(*string == '%'){ // %% escapes %
@@ -138,16 +156,13 @@ static void vsprintf(char* buffer, char* string, va_list argp) {
                 char* str = va_arg(argp, int);
                 strcpy(str, buffer);
                 buffer += strlen(str); // erase null byte
-            } else if (*string == 'd') {
+            } else if (*string == 'd' || *string == 'x') {
+                int base = 16;
+                if (*string == 'd') base = 10;
+
                 int number = va_arg(argp, int);
                 char num_string[16] = {0};
-                int_to_string(number, 10, num_string);
-                strcpy(num_string, buffer);
-                buffer += strlen(num_string); // erase null byte
-            } else if (*string == 'x') {
-                int number = va_arg(argp, int);
-                char num_string[16] = {0};
-                int_to_string(number, 16, num_string);
+                int_to_string(number, base, num_string);
                 int num_digits = strlen(num_string);
                 int padding = num_length - num_digits;
                 while (padding > 0) {

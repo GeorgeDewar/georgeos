@@ -17,6 +17,13 @@
 #define va_copy(d,s)        __builtin_va_copy(d,s)
 typedef __builtin_va_list va_list;
 
+/* Log levels (aligned with Syslog) */
+#define ERROR 3
+#define WARN  4
+#define INFO  6
+#define DEBUG 7
+
+
 /* INTERRUPT HANDLING */
 
 /* This defines what the stack looks like after an ISR was running */

@@ -148,12 +148,12 @@ bool usb_uhci_init_controller(struct pci_device *device) {
     // IO base for UHCI is I/O space, not memory. We have to mask the bit that tells us that.
     controller->io_base = pci_config_read_word(device->bus, device->device, device->function, 0x20) & 0xFFFC;
 
-    fprintf(stderr, "Found UHCI controller (%x:%x) on PCI bus at %x:%x:%x - Base I/O: 0x%x, IRQ %d\n",
+    kprintf(INFO, "Found UHCI controller (%x:%x) on PCI bus at %x:%x:%x - Base I/O: 0x%x, IRQ %d\n",
         device->vendor_id, device->device_id, device->bus, device->device, device->function,
         controller->io_base, controller->pci_device->irq);
 
     // Global reset
-    fprintf(stddebug, "UHCI[%d]: Resetting\n", controller_id);
+    kprintf(DEBUG, "UHCI[%d]: Resetting\n", controller_id);
     port_word_out(controller->io_base + REG_USB_COMMAND, USBCMD_GLOBAL_RESET);
     delay(55); // spec requires 50ms+
     port_word_out(controller->io_base + REG_USB_COMMAND, 0);
@@ -167,7 +167,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
     port_word_out(controller->io_base + REG_USB_STATUS, usbsts);
     // Check SOF register
     if (port_byte_in(controller->io_base + REG_SOFMOD) != 0x40) return FAILURE;
-    fprintf(stddebug, "UHCI[%d]: Initial register checks OK\n", controller_id);
+    kprintf(DEBUG, "UHCI[%d]: Initial register checks OK\n", controller_id);
 
     // Controller reset
     if (uhci_controller_reset(controller) < 0) return FAILURE;
@@ -181,10 +181,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
     // Allocate the stack frame (1024 dwords = 4KB)
     controller->stack_frame = memalign(4096, 4096);
     if (!(controller->stack_frame)) {
-        fprintf(stderr, "UHCI[%d]: Failed to allocate memory\n", controller->id);
+        kprintf(ERROR, "UHCI[%d]: Failed to allocate memory\n", controller->id);
         return FAILURE;
     }
-    fprintf(stddebug, "UHCI[%d]: Allocated stack frame at 0x%x\n", controller->id, controller->stack_frame);
+    kprintf(DEBUG, "UHCI[%d]: Allocated stack frame at 0x%x\n", controller->id, controller->stack_frame);
     port_long_out(controller->io_base + REG_FRBASEADD, controller->stack_frame);
 
     // Clear the status register
@@ -214,16 +214,15 @@ bool usb_uhci_init_controller(struct pci_device *device) {
         if (result == SUCCESS) {
             uint16_t port_reg = read_port_sc(controller, i);
             uint8_t low_speed = (port_reg & PORTSC_LOW_SPEED_DEVICE) != 0;
-            printf("Port %d reset successfully with a %s speed device\n", i, low_speed ? "low" : "full");
-            fprintf(stdout, "UHCI[%d]: Successfully reset port %d\n", controller->id, i);
+            kprintf(INFO, "UHCI[%d]: Successfully reset port %d with a %s speed device\n", controller->id, i, low_speed ? "low" : "full");
 
-            uhci_reset_port(controller, i);
+            //uhci_reset_port(controller, i);
 
             UsbStandardDeviceDescriptor *device_descriptor = memalign(16, sizeof(UsbStandardDeviceDescriptor));
             memset(device_descriptor, 0x45, 18); // so we can easily see if it's changed
             bool response = uhci_get_device_descriptor(controller, i, device_descriptor);
             if (response > 0) {
-                fprintf(stdout, "UHCI[%d:%d]: Loaded device descriptor; length is %d, ID %04x:%04x, Mfr %x, Prod %x, Ser %x\n", controller->id, i, device_descriptor->length, device_descriptor->vendor_id, device_descriptor->product_id, 
+                kprintf(INFO, "UHCI[%d:%d]: Loaded device descriptor; length is %d, ID %04x:%04x, Mfr %x, Prod %x, Ser %x\n", controller->id, i, device_descriptor->length, device_descriptor->vendor_id, device_descriptor->product_id, 
                     device_descriptor->manufacturer, device_descriptor->product, device_descriptor->serial_num);
             
                 // Register the device
@@ -241,7 +240,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                 // Let's try resetting the port again now, before setting the address, in case it fixed the broken-after-set-address prob
                 uhci_reset_port(controller, i);
 
-                fprintf(stderr, "Registering device as %d\n", device_id);
+                kprintf(INFO, "Registering device as %d\n", device_id);
                 bool response = uhci_set_address(controller, i, device_id);
                 if (response > 0) {
                     controller->devices[device_id].port = i;
@@ -251,6 +250,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                     // Get string descriptors
                     uint8_t string1[256];
                     bool stringresp = uhci_get_string_descriptor(controller, &controller->devices[device_id], 1, string1);
+                    //dump_mem8(stdout, "string1: ", string1, 32);
                     if (stringresp > 0) {
                         int length = (string1[0] - 2) / 2;
                         char ascii[128];
@@ -261,6 +261,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                         printf("%s - ", ascii);
                     }
                     stringresp = uhci_get_string_descriptor(controller, &controller->devices[device_id], 2, string1);
+                    //dump_mem8(stdout, "string1: ", string1, 32);
                     if (stringresp > 0) {
                         int length = (string1[0] - 2) / 2;
                         char ascii[128];
@@ -273,13 +274,13 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                 }
             
             } else {
-                fprintf(stderr, "UHCI[%d:%d]: Failed to get device descriptor: %d\n", controller->id, i, response);
+                kprintf(ERROR, "UHCI[%d:%d]: Failed to get device descriptor: %d\n", controller->id, i, response);
                 print_driver_status(stderr, controller);
             }
         } else if (result == ERR_NO_DEVICE) {
-            fprintf(stdout, "UHCI[%d]: No device on port %d\n", controller->id, i);
+            kprintf(INFO, "UHCI[%d]: No device on port %d\n", controller->id, i);
         } else {
-            fprintf(stderr, "UHCI[%d]: Failed to reset port %d\n", controller->id, i);
+            kprintf(ERROR, "UHCI[%d]: Failed to reset port %d\n", controller->id, i);
         }
     }
 }
@@ -291,13 +292,13 @@ bool uhci_controller_reset(UhciController *controller) {
     port_word_out(controller->io_base + REG_USB_COMMAND, USBCMD_HCRESET);
     for(int i=0; i<RESET_TIMEOUT; i++) {
         if (!(port_word_in(controller->io_base + REG_USB_COMMAND) & USBCMD_HCRESET)) {
-            fprintf(stddebug, "UHCI[%d]: Controller reset successfully after %dms\n", controller->id, i);
+            kprintf(DEBUG, "UHCI[%d]: Controller reset successfully after %dms\n", controller->id, i);
             return SUCCESS;
         }
         delay(1);
     }
     
-    fprintf(stderr, "UHCI[%d]: Controller did not reset within %dms\n", controller->id, RESET_TIMEOUT);
+    kprintf(ERROR, "UHCI[%d]: Controller did not reset within %dms\n", controller->id, RESET_TIMEOUT);
     return FAILURE;
 }
 
@@ -308,12 +309,12 @@ bool uhci_controller_reset(UhciController *controller) {
  * TODO: Use read_port_sc and write_port_sc
  */
 bool uhci_reset_port(UhciController *controller, uint8_t port) {
-    fprintf(stddebug, "UHCI[%d]: Resetting port %d\n", controller->id, port);
+    kprintf(DEBUG, "UHCI[%d]: Resetting port %d\n", controller->id, port);
     uint8_t reg_offset = (port == 1 ? REG_PORTSC1 : REG_PORTSC2);
     
     // Check the status
     uint16_t port_reg = port_word_in(controller->io_base + reg_offset);
-    fprintf(stddebug, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
+    kprintf(DEBUG, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
     if (!(port_reg & PORTSC_CURRENT_CONNECT_STATUS)) {
         return ERR_NO_DEVICE;
     }
@@ -340,7 +341,7 @@ bool uhci_reset_port(UhciController *controller, uint8_t port) {
     // Verify success. We keep checking and setting PORTSC_PORT_ENABLED until it's enabled or we give up
     for (int i=0; i<PORT_ENABLE_TIMEOUT; i++) {
         uint16_t port_reg = port_word_in(controller->io_base + reg_offset);
-        fprintf(stddebug, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
+        kprintf(DEBUG, "UHCI[%d:%d]: PORTSC: %x\n", controller->id, port, port_reg);
         if (port_reg & PORTSC_PORT_ENABLED) {
             return SUCCESS;
         }
@@ -348,7 +349,7 @@ bool uhci_reset_port(UhciController *controller, uint8_t port) {
         delay(1);
     }
 
-    fprintf(stddebug, "UHCI[%d:%d]: Port reset timed out\n", controller->id, port);
+    kprintf(ERROR, "UHCI[%d:%d]: Port reset timed out\n", controller->id, port);
     return FAILURE;
 }
 
@@ -381,8 +382,8 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
 
     TransferDescriptor *descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
-    fprintf(stddebug, "UHCI[%d:%d]: paragraph-aligned buffer at %x\n", controller->id, port, descriptors);
-    fprintf(stddebug, "TD size %d", sizeof(TransferDescriptor));
+    kprintf(DEBUG, "UHCI[%d:%d]: paragraph-aligned buffer at %x\n", controller->id, port, descriptors);
+    kprintf(DEBUG, "TD size %d", sizeof(TransferDescriptor));
 
     // Setup packet
     descriptors[0].link_pointer = ((uint32_t) descriptors + 0x20) >> 4;
@@ -439,7 +440,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
 
     // Get the rest
     uint16_t full_length = buffer->length;
-    fprintf(stddebug, "Fetching all %d bytes of transfer descriptor\n", full_length);
+    kprintf(DEBUG, "Fetching all %d bytes of transfer descriptor\n", full_length);
 
     // Reuse the packet
     packet->value = DESCRIPTOR_DEVICE << 8;
@@ -455,10 +456,10 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     int descriptor_num = 0;
     descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
-    fprintf(stddebug, "UHCI[%d:%d]: paragraph-aligned buffer at %x\n", controller->id, port, descriptors);
+    kprintf(DEBUG, "UHCI[%d:%d]: paragraph-aligned buffer at %x\n", controller->id, port, descriptors);
 
     // Setup packet
-    fprintf(stddebug, "UHCI[%d:%d]: Preparing setup packet (0)\n", controller->id, port);
+    kprintf(DEBUG, "UHCI[%d:%d]: Preparing setup packet (0)\n", controller->id, port);
     descriptors[0].link_pointer = ((uint32_t) &(descriptors[1])) >> 4;
     descriptors[0].depth_first = true;
     descriptors[0].error_count = 3;
@@ -485,7 +486,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     }
 
     // OUT packet
-    fprintf(stddebug, "UHCI[%d:%d]: Preparing status packet (%d)\n", controller->id, port, descriptor_num);
+    kprintf(DEBUG, "UHCI[%d:%d]: Preparing status packet (%d)\n", controller->id, port, descriptor_num);
     descriptors[descriptor_num].link_pointer = 0;
     descriptors[descriptor_num].depth_first = true;
     descriptors[descriptor_num].error_count = 3;

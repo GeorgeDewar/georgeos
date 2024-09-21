@@ -1,5 +1,8 @@
 #include "system.h"
 
+const uint8_t PS2_DATA_PORT = 0x60;
+const uint8_t PS2_STATUS_CMD_PORT = 0x64;
+
 // Scancode -> ASCII
 #define ESC 27
 const uint8_t lower_ascii_codes[256] = {
@@ -55,6 +58,9 @@ const uint8_t upper_ascii_codes[256] = {
     0x00, 0x00, 0x00, 0x00      /* 0x58 */
 };
 
+static void wait_to_read();
+static void wait_to_write();
+
 // Variable to keep track of key states
 struct KeyStatus key_status = {};
 
@@ -64,7 +70,7 @@ void keyboard_handler()
     unsigned char scancode;
 
     /* Read from the keyboard's data buffer */
-    scancode = port_byte_in(0x60);
+    scancode = port_byte_in(PS2_DATA_PORT);
 
     /* If the top bit of the byte we read from the keyboard is
     *  set, that means that a key has just been released */
@@ -117,4 +123,47 @@ void ps2_keyboard_install()
 {
     /* Installs the handler to IRQ1 */
     irq_install_handler(1, keyboard_handler);
+
+    //
+    // The following steps are unnecessary on many machines due to the BIOS leaving the keyboard in a suitable state,
+    // however this is not guaranteed and Bochs doesn't do it.
+    // ---
+
+    // Disable first and second port devices so they can't mess up our initialisation
+    port_byte_out(PS2_STATUS_CMD_PORT, 0xAD);
+    port_byte_out(PS2_STATUS_CMD_PORT, 0xA7);
+
+    // Flush the output buffer (by reading it)
+    port_byte_in(PS2_DATA_PORT);
+
+    // Read the configuration byte
+    port_byte_out(PS2_STATUS_CMD_PORT, 0x20);
+    wait_to_read();
+    uint8_t configuration_byte = port_byte_in(PS2_DATA_PORT);
+    kprintf(DEBUG, "PS/2 Configuration Byte: %02x\n", configuration_byte);
+    
+    // Enable interrupts
+    configuration_byte |= 0x01;
+    port_byte_out(PS2_STATUS_CMD_PORT, 0x60);
+    wait_to_write();
+    port_byte_out(PS2_DATA_PORT, configuration_byte);
+
+    // Enable the port
+    port_byte_out(PS2_STATUS_CMD_PORT, 0xae);
+}
+
+static void wait_to_read() {
+    for(int i=0; i<500; i++) {
+        uint8_t status = port_byte_in(PS2_STATUS_CMD_PORT);
+        if (status && 0x01) return;
+    }
+    fprintf(stderr, "Timeout reading from PS/2 controller\n");
+}
+
+static void wait_to_write() {
+    for(int i=0; i<500; i++) {
+        uint8_t status = port_byte_in(PS2_STATUS_CMD_PORT);
+        if (status && 0x02) return;
+    }
+    fprintf(stderr, "Timeout reading from PS/2 controller\n");
 }
