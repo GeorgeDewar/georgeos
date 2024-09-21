@@ -258,7 +258,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                             ascii[j] = string1[j*2 + 2];
                         }
                         ascii[length] = 0;
-                        printf("%s - ", ascii);
+                        kprintf(INFO, "String 1: %s\n", ascii);
                     }
                     stringresp = uhci_get_string_descriptor(controller, &controller->devices[device_id], 2, string1);
                     //dump_mem8(stdout, "string1: ", string1, 32);
@@ -269,7 +269,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                             ascii[j] = string1[j*2 + 2];
                         }
                         ascii[length] = 0;
-                        printf("%s\n", ascii);
+                        kprintf(INFO, "String 2: %s\n", ascii);
                     }
                 }
             
@@ -278,7 +278,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                 print_driver_status(stderr, controller);
             }
         } else if (result == ERR_NO_DEVICE) {
-            kprintf(INFO, "UHCI[%d]: No device on port %d\n", controller->id, i);
+            kprintf(DEBUG, "UHCI[%d]: No device on port %d\n", controller->id, i);
         } else {
             kprintf(ERROR, "UHCI[%d]: Failed to reset port %d\n", controller->id, i);
         }
