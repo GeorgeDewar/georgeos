@@ -11,7 +11,10 @@ HEADERS = $(wildcard $(SRCDIR)/include/*.h)
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(C_SOURCES))
 OBJ += $(OBJDIR)/kernel/core/idt.o $(OBJDIR)/kernel/core/irq_asm.o $(OBJDIR)/fonts/zap-vga16.o
 # Default build target
-all: georgeos_1440.img hdd.img
+all: georgeos_1440.img hdd.img pxe
+pxe: georgeos_1440.img
+	scp build/georgeos_1440.img ubuntu@server1:/srv/tftp/
+
 run: hdd.img
 	qemu-system-i386 \
 		-nodefaults \
@@ -27,6 +30,17 @@ run-usb: hdd.img
 		-device usb-ehci,id=ehci \
 		-device usb-storage,bus=usb-bus.0,drive=usbstick,pcap=uhci.pcap \
 		-drive if=none,id=usbstick,file=build/hdd.img,format=raw \
+		-serial stdio
+run-pxe: georgeos_1440.img
+	qemu-system-i386 \
+		-nodefaults \
+		-vga std \
+		-usb \
+		-device usb-ehci,id=ehci \
+		-device usb-storage,bus=usb-bus.0,drive=usbstick,pcap=uhci.pcap \
+		-drive if=none,id=usbstick,file=/dev/null,format=raw \
+		-nic user \
+		-boot n \
 		-serial stdio
 run-alpine:
 	qemu-system-i386 \
@@ -90,7 +104,6 @@ georgeos_1440.img: bootload-floppy.bin kernel.bin src/data/* userland
 	mcopy -i build/$@ build/kernel.bin ::/
 	mcopy -i build/$@ src/data/* ::/
 	mkdir -p tftp
-	cp build/$@ tftp/georgeos_georgeos_1440.actual.img
 
 hdd.vdi: hdd.img
 	qemu-img convert -f raw -O vdi build/hdd.img build/hdd.vdi
