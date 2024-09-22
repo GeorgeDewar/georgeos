@@ -55,3 +55,19 @@ typedef struct {
     UsbQueue *queue_default; // For control and bulk operations
     UsbDevice devices[128];
 } UhciController;
+
+/**
+ * Our own stuff
+ */
+
+const uint8_t USB_TXNTYPE_CONTROL = 1;
+
+// Similar to Linux URB?
+typedef struct {
+    uint8_t type;
+    void *buffer;
+    DeviceRequestPacket *setup_packet;
+
+    // OUTPUT
+    uint32_t actual_length; // bytes read/written
+} UsbTransaction;
