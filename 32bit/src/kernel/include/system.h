@@ -463,3 +463,4 @@ void print_mem_info();
 
 /* To be homed later */
 void reboot();
+void usb_storage_init();

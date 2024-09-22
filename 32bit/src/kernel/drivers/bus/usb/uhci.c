@@ -232,7 +232,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                 // Register the device
                 uint8_t device_id;
                 for (device_id=1; device_id<MAX_DEVICES; device_id++) {
-                    if (controller->devices[device_id].address == 0) {
+                    if (controller->devices[device_id] == 0) { // null ptr = no device
                         break;
                     }
                 }
@@ -247,13 +247,16 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                 kprintf(INFO, UHCI_LOG_PREFIX "Registering device as %d\n", controller->id, device_id);
                 bool response = uhci_set_address(controller, i, device_id);
                 if (response > 0) {
-                    controller->devices[device_id].port = i;
-                    controller->devices[device_id].address = device_id;
-                    memcpy(device_descriptor, &controller->devices[device_id].descriptor, sizeof(UsbStandardDeviceDescriptor));
+                    UsbDevice *device = &usb_devices[usb_device_count++];
+                    controller->devices[device_id] = device; // also set on controller
+                    device->controller = controller;
+                    device->port = i;
+                    device->address = device_id;
+                    memcpy(device_descriptor, &device->descriptor, sizeof(UsbStandardDeviceDescriptor));
 
                     // Get string descriptors
                     uint8_t string1[256];
-                    bool stringresp = uhci_get_string_descriptor(controller, &controller->devices[device_id], 1, string1);
+                    bool stringresp = uhci_get_string_descriptor(controller, device, 1, string1);
                     //dump_mem8(stdout, "string1: ", string1, 32);
                     if (stringresp > 0) {
                         int length = (string1[0] - 2) / 2;
@@ -264,7 +267,7 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                         ascii[length] = 0;
                         kprintf(INFO, UHCI_LOG_PREFIX "String 1: %s\n", controller->id, ascii);
                     }
-                    stringresp = uhci_get_string_descriptor(controller, &controller->devices[device_id], 2, string1);
+                    stringresp = uhci_get_string_descriptor(controller, device, 2, string1);
                     //dump_mem8(stdout, "string1: ", string1, 32);
                     if (stringresp > 0) {
                         int length = (string1[0] - 2) / 2;
@@ -655,7 +658,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
 
     int first_data_packet = packet_idx;
 
-    // IN packets
+    // DATA IN packets
     for(packet_idx; packet_idx<num_packets - 1; packet_idx++) {
         fprintf(stddebug, UHCI_LOG_PREFIX "Preparing data packet (%d)\n", controller->id, packet_idx);
         descriptors[packet_idx].link_pointer = ((uint32_t) &(descriptors[packet_idx + 1])) >> 4;
@@ -670,7 +673,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
         descriptors[packet_idx].buffer_pointer = ((char *) transaction->buffer) + (8 * (packet_idx - 1));
     }
 
-    // OUT packet
+    // STATUS packet
     fprintf(stddebug, UHCI_LOG_PREFIX "Preparing status packet (%d)\n", controller->id, packet_idx);
     descriptors[packet_idx].link_pointer = 0;
     descriptors[packet_idx].depth_first = true;
@@ -680,7 +683,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
     descriptors[packet_idx].status_active = true;
     descriptors[packet_idx].max_length = 0x7FF;
     descriptors[packet_idx].data_toggle = 1;
-    descriptors[packet_idx].packet_identification = TD_PID_OUT;
+    descriptors[packet_idx].packet_identification = num_data_packets > 0 ? TD_PID_OUT : TD_PID_IN;
     descriptors[packet_idx].buffer_pointer = 0;
     descriptors[packet_idx].interrupt_on_complete = false;
     descriptors[packet_idx].terminate = true;

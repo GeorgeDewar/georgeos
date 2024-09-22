@@ -1,9 +1,10 @@
+#pragma once 
+
 #include "stdint.h"
 
-const uint8_t MAX_DEVICES = 127;
+#define MAX_DEVICES 127
 
-const uint8_t SPEED_LOW = 0;
-const uint8_t SPEED_FULL = 1;
+enum { SPEED_LOW = 0, SPEED_FULL = 1 };
 
 typedef struct {
     uint8_t length;
@@ -41,26 +42,32 @@ typedef struct {
 //     uint8_t speed;
 // } UhciPort;
 
-typedef struct {
+// Stub definition to allow circular reference
+typedef struct uhci_controller UhciController;
+typedef struct usb_device UsbDevice;
+
+struct usb_device {
+    UhciController *controller;
     uint8_t port;
     uint8_t address;
     UsbStandardDeviceDescriptor descriptor;
-} UsbDevice;
+    // Can add HCD-specific space here
+};
 
-typedef struct {
+struct uhci_controller {
     int id;
     struct pci_device *pci_device;
     uint32_t io_base;
     uint32_t *stack_frame; // 1024 dwords
     UsbQueue *queue_default; // For control and bulk operations
-    UsbDevice devices[128];
-} UhciController;
+    UsbDevice *devices[128]; // These are stored in the global usb_devices variable, and pointed to here
+};
 
 /**
  * Our own stuff
  */
 
-const uint8_t USB_TXNTYPE_CONTROL = 1;
+enum { USB_TXNTYPE_CONTROL = 1 };
 
 // Similar to Linux URB?
 typedef struct {
@@ -71,3 +78,11 @@ typedef struct {
     // OUTPUT
     uint32_t actual_length; // bytes read/written
 } UsbTransaction;
+
+/**
+ * Global state
+ */
+
+extern uint16_t usb_device_count;
+extern UsbDevice usb_devices[64];
+
