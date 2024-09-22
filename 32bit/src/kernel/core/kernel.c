@@ -45,13 +45,13 @@ void main () {
     open_files[stddebug].type = STREAM;
     open_files[stddebug].stream_device = sd_com1;
 
-    kprintf(INFO, "Kernel loaded successfully. Welcome to GeorgeOS!\n");
+    kprintf(INFO, null, "Kernel loaded successfully. Welcome to GeorgeOS!\n");
     extern uint8_t* video_memory;
-    kprintf(INFO, "Resolution: %dx%d, Frame Buffer: %x \n",
+    kprintf(INFO, null, "Resolution: %dx%d, Frame Buffer: %x \n",
            vesa_graphics_device.screen_width,
            vesa_graphics_device.screen_height,
            video_memory);
-    kprintf(DEBUG, "Serial connected\n");
+    kprintf(DEBUG, null, "Serial connected\n");
 
     // Set up interrupts
     char* init = "\rInitialising hardware: %s                                    ";
@@ -90,7 +90,7 @@ void main () {
     printf("\n");
 
     // Find partitions
-    kprintf(INFO, "Looking for partitions\n");
+    kprintf(INFO, null, "Looking for partitions\n");
     for (int i=0; i<block_devices_count; i++) {
         if (block_devices[i].dev.type == HARD_DISK && block_devices[i].dev.partition == RAW_DEVICE) {
             find_partitions(&block_devices[i]);
@@ -98,9 +98,9 @@ void main () {
     }
 
     // Detect the FS for each block device
-    kprintf(INFO, "Looking for file systems\n");
+    kprintf(INFO, null, "Looking for file systems\n");
     for (int i=0; i<block_devices_count; i++) {
-        kprintf(DEBUG, "Processing device: %s\n", block_devices[i].device_name);
+        kprintf(DEBUG, null, "Processing device: %s\n", block_devices[i].device_name);
         if (block_devices[i].dev.type == FLOPPY) {
             // Create a FAT12 FileSystem instance - floppies always use FAT12
             FileSystem *fs = malloc(sizeof(FileSystem));
@@ -117,7 +117,7 @@ void main () {
 
     // If there are none, we can't do much more
     if (fs_mounts_count == 0) {
-        kprintf(INFO, "No filesystems detected\n");
+        kprintf(INFO, null, "No filesystems detected\n");
         loopback();
     }
 
@@ -128,9 +128,9 @@ void main () {
     strcat(cwd, mountpoint);
 
     // Start shell from disk
-    kprintf(INFO, "Loading SHELL.EXE... ");
+    kprintf(INFO, null, "Loading SHELL.EXE... ");
     if(exec("shell.exe") < 0) {
-        kprintf(ERROR, "Failed to execute shell!\n");
+        kprintf(ERROR, null, "Failed to execute shell!\n");
     }
 
     loopback();

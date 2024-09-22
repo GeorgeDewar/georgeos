@@ -1,5 +1,7 @@
 #include "system.h"
 
+#define LOG_PREFIX "EHCI"
+
 const uint8_t EHCI_MAX_CONTROLLERS = 16;
 
 const uint8_t EHCI_PCI_CLASS_SERIAL_BUS = 0x0C;
@@ -31,7 +33,7 @@ bool usb_ehci_init() {
 }
 
 bool usb_ehci_disable_controller(struct pci_device *device) {
-    kprintf(INFO, "Found EHCI controller (%x:%x) on PCI bus at %x:%x:%x (will be disabled)\n",
+    kprintf(INFO, LOG_PREFIX, "Found EHCI controller (%x:%x) on PCI bus at %x:%x:%x (will be disabled)\n",
         device->vendor_id, device->device_id, device->bus, device->device, device->function);
     
     int controller_id = ehci_controller_count++;
@@ -41,7 +43,7 @@ bool usb_ehci_disable_controller(struct pci_device *device) {
     // MMIO base for EHCI is 256-byte aligned so we need to mask the first 8 bits
     controller->mmio_base = pci_config_read_dword(device->bus, device->device, device->function, 0x10) & 0xFFFFFF00;
 
-    kprintf(DEBUG, "Base address: %x\n", controller->mmio_base);
+    kprintf(DEBUG, LOG_PREFIX, "Base address: %x\n", controller->mmio_base);
 
     // Find the EHCI Extended Capabilities Pointer (EECP)
     // void *EECP = (* ((unsigned long int*) ( ((char*)controller->mmio_base) + 0x08 )) & 0x0FF00) >> 16;

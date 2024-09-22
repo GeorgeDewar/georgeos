@@ -1,5 +1,7 @@
 #include "system.h"
 
+#define LOG_PREFIX "ps2_keyboard"
+
 const uint8_t PS2_DATA_PORT = 0x60;
 const uint8_t PS2_STATUS_CMD_PORT = 0x64;
 
@@ -140,7 +142,7 @@ void ps2_keyboard_install()
     port_byte_out(PS2_STATUS_CMD_PORT, 0x20);
     wait_to_read();
     uint8_t configuration_byte = port_byte_in(PS2_DATA_PORT);
-    kprintf(DEBUG, "PS/2 Configuration Byte: %02x\n", configuration_byte);
+    kprintf(DEBUG, LOG_PREFIX, "PS/2 Configuration Byte: %02x\n", configuration_byte);
     
     // Enable interrupts
     configuration_byte |= 0x01;
@@ -157,7 +159,7 @@ static void wait_to_read() {
         uint8_t status = port_byte_in(PS2_STATUS_CMD_PORT);
         if (status && 0x01) return;
     }
-    fprintf(stderr, "Timeout reading from PS/2 controller\n");
+    fprintf(stderr, LOG_PREFIX, "Timeout reading from PS/2 controller\n");
 }
 
 static void wait_to_write() {
@@ -165,5 +167,5 @@ static void wait_to_write() {
         uint8_t status = port_byte_in(PS2_STATUS_CMD_PORT);
         if (status && 0x02) return;
     }
-    fprintf(stderr, "Timeout reading from PS/2 controller\n");
+    fprintf(stderr, LOG_PREFIX, "Timeout reading from PS/2 controller\n");
 }

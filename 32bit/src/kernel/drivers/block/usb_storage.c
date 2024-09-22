@@ -1,7 +1,7 @@
 #include "system.h"
 #include "usb.h"
 
-#define USBSTOR_LOG_PREFIX "\1[34musb_storage\1[0m "
+#define USBSTOR_LOG_PREFIX "usb_storage"
 
 static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer);
 
@@ -15,7 +15,7 @@ void usb_storage_init() {
     for (int i=0; i<usb_device_count; i++) {
         UsbDevice *device = &usb_devices[i];
         if (device) {
-            kprintf(INFO, USBSTOR_LOG_PREFIX "USB device %d.%d\n", device->controller->id, device->address);
+            kprintf(INFO, USBSTOR_LOG_PREFIX, "USB device %d.%d\n", device->controller->id, device->address);
         }
     }
 }

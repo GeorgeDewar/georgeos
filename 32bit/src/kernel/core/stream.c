@@ -96,6 +96,14 @@ void printf(char* string, ...) {
     va_end(argp);
 }
 
+void sprintf(char* buffer, char* string, ...) {
+    va_list argp;
+    va_start(argp, string);
+
+    vsprintf(buffer, string, argp);
+    va_end(argp);
+}
+
 void fprintf(int16_t fp, char* string, ...) {
     va_list argp;
     va_start(argp, string);
@@ -104,7 +112,7 @@ void fprintf(int16_t fp, char* string, ...) {
     va_end(argp);
 }
 
-void kprintf(uint8_t level, char* string, ...) {
+void kprintf(uint8_t level, char *prefix, char* string, ...) {
     uint8_t debug_level = DEBUG;
     uint8_t display_level = INFO;
     char buffer[1024];
@@ -117,11 +125,19 @@ void kprintf(uint8_t level, char* string, ...) {
 
     // Then print it to the appropriate places
     if (level <= display_level) {
-        fprintf(stdout, "\1[32m[%6d]\1[0m %s", timer_ticks, buffer);
+        if (prefix) {
+            fprintf(stdout, "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", timer_ticks, prefix, buffer);
+        } else {
+            fprintf(stdout, "\1[32m[%6d]\1[0m %s", timer_ticks, buffer);
+        }
     }
 
     if (level <= debug_level) {
-        fprintf(stddebug, "[%6d] %s", timer_ticks, buffer);
+        if (prefix) {
+            fprintf(stddebug, "[%6d] [%s] %s", timer_ticks, prefix, buffer);
+        } else {
+            fprintf(stddebug, "[%6d] %s", timer_ticks, buffer);
+        }
     }
 }
 

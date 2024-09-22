@@ -56,6 +56,7 @@ struct usb_device {
 
 struct uhci_controller {
     int id;
+    char name[8]; // UHCI.n - for logging
     struct pci_device *pci_device;
     uint32_t io_base;
     uint32_t *stack_frame; // 1024 dwords
