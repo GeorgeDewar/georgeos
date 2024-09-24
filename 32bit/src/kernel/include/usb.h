@@ -102,5 +102,5 @@ typedef struct {
  */
 
 extern uint16_t usb_device_count;
-extern UsbDevice usb_devices[64];
+extern UsbDevice usb_devices[4];
 

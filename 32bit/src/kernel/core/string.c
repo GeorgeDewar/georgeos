@@ -60,6 +60,8 @@ char *strcat(char *dest, const char *src) {
 
 void utf16to8(char *src, char *dest, int length) {
     for(int j=0; j<length; j++) {
+        //printf("%8x\n", &j);
+        //printf("%d ", j);
         dest[j] = src[j*2 + 2];
     }
     dest[length] = 0;

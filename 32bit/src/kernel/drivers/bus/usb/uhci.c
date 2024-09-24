@@ -271,6 +271,8 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                     if (device->descriptor.product) {
                         uhci_get_string_descriptor(controller, device, device->descriptor.product, device->product);
                         kprintf(INFO, controller->name, "Product: %s\n", device->product);
+                        delay(500);
+                        dump_mem8(stdout, "", device->product, 19);
                     }
 
                     if (device->descriptor.serial_num) {
@@ -597,8 +599,9 @@ bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, u
     };
     
     kprintf(DEBUG, controller->id, "Read %d bytes\n", transaction.actual_length);
+    dump_mem8(stdout, "", utf16buf, transaction.actual_length);
 
-    uint16_t full_length = utf16buf[0];
+    uint8_t full_length = utf16buf[0];
     if (transaction.actual_length > 0 && transaction.actual_length == full_length) {
         fprintf(stddebug, "Got %d bytes, so we must have the full descriptor\n", transaction.actual_length);
         return SUCCESS; // we read the whole packet
@@ -615,8 +618,16 @@ bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, u
         return FAILURE;
     };
 
+    //dump_mem8(stdout, "", buffer, 24);
+    //delay(100);
+    char buffer2[256];
+    memcpy(utf16buf, buffer2, 256);
+
     // Convert to UTF8 in-place
     utf16to8(utf16buf, buffer, (utf16buf[0] - 2) / 2);
+
+    dump_mem8(stdout, "", utf16buf, utf16buf[0]);
+    dump_mem8(stdout, "", buffer, 24);
 
     return SUCCESS;
 }
