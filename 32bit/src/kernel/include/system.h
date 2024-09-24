@@ -258,6 +258,7 @@ void strcpy(const char *src, char *dest);
 void strupr(char* string);
 int strlen(const char *str);
 char *strcat(char *dest, const char *src);
+void utf16to8(char *src, char *dest, int length);
 
 /* Serial */
 int init_serial(uint32_t speed);

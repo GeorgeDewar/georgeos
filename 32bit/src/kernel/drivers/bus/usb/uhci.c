@@ -256,26 +256,19 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                     memcpy(device_descriptor, &device->descriptor, sizeof(UsbStandardDeviceDescriptor));
 
                     // Get string descriptors
-                    uint8_t string1[256];
-                    bool stringresp = uhci_get_string_descriptor(controller, device, 1, string1);
-                    if (stringresp > 0) {
-                        int length = (string1[0] - 2) / 2;
-                        char ascii[128];
-                        for(int j=0; j<length; j++) {
-                            ascii[j] = string1[j*2 + 2];
-                        }
-                        ascii[length] = 0;
-                        kprintf(INFO, controller->name, "String 1: %s\n", ascii);
+                    if (device->descriptor.manufacturer) {
+                        uhci_get_string_descriptor(controller, device, device->descriptor.manufacturer, device->manufacturer);
+                        kprintf(INFO, controller->name, "Manufacturer: %s\n", device->manufacturer);
                     }
-                    stringresp = uhci_get_string_descriptor(controller, device, 2, string1);
-                    if (stringresp > 0) {
-                        int length = (string1[0] - 2) / 2;
-                        char ascii[128];
-                        for(int j=0; j<length; j++) {
-                            ascii[j] = string1[j*2 + 2];
-                        }
-                        ascii[length] = 0;
-                        kprintf(INFO, controller->name, "String 2: %s\n", ascii);
+
+                    if (device->descriptor.product) {
+                        uhci_get_string_descriptor(controller, device, device->descriptor.product, device->product);
+                        kprintf(INFO, controller->name, "Product: %s\n", device->product);
+                    }
+
+                    if (device->descriptor.serial_num) {
+                        uhci_get_string_descriptor(controller, device, device->descriptor.serial_num, device->serial_num);
+                        kprintf(INFO, controller->name, "Serial No: %s\n", device->serial_num);
                     }
                 }
             
@@ -571,7 +564,10 @@ bool uhci_set_address(UhciController *controller, uint8_t port, uint8_t device_i
     return SUCCESS;
 }
 
+// TODO: No longer UHCI-specific, could go into a general USB device initialisation file
 bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, uint8_t index, uint8_t *buffer) {
+    char utf16buf[256];
+    
     DeviceRequestPacket *packet = memalign(16, sizeof(DeviceRequestPacket));
     packet->request_type = REQ_PKT_DIR_DEVICE_TO_HOST;
     packet->request = REQ_PKT_REQ_CODE_GET_DESCRIPTOR;
@@ -581,7 +577,7 @@ bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, u
     
     UsbTransaction transaction;
     transaction.type = USB_TXNTYPE_CONTROL;
-    transaction.buffer = buffer;
+    transaction.buffer = utf16buf;
     transaction.setup_packet = packet;
     
     if (uhci_execute_transaction(controller, device, &transaction) < 0) {
@@ -590,7 +586,7 @@ bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, u
     
     kprintf(DEBUG, controller->id, "Read %d bytes\n", transaction.actual_length);
 
-    uint16_t full_length = buffer[0];
+    uint16_t full_length = utf16buf[0];
     if (transaction.actual_length > 0 && transaction.actual_length == full_length) {
         fprintf(stddebug, "Got %d bytes, so we must have the full descriptor\n", transaction.actual_length);
         return SUCCESS; // we read the whole packet
@@ -606,6 +602,9 @@ bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, u
     if (uhci_execute_transaction(controller, device, &transaction) < 0) {
         return FAILURE;
     };
+
+    // Convert to UTF8 in-place
+    utf16to8(utf16buf, buffer, (utf16buf[0] - 2) / 2);
 
     return SUCCESS;
 }

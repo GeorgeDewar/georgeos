@@ -51,6 +51,9 @@ struct usb_device {
     uint8_t port;
     uint8_t address;
     UsbStandardDeviceDescriptor descriptor;
+    char manufacturer[128];
+    char product[128];
+    char serial_num[128];
     // Can add HCD-specific space here
 };
 
