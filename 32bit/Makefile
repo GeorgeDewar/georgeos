@@ -47,6 +47,8 @@ run-alpine:
 		-usb \
 		-device usb-ehci,id=ehci \
 		-drive file=tmp/alpine-hdd.img,format=raw \
+		-device usb-storage,bus=usb-bus.0,drive=usbstick,pcap=uhci.pcap \
+		-drive if=none,id=usbstick,file=/dev/null,format=raw \
 		-nic user
 run-floppy: all
 	qemu-system-i386 \

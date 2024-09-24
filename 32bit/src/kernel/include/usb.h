@@ -24,6 +24,18 @@ typedef struct {
 } UsbStandardDeviceDescriptor;
 
 typedef struct {
+    uint8_t length;
+    uint8_t type;
+    uint16_t total_length; // includes interface and endpoint descriptors
+    uint8_t num_interfaces;
+    uint8_t config_val;
+    uint8_t config_string;
+    uint8_t attributes;
+    uint8_t max_power;
+    // other descriptors follow
+} UsbConfigurationDescriptor;
+
+typedef struct {
     uint8_t request_type;
     uint8_t request;
     uint16_t value;
@@ -54,6 +66,8 @@ struct usb_device {
     char manufacturer[128];
     char product[128];
     char serial_num[128];
+    UsbConfigurationDescriptor configuration_descriptor;
+    uint8_t configuration_descriptor_extra[65536 - sizeof(UsbConfigurationDescriptor)]; // max theoretical size
     // Can add HCD-specific space here
 };
 
