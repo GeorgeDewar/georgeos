@@ -112,6 +112,15 @@ void fprintf(int16_t fp, char* string, ...) {
     va_end(argp);
 }
 
+char* pattern_prefix[32] = {
+    0, 0, 0,
+    "\1[31m[%6d]\1[0m \1[34m%s\1[0m %s", // 3 = ERROR
+    "\1[33m[%6d]\1[0m \1[34m%s\1[0m %s", // 4 = WARN
+    0,
+    "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", // 6 = INFO
+    "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", // 7 = DEBUG
+};
+
 void kprintf(uint8_t level, char *prefix, char* string, ...) {
     uint8_t debug_level = DEBUG;
     char buffer[1024];
@@ -125,7 +134,7 @@ void kprintf(uint8_t level, char *prefix, char* string, ...) {
     // Then print it to the appropriate places
     if (level <= log_level) {
         if (prefix) {
-            fprintf(stdout, "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", timer_ticks, prefix, buffer);
+            fprintf(stdout, pattern_prefix[level], timer_ticks, prefix, buffer);
         } else {
             fprintf(stdout, "\1[32m[%6d]\1[0m %s", timer_ticks, buffer);
         }

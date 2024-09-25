@@ -6,6 +6,14 @@
 
 enum { SPEED_LOW = 0, SPEED_FULL = 1 };
 
+enum UsbDescriptorTypes {
+    DESCRIPTOR_DEVICE = 0x01,
+    DESCRIPTOR_CONFIGURATION = 0x02,
+    DESCRIPTOR_STRING = 0x03,
+    DESCRIPTOR_INTERFACE = 0x04,
+    DESCRIPTOR_ENDPOINT = 0x05
+};
+
 enum UsbDeviceClasses {
     MASS_STORAGE = 0x08
 };

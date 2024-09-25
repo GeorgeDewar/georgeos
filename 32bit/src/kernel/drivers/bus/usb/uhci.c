@@ -49,13 +49,6 @@ const uint8_t REQ_PKT_DIR_DEVICE_TO_HOST = (1<<7);
 const uint8_t REQ_PKT_REQ_CODE_SET_ADDRESS = 0x05;
 const uint8_t REQ_PKT_REQ_CODE_GET_DESCRIPTOR = 0x06;
 
-// Descriptor types
-const uint8_t DESCRIPTOR_DEVICE = 0x01;
-const uint8_t DESCRIPTOR_CONFIGURATION = 0x02;
-const uint8_t DESCRIPTOR_STRING = 0x03;
-const uint8_t DESCRIPTOR_INTERFACE = 0x04;
-const uint8_t DESCRIPTOR_ENDPOINT = 0x05;
-
 // Transfer descriptor
 const uint8_t TD_PID_SETUP = 0x2D;
 const uint8_t TD_PID_IN = 0x69;
