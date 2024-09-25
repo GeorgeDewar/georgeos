@@ -56,13 +56,16 @@ void memcpy(void* source, void* dest, uint32_t length) {
  * Print out the specified number of bytes from the buffer, one byte at a time, 8 per line
  */
 void dump_mem8(int16_t fp, char *prefix, char *buffer, int bytes) {
-    int bytes_per_line = 8;
+    int bytes_per_block = 8;
+    int bytes_per_line = 16;
     fprintf(fp, "Dumping %d bytes from 0x%08x", bytes, buffer);
     
     for(int i=0; i<bytes; i++) {
         char byte = buffer[i];
         if (i % bytes_per_line == 0) {
             fprintf(fp, "\n%s", prefix);
+        } else if (i % bytes_per_block == 0) {
+            fprintf(fp, "  ");
         }
         fprintf(fp, "%02x ", byte & 0xFF);
     }

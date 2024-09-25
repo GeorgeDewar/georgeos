@@ -280,10 +280,8 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                         kprintf(DEBUG, controller->name, "Serial No: %s\n", device->serial_num);
                     }
 
-                    // // Get configuration descriptor (which includes interface descriptors)
-                    // if (uhci_get_configuration_descriptor(controller, device, 0, &device->configuration_descriptor) > 0) {
-                    //     dump_mem8(stdout, "", &device->configuration_descriptor, device->configuration_descriptor.total_length);
-                    // }
+                    // Get configuration descriptor (which includes interface descriptors)
+                    uhci_get_configuration_descriptor(controller, device, 0, &device->configuration_descriptor);
                 }
             
             } else {

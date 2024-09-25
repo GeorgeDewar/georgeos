@@ -6,6 +6,19 @@
 
 enum { SPEED_LOW = 0, SPEED_FULL = 1 };
 
+enum UsbDeviceClasses {
+    MASS_STORAGE = 0x08
+};
+
+enum UsbMassStorageDeviceSubClasses {
+    USB_FLOPPY = 0x04,
+    SCSI_TRANSPARENT_COMMAND_SET = 0x06
+};
+
+enum UsbMassStorageDeviceProtocols {
+    BULK_ONLY_TRANSPORT = 0x50
+};
+
 typedef struct {
     uint8_t length;
     uint8_t type;
@@ -34,6 +47,18 @@ typedef struct {
     uint8_t max_power;
     // other descriptors follow
 } UsbConfigurationDescriptor;
+
+typedef struct {
+    uint8_t length;
+    uint8_t type;
+    uint8_t interface_number;
+    uint8_t alternate_setting;
+    uint8_t num_endpoints;
+    uint8_t interface_class;
+    uint8_t interface_subclass;
+    uint8_t interface_protocol;
+    uint8_t index;
+} UsbInterfaceDescriptor;
 
 typedef struct {
     uint8_t request_type;

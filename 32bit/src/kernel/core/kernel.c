@@ -22,6 +22,8 @@
     0xFD000000   Video memory (on QEMU)
 */
 
+uint8_t log_level = INFO;
+
 void loopback();
 
 void __attribute__((optimize("O0"))) div0(int num) {

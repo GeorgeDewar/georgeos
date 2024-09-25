@@ -114,7 +114,6 @@ void fprintf(int16_t fp, char* string, ...) {
 
 void kprintf(uint8_t level, char *prefix, char* string, ...) {
     uint8_t debug_level = DEBUG;
-    uint8_t display_level = INFO;
     char buffer[1024];
 
     // First render the message into a buffer
@@ -124,7 +123,7 @@ void kprintf(uint8_t level, char *prefix, char* string, ...) {
     va_end(argp);
 
     // Then print it to the appropriate places
-    if (level <= display_level) {
+    if (level <= log_level) {
         if (prefix) {
             fprintf(stdout, "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", timer_ticks, prefix, buffer);
         } else {
@@ -142,7 +141,7 @@ void kprintf(uint8_t level, char *prefix, char* string, ...) {
 }
 
 void vfprintf(int16_t fp, char* string, va_list argp) {
-    char buffer[128];
+    char buffer[1024];
     vsprintf(buffer, string, argp);
     write(fp, buffer, strlen(buffer));
 }

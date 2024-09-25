@@ -467,3 +467,4 @@ void print_mem_info();
 /* To be homed later */
 void reboot();
 void usb_storage_init();
+extern uint8_t log_level; // global so it can be changed from various places, initialised in kernel.c
