@@ -12,6 +12,15 @@ void draw_char(uint16_t start_x, uint16_t start_y, char char_num, Color color) {
     }
 }
 
+/** Write a string at a specific location on screen (in pixels) */
+void draw_string(uint16_t start_x, uint16_t start_y, char* string, Color color) {
+    while(*string != 0) {
+        draw_char(start_x, start_y, *string, color);
+        string++;
+        start_x += 8;
+    }
+}
+
 void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, Color color) {
     for(uint16_t x=0; x<width; x++) {
         for(uint16_t y=0; y<height; y++) {

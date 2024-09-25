@@ -41,6 +41,12 @@ static void timer_handler()
         if (key_status.ctrl_down) draw_char(10, default_graphics_device->screen_height - 20, 'C', COLOR_WHITE);
         if (key_status.alt_down) draw_char(20, default_graphics_device->screen_height - 20, 'A', COLOR_WHITE);
 
+        void* p = NULL;
+        extern void *free_memory_start;
+        char stack_string[128];
+        sprintf(stack_string, "Stack: %8x, KHeap: %8x", (void*)&p, free_memory_start);
+        draw_string(50, default_graphics_device->screen_height - 20, stack_string, COLOR_WHITE);
+
         // Copy the video buffer to the real video memory
         default_graphics_device->copy_buffer();
     }

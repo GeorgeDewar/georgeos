@@ -113,7 +113,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
 bool uhci_set_address(UhciController *controller, uint8_t port, uint8_t device_id);
 bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, uint8_t index, uint8_t *buffer);
 bool uhci_get_configuration_descriptor(UhciController *controller, UsbDevice *device, uint8_t index, UsbConfigurationDescriptor *buffer);
-bool wait_for_transfer(TransferDescriptor *td, uint16_t timeout);
+bool wait_for_transfer(UhciController *controller, TransferDescriptor *td, uint16_t timeout);
 static uint16_t read_port_sc(UhciController *controller, uint8_t port);
 static void write_port_sc(UhciController *controller, uint8_t port, uint16_t data);
 
@@ -228,8 +228,10 @@ bool usb_uhci_init_controller(struct pci_device *device) {
             memset(device_descriptor, 0x45, 18); // so we can easily see if it's changed
             bool response = uhci_get_device_descriptor(controller, i, device_descriptor);
             if (response > 0) {
-                kprintf(INFO, controller->name, "Loaded device descriptor; length is %d, ID %04x:%04x, Mfr %x, Prod %x, Ser %x\n", device_descriptor->length, device_descriptor->vendor_id, device_descriptor->product_id, 
-                    device_descriptor->manufacturer, device_descriptor->product, device_descriptor->serial_num);
+                kprintf(INFO, controller->name, "Len: %d bytes, ID %04x:%04x, Mfr %x, Prod %x, Ser %x, Max Pkt: %d bytes\n",
+                    device_descriptor->length, device_descriptor->vendor_id, device_descriptor->product_id, 
+                    device_descriptor->manufacturer, device_descriptor->product, device_descriptor->serial_num,
+                    device_descriptor->max_packet_size);
             
                 // We only support devices with a single configuration, for simplicity
                 if (device_descriptor->configurations != 1) {
@@ -271,19 +273,17 @@ bool usb_uhci_init_controller(struct pci_device *device) {
                     if (device->descriptor.product) {
                         uhci_get_string_descriptor(controller, device, device->descriptor.product, device->product);
                         kprintf(INFO, controller->name, "Product: %s\n", device->product);
-                        delay(500);
-                        dump_mem8(stdout, "", device->product, 19);
                     }
 
                     if (device->descriptor.serial_num) {
                         uhci_get_string_descriptor(controller, device, device->descriptor.serial_num, device->serial_num);
-                        kprintf(INFO, controller->name, "Serial No: %s\n", device->serial_num);
+                        kprintf(DEBUG, controller->name, "Serial No: %s\n", device->serial_num);
                     }
 
-                    // Get configuration descriptor (which includes interface descriptors)
-                    if (uhci_get_configuration_descriptor(controller, device, 0, &device->configuration_descriptor) > 0) {
-                        dump_mem8(stdout, "", &device->configuration_descriptor, device->configuration_descriptor.total_length);
-                    }
+                    // // Get configuration descriptor (which includes interface descriptors)
+                    // if (uhci_get_configuration_descriptor(controller, device, 0, &device->configuration_descriptor) > 0) {
+                    //     dump_mem8(stdout, "", &device->configuration_descriptor, device->configuration_descriptor.total_length);
+                    // }
                 }
             
             } else {
@@ -434,7 +434,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (wait_for_transfer(&descriptors[2], 2000) < 0) {
+    if (wait_for_transfer(controller, &descriptors[2], 2000) < 0) {
         print_tds(stderr, "TDs", descriptors, 3);
         return FAILURE;
     }
@@ -509,7 +509,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (wait_for_transfer(&descriptors[descriptor_num], 2000) < 0) {
+    if (wait_for_transfer(controller, &descriptors[descriptor_num], 2000) < 0) {
         print_tds(stderr, "TDs", descriptors, num_packets);
         return FAILURE;
     }
@@ -566,7 +566,7 @@ bool uhci_set_address(UhciController *controller, uint8_t port, uint8_t device_i
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (wait_for_transfer(&descriptors[1], 2000) < 0) {
+    if (wait_for_transfer(controller, &descriptors[1], 2000) < 0) {
         print_tds(stderr, "TDs", descriptors, num_packets);
         return FAILURE;
     }
@@ -599,11 +599,15 @@ bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, u
     };
     
     kprintf(DEBUG, controller->id, "Read %d bytes\n", transaction.actual_length);
-    dump_mem8(stdout, "", utf16buf, transaction.actual_length);
+    //dump_mem8(stdout, "", utf16buf, transaction.actual_length);
 
     uint8_t full_length = utf16buf[0];
     if (transaction.actual_length > 0 && transaction.actual_length == full_length) {
         fprintf(stddebug, "Got %d bytes, so we must have the full descriptor\n", transaction.actual_length);
+
+        // Convert to UTF8 in-place
+        utf16to8(utf16buf, buffer, (utf16buf[0] - 2) / 2);
+
         return SUCCESS; // we read the whole packet
     }
 
@@ -618,16 +622,8 @@ bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, u
         return FAILURE;
     };
 
-    //dump_mem8(stdout, "", buffer, 24);
-    //delay(100);
-    char buffer2[256];
-    memcpy(utf16buf, buffer2, 256);
-
     // Convert to UTF8 in-place
     utf16to8(utf16buf, buffer, (utf16buf[0] - 2) / 2);
-
-    dump_mem8(stdout, "", utf16buf, utf16buf[0]);
-    dump_mem8(stdout, "", buffer, 24);
 
     return SUCCESS;
 }
@@ -717,7 +713,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
         descriptors[packet_idx].device_address = device->address;
         descriptors[packet_idx].low_speed_device = low_speed_device;
         descriptors[packet_idx].status_active = true;
-        descriptors[packet_idx].max_length = 7;
+        descriptors[packet_idx].max_length = max_packet_size - 1;
         descriptors[packet_idx].data_toggle = packet_idx % 2;
         descriptors[packet_idx].packet_identification = TD_PID_IN;
         descriptors[packet_idx].buffer_pointer = ((char *) transaction->buffer) + (8 * (packet_idx - 1));
@@ -738,15 +734,18 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
     descriptors[packet_idx].interrupt_on_complete = false;
     descriptors[packet_idx].terminate = true;
 
-    print_tds(stddebug, "TDs", descriptors, num_packets);
+    print_tds(stddebug, "TDs Bf", descriptors, num_packets);
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (wait_for_transfer(&descriptors[2], 500) < 0) {
+    if (wait_for_transfer(controller, &descriptors[2], 500) < 0) {
         print_tds(stderr, "TDs", descriptors, num_packets);
-        print_driver_status(stddebug, controller);
+        print_driver_status(stderr, controller);
+        dump_mem8(stdout, "Buffer", transaction->buffer, 16);
         return FAILURE;
     }
+
+    print_tds(stddebug, "TDs Af", descriptors, num_packets);
 
     transaction->actual_length = 0;
     for(int i = 0; i<num_data_packets; i++) {
@@ -757,18 +756,25 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
     return SUCCESS;
 }
 
-bool wait_for_transfer(TransferDescriptor *td, uint16_t timeout) {
+bool wait_for_transfer(UhciController *controller, TransferDescriptor *td, uint16_t timeout) {
     int j=0;
     for(j=0; j<timeout; j++) {
-        if (td->status_active == false) break;
+        if (td->status_active == false) {
+            delay(50); // TODO: Not sure the correct time
+            break;
+        }
         delay(1);
     }
     if (j == timeout) {
-        kprintf(ERROR, null, "Timed out waiting for transfer to complete\n");
+        kprintf(ERROR, controller->name, "Timed out waiting for transfer to complete\n");
+        controller->queue_default->element_link_pointer = 0x01; // Terminate
+        delay(2); // Let it get past the frame before we can go pointing the queue at something else
         return FAILURE;
     }
 
-    kprintf(DEBUG, null, "Continued after %dms\n", j);
+    kprintf(DEBUG, controller->name, "Continued after %dms\n", j);
+    controller->queue_default->element_link_pointer = 0x01; // Terminate
+    delay(2); // Let it get past the frame before we can go pointing the queue at something else
     return SUCCESS;
 }
 

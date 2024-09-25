@@ -100,6 +100,7 @@ extern const char zap_vga16_psf[];
 #define CONSOLE_CHAR_SPACE      0
 /* Graphics */
 void draw_char(uint16_t start_x, uint16_t start_y, char char_num, Color color);
+void draw_string(uint16_t start_x, uint16_t start_y, char* string, Color color);
 void fill_rect(uint16_t start_x, uint16_t start_y, uint16_t width, uint16_t height, Color color);
 
 // Size of the screen in text mode
