@@ -43,11 +43,7 @@ const uint16_t PORTSC_PORT_ENABLED = 0x0004; // Bit 2
 const uint16_t PORTSC_CONNECT_STATUS_CHANGE = 0x0002; // Bit 1
 const uint16_t PORTSC_CURRENT_CONNECT_STATUS = 0x0001; // Bit 0
 
-// Device request packet
-const uint8_t REQ_PKT_DIR_HOST_TO_DEVICE = (0<<7);
-const uint8_t REQ_PKT_DIR_DEVICE_TO_HOST = (1<<7);
-const uint8_t REQ_PKT_REQ_CODE_SET_ADDRESS = 0x05;
-const uint8_t REQ_PKT_REQ_CODE_GET_DESCRIPTOR = 0x06;
+
 
 // Transfer descriptor
 const uint8_t TD_PID_SETUP = 0x2D;
@@ -664,7 +660,10 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
     uint16_t port_sc = read_port_sc(controller, port);
 
     uint8_t low_speed_device = (port_sc & PORTSC_LOW_SPEED_DEVICE) != 0;
-    const uint8_t max_packet_size = device->descriptor.max_packet_size;
+    uint8_t max_packet_size = device->descriptor.max_packet_size;
+    // if (transaction->setup_packet && transaction->setup_packet->length && transaction->setup_packet->length < max_packet_size) { 
+    //     max_packet_size = transaction->setup_packet->length;
+    // }
 
     int packet_idx = 0;
     int num_setup_packets = transaction->type == USB_TXNTYPE_CONTROL ? 1 : 0;
@@ -729,7 +728,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (wait_for_transfer(controller, &descriptors[2], 500) < 0) {
+    if (wait_for_transfer(controller, &descriptors[packet_idx], 500) < 0) {
         print_tds(stderr, "TDs", descriptors, num_packets);
         print_driver_status(stderr, controller);
         dump_mem8(stdout, "Buffer", transaction->buffer, 16);

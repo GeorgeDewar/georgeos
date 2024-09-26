@@ -1,11 +1,14 @@
 #include "system.h"
 #include "usb.h"
+#include "usb_storage.h"
 
 #define USBSTOR_LOG_PREFIX "usb_storage"
 
 static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer);
 static bool usb_storage_check_device(UsbDevice *device);
 static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *interface);
+static bool set_configuration(UsbDevice *device, uint8_t configuration_number);
+static int get_max_lun(UsbStorageDevice *s_device);
 
 /** Public driver interface */
 DiskDeviceDriver usb_msd_driver = {
@@ -54,9 +57,127 @@ static bool usb_storage_check_device(UsbDevice *device) {
 }
 
 static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *interface) {
+    dump_mem8(stddebug, "", interface, interface->length + (interface->num_endpoints * sizeof(UsbEndpointDescriptor)));
+
+    uint8_t *buffer = ((uint8_t *) interface) + interface->length;
+
     // Find endpoints
-    // Create pipe
+    UsbEndpointDescriptor *in_endpoint;
+    UsbEndpointDescriptor *out_endpoint;
+    for(int ep_i=0; ep_i<interface->num_endpoints; ep_i++) {
+        kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Checking endpoint %d\n", ep_i);
+        UsbEndpointDescriptor *endpoint = buffer + (ep_i * 7);
+        if (endpoint->type != DESCRIPTOR_ENDPOINT) {
+            kprintf(ERROR, USBSTOR_LOG_PREFIX, "Endpoint descriptor type was %2x, expected %2x\n", endpoint->type, DESCRIPTOR_ENDPOINT);
+            return;
+        }
+        if (endpoint->length != sizeof(UsbEndpointDescriptor)) {
+            kprintf(ERROR, USBSTOR_LOG_PREFIX, "Endpoint descriptor length was %d, expected %d\n", endpoint->length, sizeof(UsbEndpointDescriptor));
+            return;
+        }
+        if ((endpoint->attributes & USB_ENDPOINT_TYPE_MASK) == BULK) {
+            uint8_t value = endpoint->address & USB_ENDPOINT_VALUE;
+            if (endpoint->address & USB_ENDPOINT_DIRECTION_IN) {
+                kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK IN endpoint with value %d\n", value);
+                in_endpoint = endpoint;
+            } else {
+                kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK OUT endpoint with value %d\n", value);
+                out_endpoint = endpoint;
+            }
+        }
+    }
+    if (!in_endpoint) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Did not find a BULK IN endpoint");
+        return;
+    }
+    if (!out_endpoint) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Did not find a BULK OUT endpoint");
+        return;
+    }
+
+    UsbStorageDevice *s_device = malloc(sizeof(UsbStorageDevice));
+    s_device->usb_device = device;
+    s_device->interface_number = interface->index;
+    s_device->bulk_in_ep_address = in_endpoint->address & USB_ENDPOINT_VALUE;
+    s_device->bulk_in_max_length = in_endpoint->max_packet_size;
+    s_device->bulk_out_ep_address = out_endpoint->address & USB_ENDPOINT_VALUE;
+    s_device->bulk_out_max_length = out_endpoint->max_packet_size;
+
+    // Set configuration
+    set_configuration(device, device->configuration_descriptor.config_val);
+
+    // Get LUNs
+    int lun_count = 1;
+    int max_lun = get_max_lun(s_device);
+    if (max_lun >= 0 && max_lun <= 15) {
+        lun_count = max_lun + 1; 
+        kprintf(INFO, USBSTOR_LOG_PREFIX, "LUNs: %d\n", lun_count);
+    } else {
+        // This request could fail in which case we can assume 1
+        kprintf(INFO, USBSTOR_LOG_PREFIX, "Assuming 1 LUNs\n");
+    }
+
+    // Identify each LUN
+    
+
     // Register as a block device?
+}
+
+// Todo: move
+static bool set_configuration(UsbDevice *device, uint8_t configuration_number) {
+    UhciController *controller = device->controller;
+
+    DeviceRequestPacket *packet = memalign(16, sizeof(DeviceRequestPacket));
+    packet->request_type = REQ_PKT_DIR_HOST_TO_DEVICE;
+    packet->request = REQ_PKT_REQ_CODE_SET_CONFIGURATION;
+    packet->value = configuration_number;
+    packet->index = 0;
+    packet->length = 0;
+    
+    UsbTransaction transaction;
+    transaction.type = USB_TXNTYPE_CONTROL;
+    transaction.buffer = NULL;
+    transaction.setup_packet = packet;
+    
+    if (uhci_execute_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    
+    kprintf(DEBUG, controller->id, "Set configuration successfully\n", transaction.actual_length);
+
+    return SUCCESS;
+}
+
+/**
+ * Get the number of logical units (i.e. drives), normally 1
+ * Returns a negative value in the event of failure
+ */
+static int get_max_lun(UsbStorageDevice *s_device) {
+    uint8_t lun_count; // our variable or "buffer"
+    UsbDevice *device = s_device->usb_device;
+    UhciController *controller = device->controller;
+
+    DeviceRequestPacket *packet = memalign(16, sizeof(DeviceRequestPacket));
+    packet->request_type = REQ_PKT_DIR_DEVICE_TO_HOST | REQ_PKT_TYPE_CLASS | REQ_PKT_RECIPIENT_INTERFACE;
+    packet->request = REQ_PKT_REQ_CODE_GET_MAX_LUN;
+    packet->value = 0;
+    packet->index = s_device->interface_number;
+    packet->length = 1; // count is one byte
+    
+    dump_mem8(stddebug, "LUN pkt", packet, sizeof(DeviceRequestPacket));
+
+    UsbTransaction transaction;
+    transaction.type = USB_TXNTYPE_CONTROL;
+    transaction.buffer = &lun_count;
+    transaction.setup_packet = packet;
+    
+    if (uhci_execute_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    
+    kprintf(DEBUG, controller->id, "Read %d bytes\n", transaction.actual_length);
+
+    return lun_count;
 }
 
 static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {

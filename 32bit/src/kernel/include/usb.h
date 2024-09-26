@@ -68,6 +68,10 @@ typedef struct {
     uint8_t index;
 } UsbInterfaceDescriptor;
 
+/**
+ * Endpoint Descriptor
+ */
+
 typedef struct {
     uint8_t length;
     uint8_t type;
@@ -75,7 +79,19 @@ typedef struct {
     uint8_t attributes;
     uint16_t max_packet_size;
     uint8_t interval;
-} UsbEndpointDescriptor;
+} __attribute__((packed)) UsbEndpointDescriptor;
+
+#define USB_ENDPOINT_VALUE 0x0F
+#define USB_ENDPOINT_DIRECTION_IN 0x80
+
+#define USB_ENDPOINT_TYPE_MASK 0x03
+enum UsbEndpointTypes {
+    CONTROL = 0, ISOCHRONOUS = 1, BULK = 2, INTERRUPT = 3
+};
+
+/**
+ * Control setup packet
+ */
 
 typedef struct {
     uint8_t request_type;
@@ -84,6 +100,30 @@ typedef struct {
     uint16_t index;
     uint16_t length;
 } DeviceRequestPacket;
+
+enum DeviceRequestPacketMasks {
+    REQ_PKT_DIR_HOST_TO_DEVICE = (0<<7),
+    REQ_PKT_DIR_DEVICE_TO_HOST = (1<<7),
+
+    REQ_PKT_TYPE_STANDARD = (0<<5),
+    REQ_PKT_TYPE_CLASS = (1<<5),
+    REQ_PKT_TYPE_VENDOR = (2<<5),
+    REQ_PKT_TYPE_RESERVED = (3<<5),
+
+    REQ_PKT_RECIPIENT_DEVICE = 0,
+    REQ_PKT_RECIPIENT_INTERFACE = 1,
+    REQ_PKT_RECIPIENT_ENDPOINT = 2,
+
+    REQ_PKT_REQ_CODE_SET_ADDRESS = 0x05,
+    REQ_PKT_REQ_CODE_GET_DESCRIPTOR = 0x06,
+    REQ_PKT_REQ_CODE_SET_CONFIGURATION = 0x09
+};
+
+
+
+
+
+
 
 typedef struct {
     uint32_t head_link_pointer;
