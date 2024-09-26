@@ -1,6 +1,6 @@
 #include "system.h"
 
-#define HEAP_START  0xA00000    // 16 MB
+#define HEAP_START  0x1000000    // 16 MB - 32 MB
 void *free_memory_start = (void *) HEAP_START;
 
 /** A super-simple 'watermark' allocator which cannot free memory */

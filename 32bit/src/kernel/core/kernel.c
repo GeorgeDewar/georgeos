@@ -10,11 +10,10 @@
     0x   7FFFF   Kernel stack ^
     0x   80000   to 0x9FFFF = RESERVED - EBDA (Extended BIOS Data Area)
     0x   A0000   to 0xFFFFF = RESERVED - Video memory, BIOS, etc
-    0x  100000   Userspace program
-    0x  500000   Back buffer (size EA600 for 800x600x16)
-    0x  A00000   Kernel Heap (10MB)
+    0x  100000   Userspace program (4MB)
     0x  B00000   Userspace Heap
     0x  F00000   to 0xFFFFFF = RESERVED - ISA memory mapped hardware
+    0x 1000000   Kernel Heap (16MB - 32MB)
     0x 7A12000   Top of physical memory (128MB)
     0x40000000   Frame buffer on Acer Aspire One 533
     0xE0000000   Frame buffer on Dell Latitude 6430u
