@@ -14,6 +14,8 @@ static uint8_t callbacks_count = 0;
 
 volatile bool console_modified = false;
 
+extern void *_BSS_END_;
+
 /* Handles the timer. In this case, it's very simple: We
 *  increment the 'timer_ticks' variable every time the
 *  timer fires. By default, the timer fires 18.222 times
@@ -44,7 +46,7 @@ static void timer_handler()
         void* p = NULL;
         extern void *free_memory_start;
         char stack_string[128];
-        sprintf(stack_string, "Stack: %8x, KHeap: %8x", (void*)&p, free_memory_start);
+        sprintf(stack_string, "BSS End: %8x, Stack: %8x, KHeap: %8x", _BSS_END_, (void*)&p, free_memory_start);
         draw_string(50, default_graphics_device->screen_height - 20, stack_string, COLOR_WHITE);
 
         // Copy the video buffer to the real video memory

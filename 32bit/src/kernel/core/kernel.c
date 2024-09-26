@@ -32,7 +32,11 @@ void __attribute__((optimize("O0"))) div0(int num) {
 
 void main () {
     init_serial(115200);
+    open_files[stddebug].type = STREAM;
+    open_files[stddebug].stream_device = sd_com1;
+
     default_graphics_device = &vesa_graphics_device;
+    default_graphics_device->init();
     default_graphics_device->clear_screen();
 
     void console_init(int x, int y, int width, int height);
@@ -44,8 +48,6 @@ void main () {
     open_files[stdout].stream_device = sd_screen_console;
     open_files[stderr].type = STREAM;
     open_files[stderr].stream_device = sd_screen_console;
-    open_files[stddebug].type = STREAM;
-    open_files[stddebug].stream_device = sd_com1;
 
     kprintf(INFO, null, "Kernel loaded successfully. Welcome to GeorgeOS!\n");
     extern uint8_t* video_memory;

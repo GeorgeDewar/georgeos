@@ -75,6 +75,7 @@ typedef struct {
     uint8_t blue;
 } Color;
 struct GraphicsDevice {
+    void (*init)();
     void (*put_pixel)(uint16_t, uint16_t, Color);
     void (*clear_screen)();
     void (*copy_buffer)();

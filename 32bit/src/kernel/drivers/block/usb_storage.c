@@ -5,6 +5,7 @@
 
 static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer);
 static bool usb_storage_check_device(UsbDevice *device);
+static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *interface);
 
 /** Public driver interface */
 DiskDeviceDriver usb_msd_driver = {
@@ -44,11 +45,18 @@ static bool usb_storage_check_device(UsbDevice *device) {
     if (if_descriptor->interface_class == MASS_STORAGE) {
         if (if_descriptor->interface_subclass == SCSI_TRANSPARENT_COMMAND_SET && if_descriptor->interface_protocol == BULK_ONLY_TRANSPORT) {
             kprintf(INFO, USBSTOR_LOG_PREFIX, "Found USB mass storage device %d.%d: %s\n", device->controller->id, device->address, device->product);
+            usb_storage_setup_device(device, if_descriptor);
         } else {
             kprintf(WARN, USBSTOR_LOG_PREFIX, "Found unsupported USB mass storage device %d.%d: %s (Subclass %2x, Protocol %2x)\n", 
                 device->controller->id, device->address, device->product, if_descriptor->interface_subclass, if_descriptor->interface_protocol);
         }
     }
+}
+
+static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *interface) {
+    // Find endpoints
+    // Create pipe
+    // Register as a block device?
 }
 
 static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {

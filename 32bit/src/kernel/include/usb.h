@@ -69,6 +69,15 @@ typedef struct {
 } UsbInterfaceDescriptor;
 
 typedef struct {
+    uint8_t length;
+    uint8_t type;
+    uint8_t address;
+    uint8_t attributes;
+    uint16_t max_packet_size;
+    uint8_t interval;
+} UsbEndpointDescriptor;
+
+typedef struct {
     uint8_t request_type;
     uint8_t request;
     uint16_t value;

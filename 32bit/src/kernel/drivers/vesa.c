@@ -15,12 +15,14 @@ uint8_t* video_memory = 0;
 uint8_t* back_buffer = (uint8_t*) 0x500000;
 
 // Declare the functions we will expose in the struct
+static void vesa_init();
 static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, Color color);
 static void vesa_clear_screen();
 static void vesa_copy_buffer();
 
 // Define the GraphicsDevice that points to our functions
 struct GraphicsDevice vesa_graphics_device = {
+    init: &vesa_init,
     put_pixel: &vesa_putpixel,
     clear_screen: &vesa_clear_screen,
     copy_buffer: &vesa_copy_buffer
@@ -29,6 +31,14 @@ struct GraphicsDevice vesa_graphics_device = {
 /***********************
  * Implementation code *
  **********************/
+
+static void vesa_init() {
+    vesa_graphics_device.screen_width = *mode_info_width_ptr;
+    vesa_graphics_device.screen_height = *mode_info_height_ptr;
+    video_memory = (uint8_t*) *frame_buffer_location_ptr; // initialise video_memory ptr, do not remove, but do move...
+    back_buffer = memalign(4, VIDEO_MEMORY_SIZE);
+    kprintf(DEBUG, "VESA", "Initialised graphics driver with back buffer at %8x (size %8x)\n", back_buffer, VIDEO_MEMORY_SIZE);
+}
 
 /** Draw a pixel at the specified location */
 static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, Color color)
@@ -39,9 +49,6 @@ static void vesa_putpixel(uint16_t pos_x, uint16_t pos_y, Color color)
 
 /** Fill the video memory with zeros to clear the screen */
 static void vesa_clear_screen() {
-    vesa_graphics_device.screen_width = *mode_info_width_ptr;
-    vesa_graphics_device.screen_height = *mode_info_height_ptr;
-    video_memory = (uint8_t*) *frame_buffer_location_ptr; // initialise video_memory ptr, do not remove, but do move...
     memset(back_buffer, 0, VIDEO_MEMORY_SIZE);
 }
 
