@@ -4,7 +4,7 @@ OBJDIR=./build
 # Automatically generate lists of sources using wildcards .
 C_SOURCES = $(wildcard $(SRCDIR)/kernel/core/*.c $(SRCDIR)/kernel/drivers/*.c $(SRCDIR)/kernel/drivers/fs/*.c \
 	$(SRCDIR)/kernel/drivers/bus/*.c $(SRCDIR)/kernel/drivers/bus/usb/*.c $(SRCDIR)/kernel/drivers/block/*.c)
-HEADERS = $(wildcard $(SRCDIR)/kernel/include/*.h $(SRCDIR)/kernel/drivers/bus/usb/*.h)
+HEADERS = $(wildcard $(SRCDIR)/kernel/include/*.h $(SRCDIR)/kernel/drivers/bus/usb/*.h $(SRCDIR)/kernel/drivers/block/*.h)
 
 # TODO : Make sources dep on all header files .
 # Convert the *.c filenames to *.o to give a list of object files to build

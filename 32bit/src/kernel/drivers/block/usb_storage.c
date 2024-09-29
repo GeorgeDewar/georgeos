@@ -234,7 +234,7 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
     memset(&csw, 0, sizeof(CommandStatusWrapper));
     transaction.type = USB_TXNTYPE_BULK_IN;
     transaction.endpoint_address = s_device->bulk_in_ep_address;
-    transaction.buffer = buffer;
+    transaction.buffer = &csw;
     transaction.length = sizeof(CommandStatusWrapper);
     if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
         return FAILURE;

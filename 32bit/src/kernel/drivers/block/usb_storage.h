@@ -47,4 +47,4 @@ typedef struct {
     uint32_t tag;
     uint32_t data_residue;
     uint8_t status;
-} CommandStatusWrapper;
+} __attribute__((packed)) CommandStatusWrapper;
