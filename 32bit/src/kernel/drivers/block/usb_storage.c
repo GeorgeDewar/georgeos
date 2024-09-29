@@ -223,6 +223,8 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
         return FAILURE;
     };
 
+    delay(50);
+
     // Read the data
     transaction.type = USB_TXNTYPE_BULK_IN;
     transaction.endpoint = s_device->bulk_in_endpoint;
@@ -232,6 +234,8 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
         return FAILURE;
     };
     dump_mem8(stdout, "Inquiry: ", buffer, 0x24);
+
+    delay(50);
 
     // Read the Command Status Wrapper
     CommandStatusWrapper csw;
