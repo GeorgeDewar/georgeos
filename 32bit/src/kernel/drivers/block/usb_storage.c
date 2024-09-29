@@ -63,8 +63,8 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
     uint8_t *buffer = ((uint8_t *) interface) + interface->length;
 
     // Find endpoints
-    UsbEndpointDescriptor *in_endpoint;
-    UsbEndpointDescriptor *out_endpoint;
+    UsbEndpointDescriptor *in_endpoint_descriptor;
+    UsbEndpointDescriptor *out_endpoint_descriptor;
     for(int ep_i=0; ep_i<interface->num_endpoints; ep_i++) {
         kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Checking endpoint %d\n", ep_i);
         UsbEndpointDescriptor *endpoint = buffer + (ep_i * 7);
@@ -80,29 +80,37 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
             uint8_t value = endpoint->address & USB_ENDPOINT_VALUE;
             if (endpoint->address & USB_ENDPOINT_DIRECTION_IN) {
                 kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK IN endpoint with value %d, max packet size %d\n", value, endpoint->max_packet_size);
-                in_endpoint = endpoint;
+                in_endpoint_descriptor = endpoint;
             } else {
                 kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK OUT endpoint with value %d, max packet size %d\n", value, endpoint->max_packet_size);
-                out_endpoint = endpoint;
+                out_endpoint_descriptor = endpoint;
             }
         }
     }
-    if (!in_endpoint) {
+    if (!in_endpoint_descriptor) {
         kprintf(ERROR, USBSTOR_LOG_PREFIX, "Did not find a BULK IN endpoint");
         return;
     }
-    if (!out_endpoint) {
+    if (!out_endpoint_descriptor) {
         kprintf(ERROR, USBSTOR_LOG_PREFIX, "Did not find a BULK OUT endpoint");
         return;
     }
 
+    UsbEndpoint *in_endpoint = malloc(sizeof(UsbEndpoint));
+    in_endpoint->address = in_endpoint_descriptor->address & USB_ENDPOINT_VALUE;
+    in_endpoint->max_packet_size = in_endpoint_descriptor->max_packet_size;
+    in_endpoint->toggle = 0;
+
+    UsbEndpoint *out_endpoint = malloc(sizeof(UsbEndpoint));
+    out_endpoint->address = out_endpoint_descriptor->address & USB_ENDPOINT_VALUE;
+    out_endpoint->max_packet_size = out_endpoint_descriptor->max_packet_size;
+    out_endpoint->toggle = 0;
+
     UsbStorageDevice *s_device = malloc(sizeof(UsbStorageDevice));
     s_device->usb_device = device;
     s_device->interface_number = interface->index;
-    s_device->bulk_in_ep_address = in_endpoint->address & USB_ENDPOINT_VALUE;
-    s_device->bulk_in_max_length = in_endpoint->max_packet_size;
-    s_device->bulk_out_ep_address = out_endpoint->address & USB_ENDPOINT_VALUE;
-    s_device->bulk_out_max_length = out_endpoint->max_packet_size;
+    s_device->bulk_in_endpoint = in_endpoint;
+    s_device->bulk_out_endpoint = out_endpoint;
 
     // Set configuration
     set_configuration(device, device->configuration_descriptor.config_val);
@@ -190,8 +198,6 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
     UsbDevice *device = s_device->usb_device;
     UhciController *controller = device->controller;
 
-    printf("Size of CBW: %d bytes\n", sizeof(CommandBlockWrapper));
-
     CommandBlockWrapper cbw;
     memset(&cbw, 0, sizeof(CommandBlockWrapper));
     cbw.signature = 0x43425355;
@@ -206,13 +212,11 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
     cbw.command[3] = 0; // Upper bits of length
     cbw.command[4] = 0x24; // Lower bits of length
 
-    dump_mem8(stdout, "CBW: ", &cbw, sizeof(CommandBlockWrapper));
-
     UsbBulkTransaction transaction;
 
     // Send the Command Block Wrapper
     transaction.type = USB_TXNTYPE_BULK_OUT;
-    transaction.endpoint_address = s_device->bulk_out_ep_address;
+    transaction.endpoint = s_device->bulk_out_endpoint;
     transaction.buffer = &cbw;
     transaction.length = sizeof(CommandBlockWrapper);
     if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
@@ -221,7 +225,7 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
 
     // Read the data
     transaction.type = USB_TXNTYPE_BULK_IN;
-    transaction.endpoint_address = s_device->bulk_in_ep_address;
+    transaction.endpoint = s_device->bulk_in_endpoint;
     transaction.buffer = buffer;
     transaction.length = 0x24;
     if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
@@ -233,7 +237,7 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
     CommandStatusWrapper csw;
     memset(&csw, 0, sizeof(CommandStatusWrapper));
     transaction.type = USB_TXNTYPE_BULK_IN;
-    transaction.endpoint_address = s_device->bulk_in_ep_address;
+    transaction.endpoint = s_device->bulk_in_endpoint;
     transaction.buffer = &csw;
     transaction.length = sizeof(CommandStatusWrapper);
     if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {

@@ -163,6 +163,12 @@ struct uhci_controller {
     UsbDevice *devices[128]; // These are stored in the global usb_devices variable, and pointed to here
 };
 
+typedef struct {
+    uint8_t address;
+    uint16_t max_packet_size;
+    uint8_t toggle;
+} UsbEndpoint;
+
 /**
  * Our own stuff
  */
@@ -180,7 +186,7 @@ typedef struct {
 } UsbTransaction;
 
 typedef struct {
-    uint8_t endpoint_address;
+    UsbEndpoint *endpoint;
     uint8_t type;
     void *buffer;
     uint32_t length;

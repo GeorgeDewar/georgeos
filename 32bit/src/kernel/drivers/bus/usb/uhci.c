@@ -755,6 +755,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
 bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device, UsbBulkTransaction *transaction) {
     kprintf(DEBUG, controller->name, "Executing bulk transaction (len: %d bytes)\n", transaction->length);
     
+    UsbEndpoint *endpoint = transaction->endpoint;
     transaction->actual_length = 0;
 
     uint8_t PID;
@@ -771,7 +772,7 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
     uint16_t port_sc = read_port_sc(controller, port);
 
     uint8_t low_speed_device = (port_sc & PORTSC_LOW_SPEED_DEVICE) != 0;
-    uint8_t max_packet_size = 64;// device->descriptor.max_packet_size;
+    uint8_t max_packet_size = endpoint->max_packet_size;
 
     int num_packets = transaction->length / max_packet_size;
     if (transaction->length % max_packet_size != 0) num_packets++; // partial last packet
@@ -781,7 +782,7 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
     kprintf(DEBUG, controller->name, "Paragraph-aligned buffer at %x\n", descriptors);
 
     // DATA IN/OUT packets
-    kprintf(DEBUG, controller->name, "Preparing %d packets\n", num_packets); // TODO: Remove -1
+    kprintf(DEBUG, controller->name, "Preparing %d packets\n", num_packets);
     for(int packet_idx = 0; packet_idx<num_packets; packet_idx++) {
         bool is_last_packet = (packet_idx == num_packets - 1);
         kprintf(DEBUG, controller->name, "Preparing data packet (%d, last = %d)\n", packet_idx, is_last_packet);
@@ -795,14 +796,15 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
         descriptors[packet_idx].depth_first = true;
         descriptors[packet_idx].error_count = 3;
         descriptors[packet_idx].device_address = device->address;
-        descriptors[packet_idx].endpoint = transaction->endpoint_address;
+        descriptors[packet_idx].endpoint = transaction->endpoint->address;
         descriptors[packet_idx].low_speed_device = low_speed_device;
         descriptors[packet_idx].status_active = true;
         descriptors[packet_idx].max_length = max_length;
-        descriptors[packet_idx].data_toggle = packet_idx % 2;
+        descriptors[packet_idx].data_toggle = endpoint->toggle;
         descriptors[packet_idx].packet_identification = PID;
         descriptors[packet_idx].buffer_pointer = ((char *) transaction->buffer) + (max_packet_size * packet_idx);
         
+        endpoint->toggle = 1 - endpoint->toggle;
     }
 
     print_tds(stddebug, "TDs Bf", descriptors, num_packets);

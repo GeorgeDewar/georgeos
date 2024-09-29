@@ -3,10 +3,8 @@
 typedef struct {
     UsbDevice *usb_device;
     uint8_t interface_number;
-    uint8_t bulk_in_ep_address;
-    uint16_t bulk_in_max_length;
-    uint8_t bulk_out_ep_address;
-    uint16_t bulk_out_max_length;
+    UsbEndpoint *bulk_in_endpoint;
+    UsbEndpoint *bulk_out_endpoint;
 } UsbStorageDevice;
 
 enum UsbStorageRequests {
