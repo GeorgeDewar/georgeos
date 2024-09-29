@@ -9,6 +9,7 @@ static bool usb_storage_check_device(UsbDevice *device);
 static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *interface);
 static bool set_configuration(UsbDevice *device, uint8_t configuration_number);
 static int get_max_lun(UsbStorageDevice *s_device);
+static bool inquiry(UsbStorageDevice *s_device, int lun);
 
 /** Public driver interface */
 DiskDeviceDriver usb_msd_driver = {
@@ -78,10 +79,10 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
         if ((endpoint->attributes & USB_ENDPOINT_TYPE_MASK) == BULK) {
             uint8_t value = endpoint->address & USB_ENDPOINT_VALUE;
             if (endpoint->address & USB_ENDPOINT_DIRECTION_IN) {
-                kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK IN endpoint with value %d\n", value);
+                kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK IN endpoint with value %d, max packet size %d\n", value, endpoint->max_packet_size);
                 in_endpoint = endpoint;
             } else {
-                kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK OUT endpoint with value %d\n", value);
+                kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Found BULK OUT endpoint with value %d, max packet size %d\n", value, endpoint->max_packet_size);
                 out_endpoint = endpoint;
             }
         }
@@ -118,7 +119,9 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
     }
 
     // Identify each LUN
-    
+    for (int lun=0; lun<lun_count; lun++) {
+        inquiry(s_device, lun);
+    }
 
     // Register as a block device?
 }
@@ -178,6 +181,67 @@ static int get_max_lun(UsbStorageDevice *s_device) {
     kprintf(DEBUG, controller->id, "Read %d bytes\n", transaction.actual_length);
 
     return lun_count;
+}
+
+static bool inquiry(UsbStorageDevice *s_device, int lun) {
+    uint8_t buffer[0x24];
+    memset(buffer, 0, 0x24);
+
+    UsbDevice *device = s_device->usb_device;
+    UhciController *controller = device->controller;
+
+    printf("Size of CBW: %d bytes\n", sizeof(CommandBlockWrapper));
+
+    CommandBlockWrapper cbw;
+    memset(&cbw, 0, sizeof(CommandBlockWrapper));
+    cbw.signature = 0x43425355;
+    cbw.tag = 0xcafebabe;
+    cbw.transfer_length = 0x24;
+    cbw.flags = READ;
+    cbw.lun = lun;
+    cbw.command_len = 6;
+    cbw.command[0] = INQUIRY;
+    cbw.command[1] = 0; // No vital product data
+    cbw.command[2] = 0; // Page code = 0
+    cbw.command[3] = 0; // Upper bits of length
+    cbw.command[4] = 0x24; // Lower bits of length
+
+    dump_mem8(stdout, "CBW: ", &cbw, sizeof(CommandBlockWrapper));
+
+    UsbBulkTransaction transaction;
+
+    // Send the Command Block Wrapper
+    transaction.type = USB_TXNTYPE_BULK_OUT;
+    transaction.endpoint_address = s_device->bulk_out_ep_address;
+    transaction.buffer = &cbw;
+    transaction.length = sizeof(CommandBlockWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+
+    // Read the data
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint_address = s_device->bulk_in_ep_address;
+    transaction.buffer = buffer;
+    transaction.length = 0x24;
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    dump_mem8(stdout, "Inquiry: ", buffer, 0x24);
+
+    // Read the Command Status Wrapper
+    CommandStatusWrapper csw;
+    memset(&csw, 0, sizeof(CommandStatusWrapper));
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint_address = s_device->bulk_in_ep_address;
+    transaction.buffer = buffer;
+    transaction.length = sizeof(CommandStatusWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    dump_mem8(stdout, "CSW: ", &csw, sizeof(CommandStatusWrapper));
+
+    return SUCCESS;
 }
 
 static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {

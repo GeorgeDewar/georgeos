@@ -23,8 +23,9 @@ load_file_sector:
     call l2hts                  ; Make appropriate params for int 13h
 
     mov ax, KERNEL_SEGMENT      ; Set buffer to where we want the kernel to load, offset by
+    add ax, word [pointer]
     mov es, ax                  ; the current pointer (location of the next cluster)
-    mov bx, word [pointer]
+    mov bx, 0
 
     mov ah, 2                   ; int 13h floppy read params
     mov al, 1                   ; Load one sector
@@ -74,7 +75,7 @@ next_cluster_cont:
     cmp ax, 0FF8h               ; FF8h = end of file marker in FAT12
     jae end                     ; Jump if we are at the end of the file
 
-    add word [pointer], 512     ; Else, increase buffer pointer 1 sector length
+    add word [pointer], 0x20    ; Else, increase buffer pointer 1 sector length (incrementing the segment by 0x20)
     jmp load_file_sector        ; Load the next sector
 
 end:

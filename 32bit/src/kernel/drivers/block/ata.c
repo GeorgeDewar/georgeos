@@ -91,7 +91,7 @@ struct ide_device {
 } ide_devices[4];
 int ide_device_count = 0;
 
-unsigned char ide_buf[2048] = {0};
+unsigned char *ide_buf;
 
 static void ata_identify_drives();
 static unsigned char ide_read_base(unsigned char channel, unsigned char reg);
@@ -108,6 +108,9 @@ DiskDeviceDriver ata_driver = {
 };
 
 void ata_init() {
+    // Initialise buffer
+    ide_buf = malloc(2048);
+
     // Check for PCI ATA controller
     struct pci_device *device;
     bool found = false;

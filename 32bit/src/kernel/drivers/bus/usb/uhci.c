@@ -2,53 +2,57 @@
 #include "usb.h"
 #include "uhci.h"
 
+#define MAX_CONTROLLERS 16
+#define RESET_TIMEOUT 50
+#define PORT_ENABLE_TIMEOUT 50
 
-
-const uint8_t MAX_CONTROLLERS = 16;
-const uint8_t RESET_TIMEOUT = 50;
-const uint8_t PORT_ENABLE_TIMEOUT = 50;
-
-const uint8_t PCI_CLASS_SERIAL_BUS = 0x0C;
-const uint8_t PCI_SUBCLASS_USB = 0x03;
-const uint8_t PCI_PROG_IF_UHCI = 0x00;
+#define PCI_CLASS_SERIAL_BUS 0x0C
+#define PCI_SUBCLASS_USB 0x03
+#define PCI_PROG_IF_UHCI 0x00
 
 // Error values
-const int8_t ERR_NO_DEVICE = -2;
+#define ERR_NO_DEVICE -2
 
 // USB registers
-const uint8_t REG_USB_COMMAND = 0x00; // R/W
-const uint8_t REG_USB_STATUS = 0x02; // R/WC
-const uint8_t REG_USB_INTERRUPT_ENABLE = 0x04; // R/W
-const uint8_t REG_FRAME_NUM = 0x06; // Word R/W
-const uint8_t REG_FRBASEADD = 0x08; // Frame List Base Address (4 byte), R/W
-const uint8_t REG_SOFMOD = 0x0C; // Start of Frame Modify (1 byte), R/W
-const uint8_t REG_PORTSC1 = 0x10; // Port 1 Status/Control, Word R/WC
-const uint8_t REG_PORTSC2 = 0x12; // Port 2 Status/Control, Word R/WC
+enum UsbRegisters {
+    REG_USB_COMMAND = 0x00, // R/W
+    REG_USB_STATUS = 0x02, // R/WC
+    REG_USB_INTERRUPT_ENABLE = 0x04, // R/W
+    REG_FRAME_NUM = 0x06, // Word R/W
+    REG_FRBASEADD = 0x08, // Frame List Base Address (4 byte), R/W
+    REG_SOFMOD = 0x0C, // Start of Frame Modify (1 byte), R/W
+    REG_PORTSC1 = 0x10, // Port 1 Status/Control, Word R/WC
+    REG_PORTSC2 = 0x12, // Port 2 Status/Control, Word R/WC
+};
 
 // Bit masks for the USBCMD register
-const uint16_t USBCMD_GLOBAL_RESET = 0x0004; // Bit 2
-const uint16_t USBCMD_HCRESET = 0x0002; // Bit 1
-const uint16_t USBCMD_RUN_STOP = 0x0001; // Bit 0
+enum USBCMDBits {
+    USBCMD_GLOBAL_RESET = 0x0004, // Bit 2
+    USBCMD_HCRESET = 0x0002, // Bit 1
+    USBCMD_RUN_STOP = 0x0001, // Bit 0
+};
 
 // Bit masks for the PORTSC registers
-const uint16_t PORTSC_SUSPEND = 0x1000; // Bit 12
-const uint16_t PORTSC_PORT_RESET = 0x0200; // Bit 9
-const uint16_t PORTSC_LOW_SPEED_DEVICE = 0x0100; // Bit 8
-const uint16_t PORTSC_ALWAYS1 = 0x0080; // Bit 7
-const uint16_t PORTSC_RESUME_DETECT = 0x0040; // Bit 6
-const uint16_t PORTSC_LINE_DMINUS = 0x0020; // Bit 5
-const uint16_t PORTSC_LINE_DPLUS = 0x0010; // Bit 4
-const uint16_t PORTSC_PORT_ENABLE_CHANGED = 0x0008; // Bit 3
-const uint16_t PORTSC_PORT_ENABLED = 0x0004; // Bit 2
-const uint16_t PORTSC_CONNECT_STATUS_CHANGE = 0x0002; // Bit 1
-const uint16_t PORTSC_CURRENT_CONNECT_STATUS = 0x0001; // Bit 0
-
-
+enum PortStatusAndCommandBits {
+    PORTSC_SUSPEND = 0x1000, // Bit 12
+    PORTSC_PORT_RESET = 0x0200, // Bit 9
+    PORTSC_LOW_SPEED_DEVICE = 0x0100, // Bit 8
+    PORTSC_ALWAYS1 = 0x0080, // Bit 7
+    PORTSC_RESUME_DETECT = 0x0040, // Bit 6
+    PORTSC_LINE_DMINUS = 0x0020, // Bit 5
+    PORTSC_LINE_DPLUS = 0x0010, // Bit 4
+    PORTSC_PORT_ENABLE_CHANGED = 0x0008, // Bit 3
+    PORTSC_PORT_ENABLED = 0x0004, // Bit 2
+    PORTSC_CONNECT_STATUS_CHANGE = 0x0002, // Bit 1
+    PORTSC_CURRENT_CONNECT_STATUS = 0x0001, // Bit 0
+};
 
 // Transfer descriptor
-const uint8_t TD_PID_SETUP = 0x2D;
-const uint8_t TD_PID_IN = 0x69;
-const uint8_t TD_PID_OUT = 0xE1;
+enum TransferDescriptorPIDs {
+    TD_PID_SETUP = 0x2D,
+    TD_PID_IN = 0x69,
+    TD_PID_OUT = 0xE1,
+};
 
 typedef struct {
     // TD LINK POINTER (DWORD 0: 00-03h)
@@ -98,6 +102,7 @@ bool usb_uhci_init_controller(struct pci_device *device);
 bool uhci_controller_reset(UhciController *controller);
 bool uhci_reset_port(UhciController *controller, uint8_t port);
 bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, UsbTransaction *transaction);
+bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device, UsbBulkTransaction *transaction);
 bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbStandardDeviceDescriptor *buffer);
 bool uhci_set_address(UhciController *controller, uint8_t port, uint8_t device_id);
 bool uhci_get_string_descriptor(UhciController *controller, UsbDevice *device, uint8_t index, uint8_t *buffer);
@@ -706,6 +711,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
         descriptors[packet_idx].max_length = max_packet_size - 1;
         descriptors[packet_idx].data_toggle = packet_idx % 2;
         descriptors[packet_idx].packet_identification = TD_PID_IN;
+        // TODO: max_packet_size!!
         descriptors[packet_idx].buffer_pointer = ((char *) transaction->buffer) + (8 * (packet_idx - 1));
     }
 
@@ -741,6 +747,86 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
     for(int i = 0; i<num_data_packets; i++) {
         int packet_idx = i + first_data_packet;
         transaction->actual_length += (descriptors[packet_idx].actual_length + 1);
+    }
+
+    return SUCCESS;
+}
+
+bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device, UsbBulkTransaction *transaction) {
+    kprintf(DEBUG, controller->name, "Executing bulk transaction (len: %d bytes)\n", transaction->length);
+    
+    transaction->actual_length = 0;
+
+    uint8_t PID;
+    if (transaction->type == USB_TXNTYPE_BULK_IN) {
+        PID = TD_PID_IN;
+    } else if (transaction->type == USB_TXNTYPE_BULK_OUT) {
+        PID = TD_PID_OUT;
+    } else {
+        kprintf(DEBUG, controller->name, "Invalid type for bulk transfer: %2x\n", transaction->type);
+        return FAILURE;
+    }
+
+    uint8_t port = device->port;
+    uint16_t port_sc = read_port_sc(controller, port);
+
+    uint8_t low_speed_device = (port_sc & PORTSC_LOW_SPEED_DEVICE) != 0;
+    uint8_t max_packet_size = 64;// device->descriptor.max_packet_size;
+
+    int num_packets = transaction->length / max_packet_size;
+    if (transaction->length % max_packet_size != 0) num_packets++; // partial last packet
+
+    TransferDescriptor *descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
+    memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
+    kprintf(DEBUG, controller->name, "Paragraph-aligned buffer at %x\n", descriptors);
+
+    // DATA IN/OUT packets
+    kprintf(DEBUG, controller->name, "Preparing %d packets\n", num_packets); // TODO: Remove -1
+    for(int packet_idx = 0; packet_idx<num_packets; packet_idx++) {
+        bool is_last_packet = (packet_idx == num_packets - 1);
+        kprintf(DEBUG, controller->name, "Preparing data packet (%d, last = %d)\n", packet_idx, is_last_packet);
+        uint8_t max_length = max_packet_size - 1;
+        if (transaction->length % max_packet_size != 0 && is_last_packet) {
+            kprintf(DEBUG, controller->name, "Last packet is not a full packet (max = %d, tot = %d)\n", max_packet_size, transaction->length);
+            max_length = (transaction->length % max_packet_size) - 1; // Remainder, not a full packet
+        }
+        descriptors[packet_idx].link_pointer = is_last_packet ? NULL : ((uint32_t) &(descriptors[packet_idx + 1])) >> 4;
+        descriptors[packet_idx].terminate = is_last_packet;
+        descriptors[packet_idx].depth_first = true;
+        descriptors[packet_idx].error_count = 3;
+        descriptors[packet_idx].device_address = device->address;
+        descriptors[packet_idx].endpoint = transaction->endpoint_address;
+        descriptors[packet_idx].low_speed_device = low_speed_device;
+        descriptors[packet_idx].status_active = true;
+        descriptors[packet_idx].max_length = max_length;
+        descriptors[packet_idx].data_toggle = packet_idx % 2;
+        descriptors[packet_idx].packet_identification = PID;
+        descriptors[packet_idx].buffer_pointer = ((char *) transaction->buffer) + (max_packet_size * packet_idx);
+        
+    }
+
+    print_tds(stddebug, "TDs Bf", descriptors, num_packets);
+
+    controller->queue_default->element_link_pointer = descriptors;
+
+    if (wait_for_transfer(controller, &descriptors[num_packets-1], 500) < 0) {
+        print_tds(stderr, "TDs", descriptors, num_packets);
+        print_driver_status(stderr, controller);
+        dump_mem8(stdout, "Buffer", transaction->buffer, transaction->length);
+        return FAILURE;
+    }
+
+    // Expect at least one packet to have transferred data
+    if (descriptors[0].actual_length == 0) {
+        kprintf(ERROR, controller->name, "A TD was processed but no data transferred\n");
+        return FAILURE;
+    }
+
+    print_tds(stddebug, "TDs Af", descriptors, num_packets);
+
+    transaction->actual_length = 0;
+    for(int i = 0; i<num_packets; i++) {
+        transaction->actual_length += (descriptors[i].actual_length + 1);
     }
 
     return SUCCESS;

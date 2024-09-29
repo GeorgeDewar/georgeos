@@ -167,7 +167,7 @@ struct uhci_controller {
  * Our own stuff
  */
 
-enum { USB_TXNTYPE_CONTROL = 1 };
+enum { USB_TXNTYPE_CONTROL = 1, USB_TXNTYPE_BULK_IN = 2, USB_TXNTYPE_BULK_OUT = 3 };
 
 // Similar to Linux URB?
 typedef struct {
@@ -178,6 +178,16 @@ typedef struct {
     // OUTPUT
     uint32_t actual_length; // bytes read/written
 } UsbTransaction;
+
+typedef struct {
+    uint8_t endpoint_address;
+    uint8_t type;
+    void *buffer;
+    uint32_t length;
+
+    // OUTPUT
+    uint32_t actual_length; // bytes read/written
+} UsbBulkTransaction;
 
 /**
  * Global state
