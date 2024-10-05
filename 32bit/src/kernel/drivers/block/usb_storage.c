@@ -247,7 +247,14 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
     if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
         return FAILURE;
     };
-    dump_mem8(stdout, "CSW: ", &csw, sizeof(CommandStatusWrapper));
+    if (csw.signature != 0x53425355) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Unexpected CSW signature: %8x\n", csw.signature);
+        return FAILURE;
+    };
+    if (csw.status != 0) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Bulk transfer failed with status %2x\n", csw.status);
+        return FAILURE;
+    }
 
     return SUCCESS;
 }

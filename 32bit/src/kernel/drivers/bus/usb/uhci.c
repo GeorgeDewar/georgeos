@@ -826,7 +826,7 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
         return FAILURE;
     }
 
-    print_tds(stdout, "TDs Af", descriptors, num_packets);
+    print_tds(stddebug, "TDs Af", descriptors, num_packets);
 
     transaction->actual_length = 0;
     for(int i = 0; i<num_packets; i++) {
