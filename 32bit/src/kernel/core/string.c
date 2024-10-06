@@ -30,6 +30,15 @@ void strcpy(const char *src, char *dest) {
     *dest = 0;
 }
 
+/** copy a string from src to dest, stopping at the NULL byte OR n characters, whichever comes first */
+void strncpy(const char *src, char *dest, int length) {
+    int index = 0;
+    while(*src != 0 && index++ < length) {
+        *dest++ = *src++;
+    }
+    *dest = 0;
+}
+
 char upcase(char c) {
     const char offset = 'A' - 'a';
     if (c >= 'a' && c <= 'z') {

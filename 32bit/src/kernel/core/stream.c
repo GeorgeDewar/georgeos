@@ -156,10 +156,11 @@ void vfprintf(int16_t fp, char* string, va_list argp) {
 }
 
 static void vsprintf(char* buffer, char* string, va_list argp) {
-    uint8_t num_length = 0;
+    uint8_t width = 0; // minimum characters to print (zero-pads if required)
+    uint8_t precision = 0; // for strings, limit of characters to print
     while(*string != 0) {
         if (*string == '%') {
-            num_length = 0;
+            width = 0;
             string++;
             
             // If there is a number, copy it into a buffer and parse it
@@ -171,15 +172,32 @@ static void vsprintf(char* buffer, char* string, va_list argp) {
             }
             zero_pad_length_str[zero_pad_string_length] = 0;
             if (zero_pad_string_length > 0) {
-                num_length = string_to_int(zero_pad_length_str);
+                width = string_to_int(zero_pad_length_str);
+            }
+
+            if (*string == '.') {
+                // Collect the precision
+                *string++; // skip the dot
+
+                uint8_t precision_string_length = 0;
+                char precision_string[8];
+                while (*string >= '0' && *string <= '9') {
+                    precision_string[precision_string_length++] = *string;
+                    string++;
+                }
+                precision_string[precision_string_length] = 0;
+                if (precision_string_length > 0) {
+                    precision = string_to_int(precision_string);
+                }
             }
 
             if(*string == '%'){ // %% escapes %
                 *buffer++ = *string;
             } else if (*string == 's') {
                 char* str = va_arg(argp, int);
-                strcpy(str, buffer);
-                buffer += strlen(str); // erase null byte
+                int copylen = precision > 0 ? precision : strlen(str);
+                strncpy(str, buffer, copylen);
+                buffer += copylen; // erase null byte
             } else if (*string == 'd' || *string == 'x') {
                 int base = 16;
                 if (*string == 'd') base = 10;
@@ -188,7 +206,7 @@ static void vsprintf(char* buffer, char* string, va_list argp) {
                 char num_string[16] = {0};
                 int_to_string(number, base, num_string);
                 int num_digits = strlen(num_string);
-                int padding = num_length - num_digits;
+                int padding = width - num_digits;
                 while (padding > 0) {
                     *buffer++ = '0';
                     padding--;

@@ -257,6 +257,7 @@ extern volatile bool console_modified;
 char strcmp_wl(const char *string1, const char *string2, uint32_t length_to_compare);
 char strcmp(const char *string1, const char *string2);
 void strcpy(const char *src, char *dest);
+void strncpy(const char *src, char *dest, int length);
 void strupr(char* string);
 int strlen(const char *str);
 char *strcat(char *dest, const char *src);
