@@ -833,6 +833,9 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
         transaction->actual_length += (descriptors[i].actual_length + 1);
     }
 
+    // Extra sleep period which seems to be necessary for at least some bulk transfers
+    delay(50);
+
     return SUCCESS;
 }
 

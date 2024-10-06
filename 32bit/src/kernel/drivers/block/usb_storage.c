@@ -1,6 +1,7 @@
 #include "system.h"
 #include "usb.h"
 #include "usb_storage.h"
+#include "scsi.h"
 
 #define USBSTOR_LOG_PREFIX "usb_storage"
 
@@ -9,7 +10,8 @@ static bool usb_storage_check_device(UsbDevice *device);
 static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *interface);
 static bool set_configuration(UsbDevice *device, uint8_t configuration_number);
 static int get_max_lun(UsbStorageDevice *s_device);
-static bool inquiry(UsbStorageDevice *s_device, int lun);
+static bool scsi_inquiry(UsbStorageDevice *s_device, int lun, InquiryCmdResponse *buffer);
+static bool scsi_read_capacity_10(UsbStorageDevice *s_device, int lun, ReadCapacity10Response *buffer);
 
 /** Public driver interface */
 DiskDeviceDriver usb_msd_driver = {
@@ -128,7 +130,14 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
 
     // Identify each LUN
     for (int lun=0; lun<lun_count; lun++) {
-        inquiry(s_device, lun);
+        InquiryCmdResponse buffer;
+        if (scsi_inquiry(s_device, lun, &buffer) > 0) {
+            kprintf(INFO, USBSTOR_LOG_PREFIX, "Identified drive at LUN %d: %.16s\n", lun, buffer.product_identification);
+        } else continue;
+        ReadCapacity10Response capacity;
+        if (scsi_read_capacity_10(s_device, lun, &capacity) > 0) {
+            kprintf(INFO, USBSTOR_LOG_PREFIX, "Capacity: %d blocks of size %d\n", capacity.number_of_blocks, capacity.block_size);
+        }
     }
 
     // Register as a block device?
@@ -191,17 +200,14 @@ static int get_max_lun(UsbStorageDevice *s_device) {
     return lun_count;
 }
 
-static bool inquiry(UsbStorageDevice *s_device, int lun) {
-    uint8_t buffer[0x24];
-    memset(buffer, 0, 0x24);
-
+static bool scsi_inquiry(UsbStorageDevice *s_device, int lun, InquiryCmdResponse *buffer) {
     UsbDevice *device = s_device->usb_device;
     UhciController *controller = device->controller;
 
     CommandBlockWrapper cbw;
     memset(&cbw, 0, sizeof(CommandBlockWrapper));
     cbw.signature = 0x43425355;
-    cbw.tag = 0xcafebabe;
+    cbw.tag = 0;
     cbw.transfer_length = 0x24;
     cbw.flags = READ;
     cbw.lun = lun;
@@ -236,6 +242,62 @@ static bool inquiry(UsbStorageDevice *s_device, int lun) {
     dump_mem8(stdout, "Inquiry: ", buffer, 0x24);
 
     delay(50);
+    // Read the Command Status Wrapper
+    CommandStatusWrapper csw;
+    memset(&csw, 0, sizeof(CommandStatusWrapper));
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint = s_device->bulk_in_endpoint;
+    transaction.buffer = &csw;
+    transaction.length = sizeof(CommandStatusWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    if (csw.signature != 0x53425355) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Unexpected CSW signature: %8x\n", csw.signature);
+        return FAILURE;
+    };
+    if (csw.status != 0) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Bulk transfer failed with status %2x\n", csw.status);
+        return FAILURE;
+    }
+
+    return SUCCESS;
+}
+
+static bool scsi_read_capacity_10(UsbStorageDevice *s_device, int lun, ReadCapacity10Response *buffer) {
+    UsbDevice *device = s_device->usb_device;
+    UhciController *controller = device->controller;
+
+    CommandBlockWrapper cbw;
+    memset(&cbw, 0, sizeof(CommandBlockWrapper));
+    cbw.signature = 0x43425355;
+    cbw.tag = 0;
+    cbw.transfer_length = 8;
+    cbw.flags = READ;
+    cbw.lun = lun;
+    cbw.command_len = 6;
+    cbw.command[0] = READ_CAPACITY_10;
+
+    UsbBulkTransaction transaction;
+
+    // Send the Command Block Wrapper
+    transaction.type = USB_TXNTYPE_BULK_OUT;
+    transaction.endpoint = s_device->bulk_out_endpoint;
+    transaction.buffer = &cbw;
+    transaction.length = sizeof(CommandBlockWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+
+    // Read the data
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint = s_device->bulk_in_endpoint;
+    transaction.buffer = buffer;
+    transaction.length = cbw.transfer_length;
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    dump_mem8(stddebug, "Read Capacity: ", buffer, cbw.transfer_length);
 
     // Read the Command Status Wrapper
     CommandStatusWrapper csw;
