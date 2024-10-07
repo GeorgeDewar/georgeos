@@ -12,6 +12,7 @@ static bool set_configuration(UsbDevice *device, uint8_t configuration_number);
 static int get_max_lun(UsbStorageDevice *s_device);
 static bool scsi_inquiry(UsbStorageDevice *s_device, int lun, InquiryCmdResponse *buffer);
 static bool scsi_read_capacity_10(UsbStorageDevice *s_device, int lun, ReadCapacity10Response *buffer);
+static bool scsi_request_sense(UsbStorageDevice *s_device, int lun, RequestSenseResponse *buffer);
 
 /** Public driver interface */
 DiskDeviceDriver usb_msd_driver = {
@@ -135,8 +136,26 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
             kprintf(INFO, USBSTOR_LOG_PREFIX, "Identified drive at LUN %d: %.16s\n", lun, buffer.product_identification);
         } else continue;
         ReadCapacity10Response capacity;
-        if (scsi_read_capacity_10(s_device, lun, &capacity) > 0) {
-            kprintf(INFO, USBSTOR_LOG_PREFIX, "Capacity: %d blocks of size %d\n", capacity.number_of_blocks, capacity.block_size);
+        RequestSenseResponse sense;
+        bool success = false;
+        for(int attempt=0; attempt<3; attempt++) {
+            if (scsi_read_capacity_10(s_device, lun, &capacity) > 0) {
+                kprintf(INFO, USBSTOR_LOG_PREFIX, "Capacity: %d blocks of size %d\n", capacity.number_of_blocks, capacity.block_size);
+                success = true;
+                break;
+            } else {
+                int status = scsi_request_sense(s_device, lun, &sense);
+                kprintf(INFO, USBSTOR_LOG_PREFIX, "Request sense status: %d\n", status);
+                if (status > 0) {
+                    dump_mem8(stdout, "Sense: ", &sense, sizeof(sense));
+                    kprintf(INFO, USBSTOR_LOG_PREFIX, "Request Sense: error code %2x, sense key %2x, additional code %2x, qualifier %2x\n",
+                        sense.error_code, sense.sense_key, sense.additional_sense_code, sense.additional_sense_code_qualifier);
+                }
+            }
+        }
+
+        if(!success) {
+            kprintf(ERROR, USBSTOR_LOG_PREFIX, "Could not get capacity\n");
         }
     }
 
@@ -298,6 +317,65 @@ static bool scsi_read_capacity_10(UsbStorageDevice *s_device, int lun, ReadCapac
         return FAILURE;
     };
     dump_mem8(stddebug, "Read Capacity: ", buffer, cbw.transfer_length);
+
+    // Read the Command Status Wrapper
+    CommandStatusWrapper csw;
+    memset(&csw, 0, sizeof(CommandStatusWrapper));
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint = s_device->bulk_in_endpoint;
+    transaction.buffer = &csw;
+    transaction.length = sizeof(CommandStatusWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    if (csw.signature != 0x53425355) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Unexpected CSW signature: %8x\n", csw.signature);
+        return FAILURE;
+    };
+    if (csw.status != 0) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Bulk transfer failed with status %2x\n", csw.status);
+        dump_mem8(stdout, "CSW: ", &csw, sizeof(CommandStatusWrapper));
+        return FAILURE;
+    }
+
+    return SUCCESS;
+}
+
+static bool scsi_request_sense(UsbStorageDevice *s_device, int lun, RequestSenseResponse *buffer) {
+    UsbDevice *device = s_device->usb_device;
+    UhciController *controller = device->controller;
+
+    CommandBlockWrapper cbw;
+    memset(&cbw, 0, sizeof(CommandBlockWrapper));
+    cbw.signature = 0x43425355;
+    cbw.tag = 0;
+    cbw.transfer_length = 18;
+    cbw.flags = READ;
+    cbw.lun = lun;
+    cbw.command_len = 6;
+    cbw.command[0] = REQUEST_SENSE;
+    cbw.command[4] = 18;
+
+    UsbBulkTransaction transaction;
+
+    // Send the Command Block Wrapper
+    transaction.type = USB_TXNTYPE_BULK_OUT;
+    transaction.endpoint = s_device->bulk_out_endpoint;
+    transaction.buffer = &cbw;
+    transaction.length = sizeof(CommandBlockWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+
+    // Read the data
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint = s_device->bulk_in_endpoint;
+    transaction.buffer = buffer;
+    transaction.length = cbw.transfer_length;
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    dump_mem8(stddebug, "Request Sense: ", buffer, cbw.transfer_length);
 
     // Read the Command Status Wrapper
     CommandStatusWrapper csw;
