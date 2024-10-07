@@ -294,7 +294,7 @@ static bool scsi_read_capacity_10(UsbStorageDevice *s_device, int lun, ReadCapac
     cbw.transfer_length = 8;
     cbw.flags = READ;
     cbw.lun = lun;
-    cbw.command_len = 6;
+    cbw.command_len = 12;
     cbw.command[0] = READ_CAPACITY_10;
 
     UsbBulkTransaction transaction;
