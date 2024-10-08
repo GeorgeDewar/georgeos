@@ -293,7 +293,7 @@ bool fat12_read_file(FileSystem * fs, uint32_t cluster, void* buffer, uint32_t* 
 
 /** Read the whole FAT into a buffer */
 static bool fat12_read_fat(DiskDevice* device, FatInstanceData *instance_data, uint8_t *fat) {
-    fprintf(stddebug, "Reading FAT\n");
+    kprintf(INFO, "FAT", "Reading FAT (%d sectors)\n", instance_data->sectors_per_fat);
     return read_sectors_lba(device, instance_data->num_reserved_sectors, instance_data->sectors_per_fat, fat);
 }
 

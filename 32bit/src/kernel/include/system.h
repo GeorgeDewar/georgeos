@@ -251,6 +251,7 @@ struct KeyStatus key_status;
 
 /* Console */
 void on_key_event(struct KeyEvent event);
+char get_char();
 void get_string(char *buffer, uint16_t limit, uint8_t echo);
 extern volatile bool console_modified;
 
@@ -469,6 +470,7 @@ struct ehci_controller {
 
 /* Debug */
 void print_mem_info();
+void pause();
 
 /* To be homed later */
 void reboot();

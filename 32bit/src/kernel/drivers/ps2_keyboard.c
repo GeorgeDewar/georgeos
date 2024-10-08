@@ -66,6 +66,11 @@ static void wait_to_write();
 // Variable to keep track of key states
 struct KeyStatus key_status = {};
 
+
+static void __attribute__((optimize("O0"))) div0(int num) {
+    printf("Impossible: %d\n", num/0);
+}
+
 /* Handles the keyboard interrupt */
 void keyboard_handler()
 {
@@ -87,6 +92,12 @@ void keyboard_handler()
         }
         if (scancode == KEYCODE_LeftAlt) {
             key_status.alt_down = 0;
+        }
+        if (scancode == KEYCODE_F10) {
+            pause();
+        }
+        if (scancode == KEYCODE_F11) {
+            div0(5); // trigger a fault to get a stack trace, probably useless as may be in an interrupt handler
         }
         if (scancode == KEYCODE_F12) {
             port_byte_out(0xCF9, 6); // reset CPU

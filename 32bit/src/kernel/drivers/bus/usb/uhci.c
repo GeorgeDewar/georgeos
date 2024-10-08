@@ -749,6 +749,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
 
 bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device, UsbBulkTransaction *transaction) {
     kprintf(DEBUG, controller->name, "Executing bulk transaction (len: %d bytes)\n", transaction->length);
+    //pause();
     
     UsbEndpoint *endpoint = transaction->endpoint;
     transaction->actual_length = 0;
@@ -805,10 +806,10 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
 
     controller->queue_default->element_link_pointer = descriptors;
 
-    if (wait_for_transfer(controller, &descriptors[num_packets-1], 500) < 0) {
+    if (wait_for_transfer(controller, &descriptors[num_packets-1], 1000) < 0) {
         print_tds(stderr, "TDs", descriptors, num_packets);
         print_driver_status(stderr, controller);
-        dump_mem8(stdout, "Buffer", transaction->buffer, transaction->length);
+        dump_mem8(stdout, "Buffer: ", transaction->buffer, transaction->length > 128 ? 128 : transaction->length);
         return FAILURE;
     }
 
@@ -883,8 +884,13 @@ static void print_driver_status(int16_t fp, UhciController *controller) {
 
 static void print_tds(int16_t fp, char *prefix, TransferDescriptor *tds, uint16_t count) {
     print_td_header(fp, prefix);
-    for (int i=0; i<count; i++) {
+    int start_count = count > 10 ? 10 : count;
+    for (int i=0; i<start_count; i++) {
         print_td(fp, prefix, tds + i);
+    }
+    if (count > start_count) {
+        fprintf(fp, "Omitted %d TDs\n", count - start_count);
+        print_td(fp, prefix, tds + count - 1);
     }
 }
 

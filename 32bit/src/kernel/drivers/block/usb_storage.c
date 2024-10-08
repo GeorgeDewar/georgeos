@@ -430,7 +430,7 @@ static bool scsi_read_10(UsbStorageDevice *s_device, int lun, uint32_t lba, uint
     cbw.command[0] = READ_10;
     uint32_t *lba_loc = &cbw.command[2];
     *lba_loc = bswap_32(lba);
-    uint32_t *transfer_len_loc = &cbw.command[7];
+    uint16_t *transfer_len_loc = &cbw.command[7];
     *transfer_len_loc = bswap_16(blocks);
 
     UsbBulkTransaction transaction;
