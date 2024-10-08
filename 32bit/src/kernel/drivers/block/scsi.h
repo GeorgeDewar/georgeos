@@ -15,8 +15,8 @@ typedef struct {
 } InquiryCmdResponse;
 
 typedef struct {
-    uint32_t number_of_blocks;
-    uint32_t block_size;
+    uint32_t number_of_blocks; // big-endian
+    uint32_t block_size; // big-endian
 } ReadCapacity10Response;
 
 typedef struct {

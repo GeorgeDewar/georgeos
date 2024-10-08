@@ -2,6 +2,7 @@
 #include "usb.h"
 #include "usb_storage.h"
 #include "scsi.h"
+#include "byteswap.h"
 
 #define USBSTOR_LOG_PREFIX "usb_storage"
 
@@ -337,6 +338,10 @@ static bool scsi_read_capacity_10(UsbStorageDevice *s_device, int lun, ReadCapac
         dump_mem8(stdout, "CSW: ", &csw, sizeof(CommandStatusWrapper));
         return FAILURE;
     }
+
+    // Change the byte order to little-endian
+    buffer->block_size = bswap_32(buffer->block_size);
+    buffer->number_of_blocks = bswap_32(buffer->number_of_blocks);
 
     return SUCCESS;
 }
