@@ -87,15 +87,19 @@ bool normalise_path(const char* path_in, char* path_out) {
     return SUCCESS;
 }
 
-// TODO: Make use of read_sectors, no need to loop
 bool read_sectors_lba(DiskDevice* device, uint32_t lba, uint32_t count, void* buffer) {
     fprintf(stddebug, "Reading from sector %d for %d\n", lba, count);
-    for (uint32_t i=0; i<count; i++) {
-        if (device->driver->read_sectors(device, lba + i, 1, buffer + (512 * i)) == FAILURE) {
-            return FAILURE;
+    if (device->type == FLOPPY) {
+        // TODO: Move this loop to the floppy driver or improve the driver to support multi-sector reads
+        for (uint32_t i=0; i<count; i++) {
+            if (device->driver->read_sectors(device, lba + i, 1, buffer + (512 * i)) == FAILURE) {
+                return FAILURE;
+            }
         }
+        return SUCCESS;
+    } else {
+        return device->driver->read_sectors(device, lba, count, buffer);
     }
-    return SUCCESS;
 }
 
 int open_file(char* path) {

@@ -385,7 +385,6 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
 
     TransferDescriptor *descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
-    kprintf(DEBUG, controller->name, "paragraph-aligned buffer at %x\n", descriptors);
 
     // Setup packet
     descriptors[0].link_pointer = ((uint32_t) descriptors + 0x20) >> 4;
@@ -456,10 +455,9 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     int descriptor_num = 0;
     descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
-    kprintf(DEBUG, controller->name, "paragraph-aligned buffer at %x\n", descriptors);
 
     // Setup packet
-    kprintf(DEBUG, controller->name, "Preparing setup packet (0)\n");
+    kprintf(TRACE, controller->name, "Preparing setup packet (0)\n");
     descriptors[0].link_pointer = ((uint32_t) &(descriptors[1])) >> 4;
     descriptors[0].depth_first = true;
     descriptors[0].error_count = 3;
@@ -473,7 +471,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
 
     // IN packets
     for(descriptor_num; descriptor_num<num_packets - 1; descriptor_num++) {
-        fprintf(stddebug, controller->name, "Preparing data packet (%d)\n", descriptor_num);
+        kprintf(TRACE, controller->name, "Preparing data packet (%d)\n", descriptor_num);
         descriptors[descriptor_num].link_pointer = ((uint32_t) &(descriptors[descriptor_num + 1])) >> 4;
         descriptors[descriptor_num].depth_first = true;
         descriptors[descriptor_num].error_count = 3;
@@ -486,7 +484,7 @@ bool uhci_get_device_descriptor(UhciController *controller, uint8_t port, UsbSta
     }
 
     // OUT packet
-    kprintf(DEBUG, controller->name, "Preparing status packet (%d)\n", descriptor_num);
+    kprintf(TRACE, controller->name, "Preparing status packet (%d)\n", descriptor_num);
     descriptors[descriptor_num].link_pointer = 0;
     descriptors[descriptor_num].depth_first = true;
     descriptors[descriptor_num].error_count = 3;
@@ -527,8 +525,6 @@ bool uhci_set_address(UhciController *controller, uint8_t port, uint8_t device_i
 
     TransferDescriptor *descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
-    kprintf(DEBUG, controller->name, "paragraph-aligned buffer at %x\n", descriptors);
-    kprintf(DEBUG, controller->name, "TD size %d\n", sizeof(TransferDescriptor));
 
     // Setup packet
     descriptors[0].link_pointer = ((uint32_t) descriptors + 0x20) >> 4;
@@ -679,11 +675,10 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
 
     TransferDescriptor *descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
-    kprintf(DEBUG, controller->name, "Paragraph-aligned buffer at %x\n", descriptors);
 
     if (num_setup_packets == 1) {
         // Control transfers have a setup packet
-        kprintf(DEBUG, controller->name, "Preparing setup packet (0)\n");
+        kprintf(TRACE, controller->name, "Preparing setup packet (0)\n");
         descriptors[packet_idx].link_pointer = ((uint32_t) descriptors + 0x20) >> 4;
         descriptors[packet_idx].depth_first = true;
         descriptors[packet_idx].error_count = 3;
@@ -701,7 +696,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
 
     // DATA IN packets
     for(packet_idx; packet_idx<num_packets - 1; packet_idx++) {
-        kprintf(DEBUG, controller->name, "Preparing data packet (%d)\n", packet_idx);
+        kprintf(TRACE, controller->name, "Preparing data packet (%d)\n", packet_idx);
         descriptors[packet_idx].link_pointer = ((uint32_t) &(descriptors[packet_idx + 1])) >> 4;
         descriptors[packet_idx].depth_first = true;
         descriptors[packet_idx].error_count = 3;
@@ -716,7 +711,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
     }
 
     // STATUS packet
-    kprintf(DEBUG, controller->name, "Preparing status packet (%d)\n", packet_idx);
+    kprintf(TRACE, controller->name, "Preparing status packet (%d)\n", packet_idx);
     descriptors[packet_idx].link_pointer = 0;
     descriptors[packet_idx].depth_first = true;
     descriptors[packet_idx].error_count = 3;
@@ -730,7 +725,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
     descriptors[packet_idx].interrupt_on_complete = false;
     descriptors[packet_idx].terminate = true;
 
-    print_tds(stddebug, "TDs Bf", descriptors, num_packets);
+    //print_tds(stddebug, "TDs Bf", descriptors, num_packets);
 
     controller->queue_default->element_link_pointer = descriptors;
 
@@ -741,7 +736,7 @@ bool uhci_execute_transaction(UhciController *controller, UsbDevice *device, Usb
         return FAILURE;
     }
 
-    print_tds(stddebug, "TDs Af", descriptors, num_packets);
+    //print_tds(stddebug, "TDs Af", descriptors, num_packets);
 
     transaction->actual_length = 0;
     for(int i = 0; i<num_data_packets; i++) {
@@ -779,16 +774,15 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
 
     TransferDescriptor *descriptors = memalign(16, num_packets * sizeof(TransferDescriptor)); // Buffer must be paragraph-aligned
     memset(descriptors, 0, num_packets * sizeof(TransferDescriptor));
-    kprintf(DEBUG, controller->name, "Paragraph-aligned buffer at %x\n", descriptors);
 
     // DATA IN/OUT packets
     kprintf(DEBUG, controller->name, "Preparing %d packets\n", num_packets);
     for(int packet_idx = 0; packet_idx<num_packets; packet_idx++) {
         bool is_last_packet = (packet_idx == num_packets - 1);
-        kprintf(DEBUG, controller->name, "Preparing data packet (%d, last = %d)\n", packet_idx, is_last_packet);
+        kprintf(TRACE, controller->name, "Preparing data packet (%d, last = %d)\n", packet_idx, is_last_packet);
         uint8_t max_length = max_packet_size - 1;
         if (transaction->length % max_packet_size != 0 && is_last_packet) {
-            kprintf(DEBUG, controller->name, "Last packet is not a full packet (max = %d, tot = %d)\n", max_packet_size, transaction->length);
+            kprintf(TRACE, controller->name, "Last packet is not a full packet (max = %d, tot = %d)\n", max_packet_size, transaction->length);
             max_length = (transaction->length % max_packet_size) - 1; // Remainder, not a full packet
         }
         descriptors[packet_idx].link_pointer = is_last_packet ? NULL : ((uint32_t) &(descriptors[packet_idx + 1])) >> 4;
@@ -807,7 +801,7 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
         endpoint->toggle = 1 - endpoint->toggle;
     }
 
-    print_tds(stddebug, "TDs Bf", descriptors, num_packets);
+    //print_tds(stddebug, "TDs Bf", descriptors, num_packets);
 
     controller->queue_default->element_link_pointer = descriptors;
 
@@ -826,7 +820,7 @@ bool uhci_execute_bulk_transaction(UhciController *controller, UsbDevice *device
         return FAILURE;
     }
 
-    print_tds(stddebug, "TDs Af", descriptors, num_packets);
+    //print_tds(stddebug, "TDs Af", descriptors, num_packets);
 
     transaction->actual_length = 0;
     for(int i = 0; i<num_packets; i++) {

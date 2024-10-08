@@ -5,6 +5,8 @@ typedef struct {
     uint8_t interface_number;
     UsbEndpoint *bulk_in_endpoint;
     UsbEndpoint *bulk_out_endpoint;
+    uint32_t block_size;
+    uint32_t num_blocks;
 } UsbStorageDevice;
 
 enum UsbStorageRequests {

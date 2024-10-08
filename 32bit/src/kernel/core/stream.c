@@ -119,6 +119,7 @@ char* pattern_prefix[32] = {
     0,
     "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", // 6 = INFO
     "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", // 7 = DEBUG
+    "\1[32m[%6d]\1[0m \1[34m%s\1[0m %s", // 8 = TRACE
 };
 
 void kprintf(uint8_t level, char *prefix, char* string, ...) {

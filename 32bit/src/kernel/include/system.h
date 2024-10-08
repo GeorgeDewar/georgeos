@@ -22,6 +22,7 @@ typedef __builtin_va_list va_list;
 #define WARN  4
 #define INFO  6
 #define DEBUG 7
+#define TRACE 8
 
 
 /* INTERRUPT HANDLING */
@@ -318,10 +319,13 @@ struct DiskDevice {
     uint8_t device_num;
     /** 1-indexed partition number, or 0 if whole disk */
     int8_t partition;
-    /** offset within the disk (applies if this is a partition, otherwise must be 0) */
+    /** offset within the disk in bytes (applies if this is a partition, otherwise must be 0) */
     uint32_t offset;
+    uint32_t block_size;
     /** the driver that can operate this device */
     DiskDeviceDriver* driver;
+    /** driver-specific data (optional) */
+    void *driver_specific_data_ptr;
 };
 bool register_block_device(DiskDevice *dev, char* type);
 #define MAX_BLOCK_DEVICES          16

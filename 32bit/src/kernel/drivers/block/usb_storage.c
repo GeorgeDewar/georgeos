@@ -142,6 +142,11 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
         for(int attempt=0; attempt<3; attempt++) {
             if (scsi_read_capacity_10(s_device, lun, &capacity) > 0) {
                 kprintf(INFO, USBSTOR_LOG_PREFIX, "Capacity: %d blocks of size %d\n", capacity.number_of_blocks, capacity.block_size);
+
+                // Update the details
+                s_device->block_size = capacity.block_size;
+                s_device->num_blocks = capacity.number_of_blocks;
+                
                 success = true;
                 break;
             } else {
@@ -157,10 +162,20 @@ static bool usb_storage_setup_device(UsbDevice *device, UsbInterfaceDescriptor *
 
         if(!success) {
             kprintf(ERROR, USBSTOR_LOG_PREFIX, "Could not get capacity\n");
+            continue;
         }
-    }
 
-    // Register as a block device?
+        // Register the drive
+        DiskDevice *disk_device = malloc(sizeof(DiskDevice));
+        disk_device->driver = &usb_msd_driver;
+        disk_device->type = HARD_DISK;
+        disk_device->block_size = s_device->block_size;
+        disk_device->device_num = lun;
+        disk_device->partition = RAW_DEVICE;
+        disk_device->offset = 0;
+        disk_device->driver_specific_data_ptr = s_device;
+        register_block_device(disk_device, "usb");
+    }
 }
 
 // Todo: move
@@ -259,7 +274,6 @@ static bool scsi_inquiry(UsbStorageDevice *s_device, int lun, InquiryCmdResponse
     if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
         return FAILURE;
     };
-    dump_mem8(stdout, "Inquiry: ", buffer, 0x24);
 
     delay(50);
     // Read the Command Status Wrapper
@@ -404,6 +418,72 @@ static bool scsi_request_sense(UsbStorageDevice *s_device, int lun, RequestSense
     return SUCCESS;
 }
 
-static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {
+static bool scsi_read_10(UsbStorageDevice *s_device, int lun, uint32_t lba, uint16_t blocks, void *buffer) {
+    UsbDevice *device = s_device->usb_device;
+    UhciController *controller = device->controller;
 
+    CommandBlockWrapper cbw;
+    memset(&cbw, 0, sizeof(CommandBlockWrapper));
+    cbw.signature = 0x43425355;
+    cbw.tag = 0;
+    cbw.transfer_length = blocks * s_device->block_size;
+    cbw.flags = READ;
+    cbw.lun = lun;
+    cbw.command_len = 10;
+    cbw.command[0] = READ_10;
+    uint32_t *lba_loc = &cbw.command[2];
+    *lba_loc = bswap_32(lba);
+    uint32_t *transfer_len_loc = &cbw.command[7];
+    *transfer_len_loc = bswap_16(blocks);
+
+    UsbBulkTransaction transaction;
+
+    // Send the Command Block Wrapper
+    transaction.type = USB_TXNTYPE_BULK_OUT;
+    transaction.endpoint = s_device->bulk_out_endpoint;
+    transaction.buffer = &cbw;
+    transaction.length = sizeof(CommandBlockWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+
+    // Read the data
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint = s_device->bulk_in_endpoint;
+    transaction.buffer = buffer;
+    transaction.length = cbw.transfer_length;
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+
+    // Read the Command Status Wrapper
+    CommandStatusWrapper csw;
+    memset(&csw, 0, sizeof(CommandStatusWrapper));
+    transaction.type = USB_TXNTYPE_BULK_IN;
+    transaction.endpoint = s_device->bulk_in_endpoint;
+    transaction.buffer = &csw;
+    transaction.length = sizeof(CommandStatusWrapper);
+    if (uhci_execute_bulk_transaction(controller, device, &transaction) < 0) {
+        return FAILURE;
+    };
+    if (csw.signature != 0x53425355) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Unexpected CSW signature: %8x\n", csw.signature);
+        return FAILURE;
+    };
+    if (csw.status != 0) {
+        kprintf(ERROR, USBSTOR_LOG_PREFIX, "Bulk transfer failed with status %2x\n", csw.status);
+        dump_mem8(stdout, "CSW: ", &csw, sizeof(CommandStatusWrapper));
+        return FAILURE;
+    }
+
+    return SUCCESS;
+}
+
+static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {
+    kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Executing read of %d sectors from LBA %d\n", num_sectors, lba);
+
+    // Adjust LBA for partition offset
+    int offset_blocks = device->offset / device->block_size;
+
+    return scsi_read_10(device->driver_specific_data_ptr, device->device_num, lba + offset_blocks, num_sectors, buffer);
 }
