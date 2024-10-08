@@ -264,8 +264,6 @@ static bool scsi_inquiry(UsbStorageDevice *s_device, int lun, InquiryCmdResponse
         return FAILURE;
     };
 
-    delay(50);
-
     // Read the data
     transaction.type = USB_TXNTYPE_BULK_IN;
     transaction.endpoint = s_device->bulk_in_endpoint;
@@ -275,7 +273,6 @@ static bool scsi_inquiry(UsbStorageDevice *s_device, int lun, InquiryCmdResponse
         return FAILURE;
     };
 
-    delay(50);
     // Read the Command Status Wrapper
     CommandStatusWrapper csw;
     memset(&csw, 0, sizeof(CommandStatusWrapper));
