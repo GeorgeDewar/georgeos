@@ -477,10 +477,10 @@ static bool scsi_read_10(UsbStorageDevice *s_device, int lun, uint32_t lba, uint
 }
 
 static bool usb_storage_read(DiskDevice *device, unsigned int lba, unsigned int num_sectors, void *buffer) {
-    kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Executing read of %d sectors from LBA %d\n", num_sectors, lba);
-
     // Adjust LBA for partition offset
-    int offset_blocks = device->offset / device->block_size;
+    int drive_lba = lba + device->offset;
 
-    return scsi_read_10(device->driver_specific_data_ptr, device->device_num, lba + offset_blocks, num_sectors, buffer);
+    kprintf(DEBUG, USBSTOR_LOG_PREFIX, "Executing read of %d sectors from LBA %d (drive LBA %d)\n", num_sectors, lba, drive_lba);
+
+    return scsi_read_10(device->driver_specific_data_ptr, device->device_num, drive_lba, num_sectors, buffer);
 }

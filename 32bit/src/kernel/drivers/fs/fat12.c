@@ -87,6 +87,8 @@ bool fat12_init(DiskDevice* device, FileSystem* filesystem_out) {
     device->driver->read_sectors(device, 0, 1, buffer);
     Dos331BiosParameterBlock *bpb = (Dos331BiosParameterBlock *) (buffer + 11);
 
+    dump_mem8(stddebug, "BPB: ", buffer, 512);
+
     char fat_type;
     if (strcmp_wl(((ExtendedBiosParameterBlock *) bpb)->file_system_type, FatTypeName[FAT12], 5) > 0) {
         fat_type = FAT12;
