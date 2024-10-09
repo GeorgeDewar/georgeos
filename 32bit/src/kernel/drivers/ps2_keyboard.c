@@ -94,10 +94,10 @@ void keyboard_handler()
             key_status.alt_down = 0;
         }
         if (scancode == KEYCODE_F10) {
-            pause();
+            //pause();
         }
         if (scancode == KEYCODE_F11) {
-            div0(5); // trigger a fault to get a stack trace, probably useless as may be in an interrupt handler
+            //div0(5); // trigger a fault to get a stack trace, probably useless as may be in an interrupt handler
         }
         if (scancode == KEYCODE_F12) {
             port_byte_out(0xCF9, 6); // reset CPU
