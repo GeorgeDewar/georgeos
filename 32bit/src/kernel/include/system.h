@@ -85,6 +85,8 @@ struct GraphicsDevice {
 };
 struct GraphicsDevice* default_graphics_device;
 
+void i915_init();
+
 #define COLOR_BLACK         ((Color) {0, 0, 0})
 #define COLOR_RED           ((Color) {222, 56, 43})
 #define COLOR_GREEN         ((Color) {19, 161, 14})
@@ -450,6 +452,7 @@ uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t func, uint8_t o
 uint32_t pci_config_read_dword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
 uint8_t pci_get_prog_if(uint16_t bus, uint16_t device, uint16_t function);
 uint32_t pci_get_bar(uint16_t bus, uint16_t device, uint16_t function, uint8_t bar);
+uint32_t pci_get_bar32(struct pci_device *device, uint8_t bar);
 
 /* ATA */
 void ata_init();

@@ -117,6 +117,10 @@ uint32_t pci_get_bar(uint16_t bus, uint16_t device, uint16_t function, uint8_t b
     return pci_config_read_word(bus,device,function,0x10 + bar * 0x04) & 0xFFFC;
 }
 
+uint32_t pci_get_bar32(struct pci_device *device, uint8_t bar) {
+    return pci_config_read_dword(device->bus,device->device,device->function,0x10 + bar * 0x04) & 0xFFFFFFF0;
+}
+
 // void pci_get_header(uint16_t bus, uint16_t device, uint16_t function, uint16_t* buffer) {
 //    for(int i=0; i<32; i++) {
 //        buffer[i] = pci_config_read_word(bus, device, function, i*2);
