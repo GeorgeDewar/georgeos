@@ -8,6 +8,20 @@
 #define I915_REG_GMBUS4 0x5110
 #define I915_REG_GMBUS5 0x5120
 
+// GMBUS0
+#define GMBUS_RATE_100KHZ 0
+#define PIN_PAIR_LVDS 0x03
+#define GMBUS0_SW_RDY (1<<30)
+#define GMBUS0_READ (1<<0)
+
+// GMBUS1
+#define GMBUS_BUS_CYCLE_WAIT (1<<25)
+#define EDID_ADDRESS (0x50<<1)
+
+// GMBUS2
+#define GMBUS2_HW_RDY (1<<11)
+#define GMBUS2_NAK (1<<10)
+
 typedef struct {
     struct pci_device *pci_device;
     uint32_t mmio_address;
